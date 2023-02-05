@@ -1,6 +1,6 @@
 # Omnis
 
-Scheduling algorithm for people with executive disfunctioning disorder
+Daily Planning App for people with executive disfunctioning disorder
 
 **Creators:** Vignesh Peddi, Felix Zeller, Sid Gupta
 
