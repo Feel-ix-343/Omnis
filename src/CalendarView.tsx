@@ -127,7 +127,7 @@ export default function CalendarView() {
   })
 
   const tasks = createMemo<[Task[], Task[]]>(() => getTasks().reduce<[Task[], Task[]]>((prev, task) => {
-    if (task.date.getDate() !== day().getDate()) return prev
+    if (task.date.toDateString() !== day().toDateString()) return prev
 
     if (task.time !==  undefined) {
       prev[1].push(task)
@@ -158,15 +158,13 @@ function CalendarHeader(props: {dailyTasks?: Task[]}) {
 
   const dayOfMonth = () => day().getDate()
 
-  const dayAbbreviations = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-  // TODO: fix this and negative indexes
 
-  const dates: Accessor<{date: number, day: string}[]> = createMemo(() => {
+  const dates: Accessor<Date[]> = createMemo(() => {
     const dates = []
     for (let i = -2; i <= 2; i++) {
       const date = new Date(day())
       date.setDate(date.getDate() + i)
-      dates.push({date: date.getDate(), day: dayAbbreviations[date.getDay()]})
+      dates.push(date)
     }
     return dates
   })
@@ -177,11 +175,11 @@ function CalendarHeader(props: {dailyTasks?: Task[]}) {
       classList={{"max-h-full": getDailyExpanded(), "max-h-[185px]": !getDailyExpanded()}}
     >
       <div class="flex flex-row gap-2 items-center justify-center">
-        <CalendarDate date={dates()[0].date} click={() => changeDay(-2)} day={dates()[0].day}/>
-        <CalendarDate date={dates()[1].date} click={() => changeDay(-1)} day={dates()[1].day}/>
-        <CalendarDate date={dates()[2].date} day={dates()[2].day} focus={true}/>
-        <CalendarDate date={dates()[3].date} click={() => changeDay(+1)} day={dates()[3].day}/>
-        <CalendarDate date={dates()[4].date} click={() => changeDay(+2)} day={dates()[4].day}/>
+        <CalendarDate date={dates()[0]} click={() => changeDay(-2)}/>
+        <CalendarDate date={dates()[1]} click={() => changeDay(-1)}/>
+        <CalendarDate date={dates()[2]} focus={true}/>
+        <CalendarDate date={dates()[3]} click={() => changeDay(+1)} />
+        <CalendarDate date={dates()[4]} click={() => changeDay(+2)} />
       </div>
 
       {props.dailyTasks !== undefined && props.dailyTasks.length && (<>
@@ -231,19 +229,23 @@ function DailyTask(props: {task: Task, show: boolean}) {
 }
 
 
-function CalendarDate(props: {date: number, click?: () => void, day: string, focus?: boolean}) {
+function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) {
+
+  const dayAbbreviations = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
   return (
     <div 
       class="flex flex-col justify-center items-center bg-white text-center p-3 rounded-xl shadow-md border-[2px] "
       classList={{
-        "bg-highlight border-green-400 w-20": props.focus,
+        "border-gray-400 w-20": props.focus,
         "border-gray-200 w-14": !props.focus,
-        "active:scale-[85%] transition-all": props.click !== undefined
+        "active:scale-[85%] transition-all": props.click !== undefined,
+        "bg-highlight !border-green-400": props.date.toDateString() === new Date().toDateString()
       }}
       onclick={props.click}
     >
-      <div class={ "text-gray-500 " + (props.focus ? "font-extrabold text-3xl text-gray-700" : "text-xl") }>{props.date}</div>
-      <div class={ "text-gray-500 " + (props.focus ? "text-xl font-bold text-gray-700" : null)}>{props.day}</div>
+      <div class={ "text-gray-500 " + (props.focus ? "font-extrabold text-3xl text-gray-700" : "text-xl") }>{props.date.getDate()}</div>
+      <div class={ "text-gray-500 " + (props.focus ? "text-xl font-bold text-gray-700" : null)}>{dayAbbreviations[props.date.getDay()]}</div>
     </div>
   )
 }
