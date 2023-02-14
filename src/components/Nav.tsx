@@ -4,14 +4,13 @@ import { BsGear, BsGearWide } from 'solid-icons/bs'
 import { createSignal } from "solid-js"
 
 export default function Nav (props: {activeScreenIndex: number, setIndex: (index: number) => void}){
-  const [activeScreenIndex, setActiveScreenIndex] = createSignal(1)
 
   const switchScreen = (index: number) => {
-    setActiveScreenIndex(index)
-    console.log(activeScreenIndex())
+    props.setIndex(index)
+    console.log(props.activeScreenIndex)
   }
 
-  const classes = (index: number) => { return `mx-auto ${activeScreenIndex() === index ? "fill-primary" : "fill-white"}` }
+  const classes = (index: number) => { return `mx-auto ${props.activeScreenIndex === index ? "fill-primary" : "fill-white"}` }
 
   return(
     <div 
@@ -23,7 +22,7 @@ export default function Nav (props: {activeScreenIndex: number, setIndex: (index
       <div class="z-50 text-white"><BsGear onclick={() => switchScreen(2)} class={classes(2)} size={40} /></div>
       <div 
         class={ `rounded-full bg-highlight border-green-400 transition-all border-2 w-[80px] h-[80px] shadow-white shadow-lg absolute left-0 right-0 ${
-          activeScreenIndex() === 0 ? "left-[2%]" : activeScreenIndex() === 1 ? "left-[32%]" : "left-[63%]"
+          props.activeScreenIndex === 0 ? "left-[2%]" : props.activeScreenIndex === 1 ? "left-[32%]" : "left-[63%]"
         }` } />
     </div>
   )

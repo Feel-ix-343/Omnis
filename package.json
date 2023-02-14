@@ -18,7 +18,7 @@
     "vite-plugin-solid": "^2.5.0"
   },
   "dependencies": {
-    "crypto": "^1.0.1",
+    "@supabase/supabase-js": "^2.7.1",
     "solid-icons": "^1.0.4",
     "solid-js": "^1.6.10"
   }

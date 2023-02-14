@@ -1,109 +1,74 @@
-import { BsCheck2Square, BsChevronRight, BsHourglass, BsHourglassSplit } from "solid-icons/bs"
-import { FaRegularSquareCheck, FaSolidHourglass, FaSolidHourglassEnd, FaSolidSquareCheck } from "solid-icons/fa"
+import { FaRegularSquareCheck, FaSolidHourglassEnd, FaSolidSquareCheck } from "solid-icons/fa"
 import { Accessor, createEffect, createMemo, createSignal, For, onMount } from "solid-js"
-import {createStore} from 'solid-js/store'
 
 import { AiOutlineCaretUp } from 'solid-icons/ai'
-import { style } from "solid-js/web"
+import { supabase } from "./database/supabaseClient"
+import { Database } from "./database/database.types"
+import { Session } from "@supabase/supabase-js"
+
+
+type DBTask = Database["public"]["Tables"]["tasks"]["Row"]
+
+
+
+const getTasksFromDB = async (session: Session) => {
+  const {data: tasks, error} = await supabase.from("tasks")
+    .select("*")
+    .eq("user_id", session.user.id)
+
+  if (error) {
+    console.error(error)
+  }
+
+  return tasks
+}
+
+const updateTasksWithDatabase = async (session: Session) => {
+  const dbTasks = await getTasksFromDB(session)
+
+  const tasks: Task[] | undefined = dbTasks?.map(task => {
+    return {
+      id: task.id,
+      name: task.name,
+      date: new Date(task.date),
+      time: task.time,
+      completed: task.completed,
+      priority: task.priority,
+      duration: task.duration,
+      description: task.description
+    }
+  })
+
+  setTasks(tasks)
+}
+
 
 type Task = {
   id: string,
   name: string,
   date: Date,
-  time?: number,
-  duration?: number,
+  time: number | null,
+  duration: number | null,
   completed: boolean,
   priority: number,
   description: string
 }
 
 
-// TODO: Get tasks from the database
-const [getTasks, setTasks] = createSignal<Task[]>(
-  [ // TODO: Change this to be a map from the database
-    {
-      id: crypto.randomUUID(),
-      name: "Walk the dog",
-      date: new Date(),
-      time: 2,
-      completed: false,
-      priority: 1,
-      duration: 2,
-      description: "Walk the dog for 30 minutes"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "Walk the dog",
-      date: new Date(),
-      completed: false,
-      priority: 1,
-      duration: 2,
-      description: "Walk the dog for 30 minutes"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "Walk the dog fjdask",
-      date: new Date(),
-      completed: false,
-      priority: 1,
-      duration: 2,
-      description: "Walk the dog for 30 minutes"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "Do the dishes",
-      date: (() => {
-        const date = new Date()
-        date.setDate(date.getDate() + 1)
-        return date
-      })(),
-      completed: false,
-      priority: 1,
-      duration: 1,
-      description: "Do the dishes for 30 minutes"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "Dishes",
-      date: (() => {
-        const date = new Date()
-        date.setDate(date.getDate() + 1)
-        return date
-      })(),
-      completed: false,
-      priority: 1,
-      duration: 1,
-      time: 9.5,
-      description: "Do the dishes for 30 minutes"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "Task 3",
-      date: new Date(),
-      completed: false,
-      time: 10,
-      priority: 1,
-      duration: 1,
-      description: "Task 3 for 30 minutes"
-    },
-    {
-      id: crypto.randomUUID(),
-      name: "Task 4",
-      time: 12,
-      date: new Date(),
-      completed: false,
-      priority: 1,
-      duration: 2,
-      description: "Task 3 for 30 minutes"
-    },
-  ]
-)
+
+
+// All of the displayed tasks
+const [getTasks, setTasks] = createSignal<Task[] | undefined>()
+
 
 let activeLineRef: HTMLDivElement;
 
+/** The scale of 1hr in pixels */
+const [getScale, setScale] = createSignal(150)
+
 
 const toggleCompleted = (task: Task) => {
-  setTasks(getTasks().map(t => t.id === task.id ? {...t, completed: !t.completed} : t))
+  setTasks(getTasks()?.map(t => t.id === task.id ? {...t, completed: !t.completed} : t))
 }
 
 
@@ -114,33 +79,65 @@ const changeDay = (amount: number) => {
   setDay(newDate)
 }
 
-export default function CalendarView() {
+export default function CalendarView(props: {session: Session}) {
+  // addInitialTasks() // For testing purposes
 
+  // initailize tasks
+  createEffect(() => {
+    console.log("Props session", props.session)
+    updateTasksWithDatabase(props.session)
+  })
+
+  // Scroll to the active time line
   onMount(() => {
     activeLineRef.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
   })
 
+  // Sync tasks with the database after a user input
+  createEffect(async () => {
+    const dbTasks: DBTask[] | undefined = getTasks()?.map(task => {
+      return {
+        id: task.id,
+        user_id: props.session.user.id,
+        name: task.name,
+        date: task.date.toISOString(),
+        time: task.time,
+        completed: task.completed,
+        priority: task.priority,
+        duration: task.duration,
+        description: task.description
+      }
+    })
 
-  createEffect(() => {
-    // Sync with the database
-    console.log(getTasks())
+    if (!dbTasks) return
+
+    const {data: tasks, error} = await supabase.from("tasks").upsert(dbTasks)
+    console.log(tasks, error)
   })
 
-  const tasks = createMemo<[Task[], Task[]]>(() => getTasks().reduce<[Task[], Task[]]>((prev, task) => {
-    if (task.date.toDateString() !== day().toDateString()) return prev
+  const tasks = createMemo<{daily: Task[], scheduled: Task[]} | undefined>(() => 
+    getTasks()?.reduce(
+      (prev, task) => {
+        if (task.date.toDateString() !== day().toDateString()) return prev
 
-    if (task.time !==  undefined) {
-      prev[1].push(task)
-    } else {
-      prev[0].push(task)
-    }
-    return prev
-  }, [[], []]))
+        if (task.time !==  null) {
+          prev.scheduled.push(task)
+        } else {
+          prev.daily.push(task)
+        }
 
-  const dailyTasks = () => tasks()[0]
-  const scheduledTasks = () => tasks()[1]
+        return prev
+      }, 
+      { daily: new Array<Task>(), scheduled: new Array<Task>() } // The initial
+    )
+  )
 
-  console.log(dailyTasks(), scheduledTasks())
+  const dailyTasks = () => tasks()?.daily
+  const scheduledTasks = () => tasks()?.scheduled
+
+  createEffect(() => {
+    console.log("Daily", dailyTasks(), "Scheduled", scheduledTasks())
+  })
 
   return (
     <div class="pt-40">
@@ -156,10 +153,7 @@ function CalendarHeader(props: {dailyTasks?: Task[]}) {
 
   const [getDailyExpanded, setDailyExpanded] = createSignal(false)
 
-  const dayOfMonth = () => day().getDate()
-
-
-  const dates: Accessor<Date[]> = createMemo(() => {
+  const dates = createMemo<Date[]>(() => {
     const dates = []
     for (let i = -2; i <= 2; i++) {
       const date = new Date(day())
@@ -240,7 +234,7 @@ function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) 
         "border-gray-400 w-20": props.focus,
         "border-gray-200 w-14": !props.focus,
         "active:scale-[85%] transition-all": props.click !== undefined,
-        "bg-highlight !border-green-400": props.date.toDateString() === new Date().toDateString()
+        "!bg-highlight !border-green-400": props.date.toDateString() === new Date().toDateString()
       }}
       onclick={props.click}
     >
@@ -279,7 +273,7 @@ function CalendarBody(props: {tasks?: Task[]}) {
   )
 }
 
-function Time() {
+function Time() { // TODO: Fix the timing of this and the tasks when time gets late
   const date = new Date;
 
   const [minutes, setMinutes] = createSignal<number>(date.getMinutes() + (date.getHours() * 60))
@@ -293,32 +287,40 @@ function Time() {
     <div
       ref={activeLineRef}
       style={{
-        "margin-top": minutes() + "px"
+        "margin-top": minutes() * (getScale() / 60) + "px"
       }}
-      class="flex flex-row h-[3px] bg-red-600 absolute w-full top-14 mt-[60px]">
+      class="flex flex-row h-[3px] bg-red-600 absolute w-full top-1">
     </div>
   )
 }
 
 function CalendarLine(props: {time: string}) {
   return (
-    <div class="flex flex-row items-center justify-center">
-      <span class="rounded-full text-secondary mt-10 basis-12 text-sm">{props.time}</span>
-      <div class="w-full h-[2px] mt-[58px] bg-secondary"></div>
+    <div class="flex flex-row items-center mx-auto">
+      <span style={{"margin-top": getScale() + "px"}} class="rounded-full absolute left-2 text-secondary basis-12 text-sm flex items-center justify-center">{props.time}</span>
+
+      <div style={{"margin-top": getScale() - 2 + "px"}} class="w-[85%] ml-auto mr-2 h-[2px] bg-secondary"></div>
     </div>
   )
 }
 
-function Event(props: {task: Task}) {
-  if (props.task.time === undefined) return null
+type EventTask = Task & {time: NonNullable<Task["time"]>, duration: NonNullable<Task["duration"]>}
 
+function Event(props: {task: EventTask}) {
   const duration = () => props.task.duration ?? .5
 
-  const startTime = () => (props.task.time + 1) * 60
-  const height = () => duration() * 60
+  const startTime = () => (props.task.time + 1) * getScale()
+  const height = () => duration() * getScale()
 
   const add15 = () => {
-    setTasks(getTasks().map(task => task.id === props.task.id && task.duration !== undefined ? {...task, duration: task.duration + .25} : task))
+    const tasks = getTasks()
+
+    if (!tasks) {
+      console.log("No tasks but adding 15 minutes?")
+      return
+    }
+
+    setTasks(tasks.map(task => task.id === props.task.id && task.duration !== undefined ? {...task, duration: task.duration! + .25} : task)) // TODO: Make better type, but this should not be null
   }
 
   return (
@@ -352,3 +354,93 @@ function Event(props: {task: Task}) {
     </div>
   )
 }
+
+const addInitialTasks = () => {
+  const tasks = getTasks()
+  if (!tasks) {
+    setTasks(initialTasks)
+    return
+  }
+  setTasks([...tasks, ...initialTasks])
+}
+
+const initialTasks: Task[] = [ // TODO: Change this to be a map from the database
+  {
+    id: crypto.randomUUID(),
+    name: "Walk the dog",
+    date: new Date(),
+    time: 2,
+    completed: false,
+    priority: 1,
+    duration: 2,
+    description: "Walk the dog for 30 minutes"
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "Walk the dog",
+    date: new Date(),
+    completed: false,
+    priority: 1,
+    duration: 2,
+    time: null,
+    description: "Walk the dog for 30 minutes"
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "Walk the dog fjdask",
+    date: new Date(),
+    completed: false,
+    time: null,
+    priority: 1,
+    duration: 2,
+    description: "Walk the dog for 30 minutes"
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "Do the dishes",
+    date: (() => {
+      const date = new Date()
+      date.setDate(date.getDate() + 1)
+      return date
+    })(),
+    completed: false,
+    priority: 1,
+    time: null,
+    duration: 1,
+    description: "Do the dishes for 30 minutes"
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "Dishes",
+    date: (() => {
+      const date = new Date()
+      date.setDate(date.getDate() + 1)
+      return date
+    })(),
+    completed: false,
+    priority: 1,
+    duration: 1,
+    time: 9.5,
+    description: "Do the dishes for 30 minutes"
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "Task 3",
+    date: new Date(),
+    completed: false,
+    time: 10,
+    priority: 1,
+    duration: 1,
+    description: "Task 3 for 30 minutes"
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "Task 4",
+    time: 12,
+    date: new Date(),
+    completed: false,
+    priority: 1,
+    duration: 2,
+    description: "Task 3 for 30 minutes"
+  },
+]
