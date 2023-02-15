@@ -1,10 +1,13 @@
 import { FaRegularSquareCheck, FaSolidHourglassEnd, FaSolidSquareCheck } from "solid-icons/fa"
-import { Accessor, createEffect, createMemo, createSignal, For, onMount } from "solid-js"
+import { BiRegularCheckbox, BiSolidCheckboxChecked } from 'solid-icons/bi'
+import { Accessor, createEffect, createMemo, createSignal, For, onMount, untrack } from "solid-js"
 
-import { AiOutlineCaretUp } from 'solid-icons/ai'
+import { AiFillMinusCircle, AiFillPlayCircle, AiFillPlusCircle, AiOutlineCaretUp } from 'solid-icons/ai'
 import { supabase } from "./database/supabaseClient"
 import { Database } from "./database/database.types"
 import { Session } from "@supabase/supabase-js"
+import { Motion } from "@motionone/solid"
+import { spring } from "motion"
 
 
 type DBTask = Database["public"]["Tables"]["tasks"]["Row"]
@@ -61,7 +64,7 @@ type Task = {
 const [getTasks, setTasks] = createSignal<Task[] | undefined>()
 
 
-let activeLineRef: HTMLDivElement;
+let activeTimeeRef: HTMLDivElement;
 
 /** The scale of 1hr in pixels */
 const [getScale, setScale] = createSignal(150)
@@ -83,14 +86,14 @@ export default function CalendarView(props: {session: Session}) {
   // addInitialTasks() // For testing purposes
 
   // initailize tasks
-  createEffect(() => {
+  onMount(() => {
     console.log("Props session", props.session)
     updateTasksWithDatabase(props.session)
   })
 
   // Scroll to the active time line
   onMount(() => {
-    activeLineRef.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
+    activeTimeeRef?.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
   })
 
   // Sync tasks with the database after a user input
@@ -214,8 +217,8 @@ function DailyTask(props: {task: Task, show: boolean}) {
     <div class="flex flex-row gap-2 justify-start items-center text-center h-8 bg-secondary p-2 rounded-lg transition-all"
       classList={{"opacity-0": !props.show}}>
       {props.task?.completed ?  // Why is this coming as undefiend? dang javascript
-        <FaSolidSquareCheck onclick={() => toggleCompleted(props.task)} size={20} class="fill-primary" /> :
-        <FaRegularSquareCheck onclick={() => toggleCompleted(props.task)} size={20} class="fill-primary" />
+        <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task)} size={30} class="fill-primary" /> :
+        <BiRegularCheckbox onclick={() => toggleCompleted(props.task)} size={30} class="fill-primary" />
       }
       <h3>{props.task.name}</h3>
     </div>
@@ -228,7 +231,7 @@ function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) 
   const dayAbbreviations = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
   return (
-    <div 
+    <Motion.div 
       class="flex flex-col justify-center items-center bg-white text-center p-3 rounded-xl shadow-md border-[2px] "
       classList={{
         "border-gray-400 w-20": props.focus,
@@ -236,11 +239,16 @@ function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) 
         "active:scale-[85%] transition-all": props.click !== undefined,
         "!bg-highlight !border-green-400": props.date.toDateString() === new Date().toDateString()
       }}
+
+      animate={{scale: [.8, 1]}}
+      transition={{duration: .3, easing: spring()}}
+      press={{scale: .8}}
+
       onclick={props.click}
     >
       <div class={ "text-gray-500 " + (props.focus ? "font-extrabold text-3xl text-gray-700" : "text-xl") }>{props.date.getDate()}</div>
       <div class={ "text-gray-500 " + (props.focus ? "text-xl font-bold text-gray-700" : null)}>{dayAbbreviations[props.date.getDay()]}</div>
-    </div>
+    </Motion.div>
   )
 }
 
@@ -276,16 +284,16 @@ function CalendarBody(props: {tasks?: Task[]}) {
 function Time() { // TODO: Fix the timing of this and the tasks when time gets late
   const date = new Date;
 
-  const [minutes, setMinutes] = createSignal<number>(date.getMinutes() + (date.getHours() * 60))
+  const [minutes, setMinutes] = createSignal<number>(date.getMinutes() + ((date.getHours() + 1) * 60)) // + 1 because 12 = 0 on the cal
 
   setInterval(() => {
     const date = new Date;
-    setMinutes(date.getMinutes() + (date.getHours() * 60))
+    setMinutes(date.getMinutes() + ((date.getHours() + 1) * 60))
   }, 30000)
 
   return (
     <div
-      ref={activeLineRef}
+      ref={activeTimeeRef}
       style={{
         "margin-top": minutes() * (getScale() / 60) + "px"
       }}
@@ -304,6 +312,9 @@ function CalendarLine(props: {time: string}) {
   )
 }
 
+
+
+
 type EventTask = Task & {time: NonNullable<Task["time"]>, duration: NonNullable<Task["duration"]>}
 
 function Event(props: {task: EventTask}) {
@@ -312,7 +323,7 @@ function Event(props: {task: EventTask}) {
   const startTime = () => (props.task.time + 1) * getScale()
   const height = () => duration() * getScale()
 
-  const add15 = () => {
+  const changeDuration = (amt: number) => {
     const tasks = getTasks()
 
     if (!tasks) {
@@ -320,127 +331,166 @@ function Event(props: {task: EventTask}) {
       return
     }
 
-    setTasks(tasks.map(task => task.id === props.task.id && task.duration !== undefined ? {...task, duration: task.duration! + .25} : task)) // TODO: Make better type, but this should not be null
+    setTasks(tasks.map(task => task.id === props.task.id && task.duration !== undefined ? {...task, duration: task.duration! + amt} : task)) // TODO: Make better type, but this should not be null
+  }
+
+  const setStartTime = () => {
+    const tasks = getTasks()
+
+    if (!tasks) {
+      console.log("No tasks but adding 15 minutes?")
+      return
+    }
+
+    setTasks(tasks.map(task => task.id === props.task.id && task.duration !== undefined ? {...task, time: new Date().getMinutes() / 60 + new Date().getHours()} : task)) // TODO: Make better type, but this should not be null
+  }
+
+
+  // TODO: Figure out how to only rerender the new events and just update the values of the old events
+
+  const getTime = (hours) => {
+    const minutes = Math.round(hours % 1 * 60)
+    return `${Math.floor(hours) % 12}:${minutes < 10 ? "0" + minutes : minutes}`
   }
 
   return (
-    <div 
+    <Motion.div 
+
       style={{
         "margin-top": `${startTime()}px`,
         "height": `${height()}px`
       }}
-      class="absolute bg-opacity-80 flex flex-col justify-start py-3 items-start shadow-lg border-red-300 border-2 bg-red-300 w-80 ml-12 rounded-xl overflow-y-hidden p-2 text-center transition-all"
+
+      class="absolute bg-opacity-80 flex flex-col justify-start py-3 items-start shadow-lg border-red-300 border-2 bg-red-300 w-80 ml-12 rounded-xl overflow-y-hidden p-2 text-center"
     >
-      <div class="flex gap-3 w-full items-start">
+      <div class="flex gap-3 w-full items-center justify-start">
 
         { !props.task.completed ? // Add animations to this
-          <FaRegularSquareCheck onclick={() => toggleCompleted(props.task)} size={30} class='fill-primary' /> :
-          <FaSolidSquareCheck onclick={() => toggleCompleted(props.task)} size={30} class='fill-primary' />
+          <BiRegularCheckbox onclick={() => toggleCompleted(props.task)} size={50} class='fill-primary' /> :
+          <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task)} size={50} class='fill-primary' />
         }
 
-        <h1 class="flex items-center">{props.task.name}</h1>
+        <h1 class="flex items-center text-lg">{props.task.name}</h1>
 
-        <div 
-          class="bg-white ml-auto border-2 border-neutral-300 shadow-md flex justify-center items-center h-8 rounded-full px-3 active:scale-90 transition-all"
-          onclick={() => add15()}
-        >+ 15min</div>
       </div>
-      <h3>{props.task.time + ":00-" + (props.task.time + duration()) + ":00"}</h3>
+
+
+      <AiFillPlayCircle
+        class="fill-primary absolute bottom-2 right-[4.5rem]"
+        size={30}
+        onclick={() => setStartTime()}
+      />
+
+      <AiFillPlusCircle 
+        class="fill-primary absolute bottom-2 right-10"
+        size={30}
+        onclick={() => changeDuration(.25)}
+      />
+
+      <AiFillMinusCircle
+        class="fill-primary absolute bottom-2 right-2"
+        size={30}
+        onclick={() => changeDuration(-.25)}
+      />
+
+      <h3>{getTime(props.task.time) + "-" + getTime(props.task.time + duration())}</h3>
+
+
       <div class="flex flex-row items-center justify-center gap-2">
         <FaSolidHourglassEnd class="fill-primary" size={20} />
         <h2>{props.task.duration}h</h2>
       </div>
 
-    </div>
+    </Motion.div>
   )
 }
 
-const addInitialTasks = () => {
-  const tasks = getTasks()
-  if (!tasks) {
-    setTasks(initialTasks)
-    return
-  }
-  setTasks([...tasks, ...initialTasks])
-}
+// const addInitialTasks = () => {
+//   const tasks = getTasks()
+//   if (!tasks) {
+//     setTasks(initialTasks)
+//     return
+//   }
+//   setTasks([...tasks, ...initialTasks])
+// }
 
-const initialTasks: Task[] = [ // TODO: Change this to be a map from the database
-  {
-    id: crypto.randomUUID(),
-    name: "Walk the dog",
-    date: new Date(),
-    time: 2,
-    completed: false,
-    priority: 1,
-    duration: 2,
-    description: "Walk the dog for 30 minutes"
-  },
-  {
-    id: crypto.randomUUID(),
-    name: "Walk the dog",
-    date: new Date(),
-    completed: false,
-    priority: 1,
-    duration: 2,
-    time: null,
-    description: "Walk the dog for 30 minutes"
-  },
-  {
-    id: crypto.randomUUID(),
-    name: "Walk the dog fjdask",
-    date: new Date(),
-    completed: false,
-    time: null,
-    priority: 1,
-    duration: 2,
-    description: "Walk the dog for 30 minutes"
-  },
-  {
-    id: crypto.randomUUID(),
-    name: "Do the dishes",
-    date: (() => {
-      const date = new Date()
-      date.setDate(date.getDate() + 1)
-      return date
-    })(),
-    completed: false,
-    priority: 1,
-    time: null,
-    duration: 1,
-    description: "Do the dishes for 30 minutes"
-  },
-  {
-    id: crypto.randomUUID(),
-    name: "Dishes",
-    date: (() => {
-      const date = new Date()
-      date.setDate(date.getDate() + 1)
-      return date
-    })(),
-    completed: false,
-    priority: 1,
-    duration: 1,
-    time: 9.5,
-    description: "Do the dishes for 30 minutes"
-  },
-  {
-    id: crypto.randomUUID(),
-    name: "Task 3",
-    date: new Date(),
-    completed: false,
-    time: 10,
-    priority: 1,
-    duration: 1,
-    description: "Task 3 for 30 minutes"
-  },
-  {
-    id: crypto.randomUUID(),
-    name: "Task 4",
-    time: 12,
-    date: new Date(),
-    completed: false,
-    priority: 1,
-    duration: 2,
-    description: "Task 3 for 30 minutes"
-  },
-]
+// const initialTasks: Task[] = [ // TODO: Change this to be a map from the database
+//   {
+//     id: crypto.randomUUID(),
+//     name: "Walk the dog",
+//     date: new Date(),
+//     time: 2,
+//     completed: false,
+//     priority: 1,
+//     duration: 2,
+//     description: "Walk the dog for 30 minutes"
+//   },
+//   {
+//     id: crypto.randomUUID(),
+//     name: "Walk the dog",
+//     date: new Date(),
+//     completed: false,
+//     priority: 1,
+//     duration: 2,
+//     time: null,
+//     description: "Walk the dog for 30 minutes"
+//   },
+//   {
+//     id: crypto.randomUUID(),
+//     name: "Walk the dog fjdask",
+//     date: new Date(),
+//     completed: false,
+//     time: null,
+//     priority: 1,
+//     duration: 2,
+//     description: "Walk the dog for 30 minutes"
+//   },
+//   {
+//     id: crypto.randomUUID(),
+//     name: "Do the dishes",
+//     date: (() => {
+//       const date = new Date()
+//       date.setDate(date.getDate() + 1)
+//       return date
+//     })(),
+//     completed: false,
+//     priority: 1,
+//     time: null,
+//     duration: 1,
+//     description: "Do the dishes for 30 minutes"
+//   },
+//   {
+//     id: crypto.randomUUID(),
+//     name: "Dishes",
+//     date: (() => {
+//       const date = new Date()
+//       date.setDate(date.getDate() + 1)
+//       return date
+//     })(),
+//     completed: false,
+//     priority: 1,
+//     duration: 1,
+//     time: 9.5,
+//     description: "Do the dishes for 30 minutes"
+//   },
+//   {
+//     id: crypto.randomUUID(),
+//     name: "Task 3",
+//     date: new Date(),
+//     completed: false,
+//     time: 10,
+//     priority: 1,
+//     duration: 1,
+//     description: "Task 3 for 30 minutes"
+//   },
+//   {
+//     id: crypto.randomUUID(),
+//     name: "Task 4",
+//     time: 12,
+//     date: new Date(),
+//     completed: false,
+//     priority: 1,
+//     duration: 2,
+//     description: "Task 3 for 30 minutes"
+//   },
+// ]

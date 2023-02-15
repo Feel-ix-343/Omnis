@@ -6,6 +6,7 @@ import Nav from './components/Nav';
 import { supabase } from './database/supabaseClient';
 import LoginScreen from './LoginScreen';
 import SettingsView from './SettingsView';
+import PlanningView from './PlanningView';
 
 const App: Component = () => {
   const [getIndex, setIndex] = createSignal(1); // Initialize on the calendar screen
@@ -36,7 +37,9 @@ const App: Component = () => {
               <SettingsView session={getSession()!} />
               : getIndex() === 1 ?
                 <CalendarView session={getSession()!} />
-                : null
+                : getIndex() === 0 ?
+                  <PlanningView session={getSession()!} /> 
+                  : null
           }
 
           <Nav activeScreenIndex={getIndex()} setIndex={setIndex} />
