@@ -1,6 +1,6 @@
 import { FaRegularSquareCheck, FaSolidHourglassEnd, FaSolidSquareCheck } from "solid-icons/fa"
 import { BiRegularCheckbox, BiSolidCheckboxChecked } from 'solid-icons/bi'
-import { Accessor, createEffect, createMemo, createSignal, For, onMount, untrack } from "solid-js"
+import { Accessor, createEffect, createMemo, createSignal, For, onMount, Show, untrack } from "solid-js"
 
 import { AiFillMinusCircle, AiFillPlayCircle, AiFillPlusCircle, AiOutlineCaretUp } from 'solid-icons/ai'
 import { supabase } from "./database/supabaseClient"
@@ -64,7 +64,7 @@ type Task = {
 const [getTasks, setTasks] = createSignal<Task[] | undefined>()
 
 
-let activeTimeeRef: HTMLDivElement;
+let activeTimeRef: HTMLDivElement;
 
 /** The scale of 1hr in pixels */
 const [getScale, setScale] = createSignal(150)
@@ -93,7 +93,7 @@ export default function CalendarView(props: {session: Session}) {
 
   // Scroll to the active time line
   onMount(() => {
-    activeTimeeRef?.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
+    activeTimeRef?.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
   })
 
   // Sync tasks with the database after a user input
@@ -138,6 +138,7 @@ export default function CalendarView(props: {session: Session}) {
   const dailyTasks = () => tasks()?.daily
   const scheduledTasks = () => tasks()?.scheduled
 
+  // Logging
   createEffect(() => {
     console.log("Daily", dailyTasks(), "Scheduled", scheduledTasks())
   })
@@ -268,7 +269,7 @@ function CalendarBody(props: {tasks?: Task[]}) {
 
         }
 
-        <Time />
+        <CalendarTimeLine />
       </div>
       <div>
         <For each={props.tasks} fallback={null}>
@@ -281,7 +282,7 @@ function CalendarBody(props: {tasks?: Task[]}) {
   )
 }
 
-function Time() { // TODO: Fix the timing of this and the tasks when time gets late
+function CalendarTimeLine() { // TODO: Fix the timing of this and the tasks when time gets late
   const date = new Date;
 
   const [minutes, setMinutes] = createSignal<number>(date.getMinutes() + ((date.getHours() + 1) * 60)) // + 1 because 12 = 0 on the cal
@@ -292,13 +293,15 @@ function Time() { // TODO: Fix the timing of this and the tasks when time gets l
   }, 30000)
 
   return (
-    <div
-      ref={activeTimeeRef}
-      style={{
-        "margin-top": minutes() * (getScale() / 60) + "px"
-      }}
-      class="flex flex-row h-[3px] bg-red-600 absolute w-full top-1">
-    </div>
+    <Show when={day().toDateString() === new Date().toDateString()}>
+      <div
+        ref={activeTimeRef}
+        style={{
+          "margin-top": minutes() * (getScale() / 60) - 5 + "px"
+        }}
+        class="flex flex-row h-[3px] bg-red-600 absolute w-full top-1">
+      </div>
+    </Show>
   )
 }
 

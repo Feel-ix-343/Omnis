@@ -14,12 +14,12 @@ export default function LoginScreen() {
     })
   }
 
+  // Add names
+
   return (
     <div class="flex flex-col items-center justify-center h-screen">
       <h1 class="text-7xl">Omnis</h1>
       <h3 class="text-2xl">Guided Daily Planning</h3>
-
-
 
       <button 
         class="bg-background-secondary mt-10 text-xl border-2 border-neutral-200 rounded-full px-6 py-2" 
