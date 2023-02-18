@@ -9,6 +9,8 @@ import { Session } from "@supabase/supabase-js"
 import { Motion } from "@motionone/solid"
 import { spring } from "motion"
 
+import { Task } from "./types"
+
 
 type DBTask = Database["public"]["Tables"]["tasks"]["Row"]
 
@@ -45,17 +47,6 @@ const updateTasksWithDatabase = async (session: Session) => {
   setTasks(tasks)
 }
 
-
-type Task = {
-  id: string,
-  name: string,
-  date: Date,
-  time: number | null,
-  duration: number | null,
-  completed: boolean,
-  priority: number,
-  description: string
-}
 
 
 
