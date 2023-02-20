@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "allOf": [
+    {
+      "$ref": "UnscheduledTask.schema.json"
+    }
+  ],
+  "properties": {
+    "time": {
+      "type": [
+        "null",
+        "number"
+      ],
+      "description": "The start time of the task. This is in hours since midnight and can be decimal"
+    },
+    "date": {
+      "format": "date-time",
+      "type": "string",
+      "description": "The date that the task is scheduled. This will only be the day, not the time"
+    }
+  }
+}
