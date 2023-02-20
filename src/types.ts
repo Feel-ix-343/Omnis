@@ -10,3 +10,13 @@ export type Task = {
   description: string
 }
 
+export type Break = {
+  id: string,
+  description: string,
+}
+
+export type AutoscheduleRequest = {
+  tasks: Task[]
+}
+
+

@@ -1,4 +1,3 @@
-import Navbar from "../assets/Navbar"
 import { FaRegularClock, FaRegularSquareCheck } from 'solid-icons/fa'
 import { BsGear, BsGearWide } from 'solid-icons/bs'
 import { createSignal } from "solid-js"

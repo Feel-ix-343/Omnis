@@ -5,11 +5,13 @@ import { Motion } from "@motionone/solid"
 import { animate, spring } from "motion";
 import Header from "./components/Header";
 import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidCircleInfo, FaSolidPlus, FaSolidSquareCheck } from "solid-icons/fa";
-import { createEffect, createSignal, For, JSXElement, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, JSXElement, Show } from "solid-js";
 
 import { Task } from "./types";
 import { AiOutlineHourglass, AiOutlineUnorderedList } from "solid-icons/ai";
 import CreateTask from "./CreateTask";
+import { BsStar } from "solid-icons/bs";
+
 
 export default function(props: {session: Session}) {
   const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December "]
@@ -36,6 +38,17 @@ export default function(props: {session: Session}) {
 
       {/* TODO: Status section */ }
 
+      <div class="grid grid-cols-2 gap-2 mt-5 px-3">
+        <PlanningIndicator
+          icon={<BsStar size={16} class="fill-primary" />} 
+          description={<><strong class="text-primary font-extrabold">72%</strong> of tasks have meaning</>} 
+          indicatorsections={[
+            {color: (endPercentage: number) => endPercentage > 70 ? "green" : "red", endPercentage: 80},
+            {color: (endPercentage: number) => endPercentage > 70 ? "green" : "red", endPercentage: 100},
+          ]}
+        />
+      </div>
+
       <div class="flex flex-row justify-start items-center gap-2 mt-5 px-8">
         <AddTaskButton onClick={() => setCreatingTask(true)}>Add Task</AddTaskButton>
       </div>
@@ -49,7 +62,7 @@ export default function(props: {session: Session}) {
 
         <PriorityLabel importance="High" urgency="High" />
         <Tasks filteredTasks={[]} />
-        
+
         <PriorityLabel importance="High" urgency="Low" />
         <Tasks filteredTasks={[]} />
 
@@ -156,6 +169,47 @@ function TaskDisplay(props: {task: Task}) {
           <AiOutlineHourglass size={18} class="fill-secondary" />
           {props.task.time}h
         </div>
+      </div>
+    </div>
+  )
+}
+
+type Indicatorsection = {
+  startPercentage?: number,
+  endPercentage: number,
+  color: (end: number) => string
+}
+
+function PlanningIndicator(props: {icon: JSXElement, description: JSXElement, indicatorsections: Indicatorsection[]}) {
+  const sortedIndicatorSections = createMemo(() => props.indicatorsections.sort((a, b) => a.endPercentage - b.endPercentage))
+
+  return (
+
+    <div class="rounded-lg bg-background-secondary px-2 py-2">
+      <div class="flex flex-row justify-start items-center gap-1 text-[10px] text-secondary">
+        {props.icon}
+        {props.description}
+      </div>
+
+      <div class="w-[90%] bg-white rounded-full h-2 mx-auto mt-1">
+        <For each={sortedIndicatorSections()}>
+          {(item, index) => 
+            <Motion.div
+              transition={{duration: 0.5, easing: spring()}}
+              animate={{width: [0, `${item.endPercentage - (item.startPercentage ?? 0)}%`]}}
+              class="h-2"
+              style={{
+                width: `${item.endPercentage - (item.startPercentage ?? 0)}%`,
+                "margin-left": `${item.startPercentage ?? props.indicatorsections[index() -1]?.endPercentage}%`,
+                "background-color": item.color(item.endPercentage),
+              }}
+              classList={{
+                "rounded-l-full": index() === 0,
+                "rounded-r-full": item.endPercentage === 100
+              }}
+            />
+          }
+        </For>
       </div>
     </div>
   )

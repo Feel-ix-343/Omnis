@@ -8,10 +8,11 @@ import { createEffect, JSXElement, Show } from "solid-js";
 import Header from "./components/Header";
 
 export default function(props: {session: Session, show: boolean, close: () => void}) {
-  createEffect(() => console.log(props.show))
+  const createTask = () => {
+    // TODO: IMPLIMPLIMPL
+  }
   return (
     <>
-
       <Presence>
         <Show when={props.show}>
           <Motion.div
@@ -49,7 +50,7 @@ export default function(props: {session: Session, show: boolean, close: () => vo
             <div class="bg-background-secondary pt-8 pb-4 px-4">
               <div class="flex flex-row items-center mb-2 gap-2">
                 <AiOutlineCloseCircle onclick={props.close} size={50} class="fill-secondary left-6 top-12" />
-                <button class="ml-auto bg-white rounded-lg px-3 py-1 font-bold text-xl shadow-md">Create</button>
+                <button onclick={() => {props.close(); createTask()}} class="ml-auto bg-white rounded-lg px-3 py-1 font-bold text-xl shadow-md">Create</button>
               </div>
 
               <input type="text" class="w-full px-4 h-7 py-2 font-bold text-center bg-background-secondary text-3xl placeholder-primary" placeholder="Add Task Name" />
@@ -86,7 +87,16 @@ export default function(props: {session: Session, show: boolean, close: () => vo
             <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
               <IoDocumentTextOutline size={35} class="fill-secondary" />
 
-              <textarea class="bg-background-secondary p-2 rounded-lg w-full" placeholder="Attach meaning..." />
+              <textarea
+
+                style={{
+                  "box-shadow": "inset 0px 3px 4px 1px rgba(0, 0, 0, 0.15)",
+                }}
+
+                class="bg-background-secondary p-2 rounded-lg w-full"
+                placeholder="Why is this important?" 
+              />
+
             </div>
           </Motion.div>
 
