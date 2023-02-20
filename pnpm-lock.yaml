@@ -4,8 +4,16 @@ specifiers:
   '@motionone/solid': ^10.15.5
   '@motionone/types': ^10.15.1
   '@supabase/supabase-js': ^2.7.1
+<<<<<<< HEAD
   autoprefixer: ^10.4.13
   motion: ^10.15.5
+=======
+  '@types/babel__core': ^7.20.0
+  '@types/node': ^18.14.0
+  autoprefixer: ^10.4.13
+  motion: ^10.15.5
+  node: ^19.6.0
+>>>>>>> Planningview
   postcss: ^8.4.21
   solid-icons: ^1.0.4
   solid-js: ^1.6.10
@@ -23,11 +31,22 @@ dependencies:
   solid-js: 1.6.10
 
 devDependencies:
+<<<<<<< HEAD
   autoprefixer: 10.4.13_postcss@8.4.21
   postcss: 8.4.21
   tailwindcss: 3.2.6_postcss@8.4.21
   typescript: 4.9.5
   vite: 4.1.1
+=======
+  '@types/babel__core': 7.20.0
+  '@types/node': 18.14.0
+  autoprefixer: 10.4.13_postcss@8.4.21
+  node: 19.6.0
+  postcss: 8.4.21
+  tailwindcss: 3.2.6_postcss@8.4.21
+  typescript: 4.9.5
+  vite: 4.1.1_@types+node@18.14.0
+>>>>>>> Planningview
   vite-plugin-solid: 2.5.0_solid-js@1.6.10+vite@4.1.1
 
 packages:
@@ -750,6 +769,42 @@ packages:
       - supports-color
     dev: false
 
+<<<<<<< HEAD
+=======
+  /@types/babel__core/7.20.0:
+    resolution: {integrity: sha512-+n8dL/9GWblDO0iU6eZAwEIJVr5DWigtle+Q6HLOrh/pdbXOhOtqzq8VPPE2zvNJzSKY4vH/z3iT3tn0A3ypiQ==}
+    dependencies:
+      '@babel/parser': 7.20.15
+      '@babel/types': 7.20.7
+      '@types/babel__generator': 7.6.4
+      '@types/babel__template': 7.4.1
+      '@types/babel__traverse': 7.18.3
+    dev: true
+
+  /@types/babel__generator/7.6.4:
+    resolution: {integrity: sha512-tFkciB9j2K755yrTALxD44McOrk+gfpIpvC3sxHjRawj6PfnQxrse4Clq5y/Rq+G3mrBurMax/lG8Qn2t9mSsg==}
+    dependencies:
+      '@babel/types': 7.20.7
+    dev: true
+
+  /@types/babel__template/7.4.1:
+    resolution: {integrity: sha512-azBFKemX6kMg5Io+/rdGT0dkGreboUVR0Cdm3fz9QJWpaQGJRQXl7C+6hOTCZcMll7KFyEQpgbYI2lHdsS4U7g==}
+    dependencies:
+      '@babel/parser': 7.20.15
+      '@babel/types': 7.20.7
+    dev: true
+
+  /@types/babel__traverse/7.18.3:
+    resolution: {integrity: sha512-1kbcJ40lLB7MHsj39U4Sh1uTd2E7rLEa79kmDpI6cy+XiXsteB3POdQomoq4FxszMrO3ZYchkhYJw7A2862b3w==}
+    dependencies:
+      '@babel/types': 7.20.7
+    dev: true
+
+  /@types/node/18.14.0:
+    resolution: {integrity: sha512-5EWrvLmglK+imbCJY0+INViFWUHg1AHel1sq4ZVSfdcNqGy9Edv3UB9IIzzg+xPaUcAgZYcfVs2fBcwDeZzU0A==}
+    dev: true
+
+>>>>>>> Planningview
   /@types/phoenix/1.5.4:
     resolution: {integrity: sha512-L5eZmzw89eXBKkiqVBcJfU1QGx9y+wurRIEgt0cuLH0hwNtVUxtx+6cu0R2STwWj468sjXyBYPYDtGclUd1kjQ==}
     dev: false
@@ -1259,6 +1314,13 @@ packages:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
     dev: false
 
+<<<<<<< HEAD
+=======
+  /node-bin-setup/1.1.3:
+    resolution: {integrity: sha512-opgw9iSCAzT2+6wJOETCpeRYAQxSopqQ2z+N6BXwIMsQQ7Zj5M8MaafQY8JMlolRR6R1UXg2WmhKp0p9lSOivg==}
+    dev: true
+
+>>>>>>> Planningview
   /node-fetch/2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
     engines: {node: 4.x || >=6.0.0}
@@ -1280,6 +1342,18 @@ packages:
     resolution: {integrity: sha512-5GFldHPXVG/YZmFzJvKK2zDSzPKhEp0+ZR5SVaoSag9fsL5YgHbUHDfnG5494ISANDcK4KwPXAx2xqVEydmd7w==}
     dev: true
 
+<<<<<<< HEAD
+=======
+  /node/19.6.0:
+    resolution: {integrity: sha512-jbdClWIsgsEVutra596SgggvcNm4Nwrh1WYszNBe/6QHBu+1KJTTsQCju0tuOg1BF2lIHjJ/YP0H7wv8GfUfLw==}
+    engines: {npm: '>=5.0.0'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      node-bin-setup: 1.1.3
+    dev: true
+
+>>>>>>> Planningview
   /normalize-path/3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
@@ -1593,13 +1667,21 @@ packages:
       merge-anything: 5.1.4
       solid-js: 1.6.10
       solid-refresh: 0.4.3_solid-js@1.6.10
+<<<<<<< HEAD
       vite: 4.1.1
+=======
+      vite: 4.1.1_@types+node@18.14.0
+>>>>>>> Planningview
       vitefu: 0.2.4_vite@4.1.1
     transitivePeerDependencies:
       - supports-color
     dev: true
 
+<<<<<<< HEAD
   /vite/4.1.1:
+=======
+  /vite/4.1.1_@types+node@18.14.0:
+>>>>>>> Planningview
     resolution: {integrity: sha512-LM9WWea8vsxhr782r9ntg+bhSFS06FJgCvvB0+8hf8UWtvaiDagKYWXndjfX6kGl74keHJUcpzrQliDXZlF5yg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -1624,6 +1706,10 @@ packages:
       terser:
         optional: true
     dependencies:
+<<<<<<< HEAD
+=======
+      '@types/node': 18.14.0
+>>>>>>> Planningview
       esbuild: 0.16.17
       postcss: 8.4.21
       resolve: 1.22.1
@@ -1640,7 +1726,11 @@ packages:
       vite:
         optional: true
     dependencies:
+<<<<<<< HEAD
       vite: 4.1.1
+=======
+      vite: 4.1.1_@types+node@18.14.0
+>>>>>>> Planningview
     dev: true
 
   /webidl-conversions/3.0.1:

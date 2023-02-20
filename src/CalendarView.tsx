@@ -9,8 +9,8 @@ import { Session } from "@supabase/supabase-js"
 import { Motion } from "@motionone/solid"
 import { spring } from "motion"
 
-
 type DBTask = Database["public"]["Tables"]["tasks"]["Row"]
+import {Task} from "./types"
 
 
 
@@ -44,19 +44,6 @@ const updateTasksWithDatabase = async (session: Session) => {
 
   setTasks(tasks)
 }
-
-
-type Task = {
-  id: string,
-  name: string,
-  date: Date,
-  time: number | null,
-  duration: number | null,
-  completed: boolean,
-  priority: number,
-  description: string
-}
-
 
 
 
@@ -318,12 +305,10 @@ function CalendarLine(props: {time: string}) {
 
 
 
-type EventTask = Task & {time: NonNullable<Task["time"]>, duration: NonNullable<Task["duration"]>}
-
-function Event(props: {task: EventTask}) {
+function Event(props: {task: Task}) {
   const duration = () => props.task.duration ?? .5
 
-  const startTime = () => (props.task.time + 1) * getScale()
+  const startTime = () => (props.task.time! + 1) * getScale()
   const height = () => duration() * getScale()
 
   const changeDuration = (amt: number) => {
@@ -351,7 +336,7 @@ function Event(props: {task: EventTask}) {
 
   // TODO: Figure out how to only rerender the new events and just update the values of the old events
 
-  const getTime = (hours) => {
+  const getTime = (hours: number) => {
     const minutes = Math.round(hours % 1 * 60)
     return `${Math.floor(hours) % 12}:${minutes < 10 ? "0" + minutes : minutes}`
   }
@@ -396,7 +381,7 @@ function Event(props: {task: EventTask}) {
         onclick={() => changeDuration(-.25)}
       />
 
-      <h3>{getTime(props.task.time) + "-" + getTime(props.task.time + duration())}</h3>
+      <h3>{getTime(props.task.time!) + "-" + getTime(props.task.time! + duration())}</h3>
 
 
       <div class="flex flex-row items-center justify-center gap-2">

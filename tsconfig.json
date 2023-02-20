@@ -8,7 +8,11 @@
     "esModuleInterop": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
+<<<<<<< HEAD
     "types": ["vite/client"],
+=======
+    "types": ["vite/client", "node"],
+>>>>>>> Planningview
     "noEmit": true,
     "isolatedModules": true
   }
