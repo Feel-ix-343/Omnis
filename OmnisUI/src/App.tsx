@@ -9,7 +9,9 @@ import SettingsView from './SettingsView';
 import PlanningView from './PlanningView';
 
 const App: Component = () => {
-  const [getIndex, setIndex] = createSignal(1); // Initialize on the calendar screen
+  const [getIndex, setIndex] = createSignal(parseInt(localStorage.getItem("index") ?? "1")); // Initialize on the calendar screen
+
+  createEffect(() => localStorage.setItem("index", getIndex().toString()))
 
   const [getSession, setSession] = createSignal<Session | null>(null)
 

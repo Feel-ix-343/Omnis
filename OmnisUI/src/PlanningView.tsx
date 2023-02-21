@@ -7,14 +7,18 @@ import Header from "./components/Header";
 import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidCircleInfo, FaSolidPlus, FaSolidSquareCheck } from "solid-icons/fa";
 import { createEffect, createMemo, createSignal, For, JSXElement, Show } from "solid-js";
 
-import { Task } from "./types";
-import { AiOutlineHourglass, AiOutlineUnorderedList } from "solid-icons/ai";
+import { AiOutlineClockCircle, AiOutlineHourglass, AiOutlineUnorderedList } from "solid-icons/ai";
 import CreateTask from "./CreateTask";
 import { BsStar } from "solid-icons/bs";
+import DatePicker from "./components/DatePicker";
 
 
 export default function(props: {session: Session}) {
   const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December "]
+
+  const [ref, setRef] = createSignal<HTMLElement | null>(null)
+
+  createEffect(() => ref()?.scrollIntoView({block: "center"}))
 
 
   const [creatingTask, setCreatingTask] = createSignal(false)
@@ -26,7 +30,7 @@ export default function(props: {session: Session}) {
 
       <Header>
         <h1 
-          class="text-primary text-5xl font-black"
+          class="text-primary text-4xl font-black"
           style={{
             "text-shadow": "0px 0px 10px rgba(0, 0, 0, 0.25)"
           }}
@@ -36,15 +40,30 @@ export default function(props: {session: Session}) {
         <FaSolidCircleInfo size={30} class="fill-primary absolute right-6 top-12" />
       </Header>
 
-      {/* TODO: Status section */ }
-
-      <div class="grid grid-cols-2 gap-2 mt-5 px-3">
+      <div ref={setRef} class="grid grid-cols-2 gap-2 mt-5 px-3">
         <PlanningIndicator
           icon={<BsStar size={16} class="fill-primary" />} 
           description={<><strong class="text-primary font-extrabold">72%</strong> of tasks have meaning</>} 
           indicatorsections={[
-            {color: (endPercentage: number) => endPercentage > 70 ? "green" : "red", endPercentage: 80},
-            {color: (endPercentage: number) => endPercentage > 70 ? "green" : "red", endPercentage: 100},
+            {color: (endPercentage: number) => endPercentage > 70 ? "lightgreen" : "lightgray", endPercentage: 80},
+          ]}
+        />
+        <PlanningIndicator
+          icon={<AiOutlineUnorderedList size={16} class="fill-primary" />} 
+          description={<><strong class="text-primary font-extrabold">40%</strong> of tasks have a plan</>} 
+          indicatorsections={[
+            {color: (endPercentage: number) => endPercentage > 70 ? "lightgreen" : "lightgray", endPercentage: 40},
+          ]}
+        />
+        <PlanningIndicator
+          class="col-span-2"
+          icon={<AiOutlineClockCircle size={20} class="fill-primary" />} 
+          description={<p class="text-lg"><strong class="text-primary font-extrabold text-xl">3:00</strong> of tasks planned</p>} 
+          indicatorsections={[
+            {color: () => "red", endPercentage: 20},
+            {color: () => "orange", endPercentage: 50},
+            {color: () => "lightblue", endPercentage: 70},
+            {color: () => "lightgray", endPercentage: 100},
           ]}
         />
       </div>
@@ -177,30 +196,30 @@ function TaskDisplay(props: {task: Task}) {
 type Indicatorsection = {
   startPercentage?: number,
   endPercentage: number,
-  color: (end: number) => string
+  color: ((end: number) => string) | (() => string)
 }
 
-function PlanningIndicator(props: {icon: JSXElement, description: JSXElement, indicatorsections: Indicatorsection[]}) {
+function PlanningIndicator(props: {icon: JSXElement, class?: string, description: JSXElement, indicatorsections: Indicatorsection[]}) {
   const sortedIndicatorSections = createMemo(() => props.indicatorsections.sort((a, b) => a.endPercentage - b.endPercentage))
 
   return (
 
-    <div class="rounded-lg bg-background-secondary px-2 py-2">
+    <div class={ "rounded-lg bg-background-secondary px-2 py-2 " + props.class }>
       <div class="flex flex-row justify-start items-center gap-1 text-[10px] text-secondary">
         {props.icon}
         {props.description}
       </div>
 
-      <div class="w-[90%] bg-white rounded-full h-2 mx-auto mt-1">
+      <div class="w-[90%] bg-white rounded-full h-2 mx-auto mt-1 flex flex-row">
         <For each={sortedIndicatorSections()}>
           {(item, index) => 
             <Motion.div
-              transition={{duration: 0.5, easing: spring()}}
-              animate={{width: [0, `${item.endPercentage - (item.startPercentage ?? 0)}%`]}}
+              transition={{duration: 0.5}}
+              animate={{
+                width: [0, `${item.endPercentage - (item.startPercentage ?? props.indicatorsections[index() - 1]?.endPercentage ?? 0)}%`]
+              }}
               class="h-2"
               style={{
-                width: `${item.endPercentage - (item.startPercentage ?? 0)}%`,
-                "margin-left": `${item.startPercentage ?? props.indicatorsections[index() -1]?.endPercentage}%`,
                 "background-color": item.color(item.endPercentage),
               }}
               classList={{

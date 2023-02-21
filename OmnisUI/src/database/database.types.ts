@@ -38,7 +38,7 @@ export interface Database {
         Row: {
           completed: boolean
           date: string
-          description: string
+          description: string | null
           duration: number | null
           id: string
           name: string
@@ -49,7 +49,7 @@ export interface Database {
         Insert: {
           completed: boolean
           date: string
-          description: string
+          description?: string | null
           duration?: number | null
           id: string
           name: string
@@ -60,7 +60,7 @@ export interface Database {
         Update: {
           completed?: boolean
           date?: string
-          description?: string
+          description?: string | null
           duration?: number | null
           id?: string
           name?: string

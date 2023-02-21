@@ -11,5 +11,6 @@
     "types": ["vite/client", "node"],
     "noEmit": true,
     "isolatedModules": true
-  }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx", "types/**/*.d.ts"]
 }

@@ -24,6 +24,8 @@
     "@motionone/solid": "^10.15.5",
     "@motionone/types": "^10.15.1",
     "@supabase/supabase-js": "^2.7.1",
+    "@types/react": "^18.0.28",
+    "flatpickr": "^4.6.13",
     "motion": "^10.15.5",
     "solid-icons": "^1.0.4",
     "solid-js": "^1.6.10"

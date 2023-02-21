@@ -9,9 +9,6 @@ import { Session } from "@supabase/supabase-js"
 import { Motion } from "@motionone/solid"
 import { spring } from "motion"
 
-type DBTask = Database["public"]["Tables"]["tasks"]["Row"]
-import {Task} from "./types"
-
 
 
 const getTasksFromDB = async (session: Session) => {
@@ -43,6 +40,27 @@ const updateTasksWithDatabase = async (session: Session) => {
   })
 
   setTasks(tasks)
+}
+
+const updateDBWithTasks = async (tasks: Task[], user_id: string) => {
+  const dbTasks: DBTask[] | undefined = getTasks()?.map(task => {
+    return {
+      id: task.id,
+      user_id,
+      name: task.name,
+      date: task.date.toISOString(),
+      time: task.time,
+      completed: task.completed,
+      priority: task.priority,
+      duration: task.duration,
+      description: task.description
+    }
+  })
+
+  if (!dbTasks) return
+
+  const {data, error} = await supabase.from("tasks").upsert(dbTasks)
+  console.log(data, error)
 }
 
 
@@ -84,25 +102,10 @@ export default function CalendarView(props: {session: Session}) {
   })
 
   // Sync tasks with the database after a user input
-  createEffect(async () => {
-    const dbTasks: DBTask[] | undefined = getTasks()?.map(task => {
-      return {
-        id: task.id,
-        user_id: props.session.user.id,
-        name: task.name,
-        date: task.date.toISOString(),
-        time: task.time,
-        completed: task.completed,
-        priority: task.priority,
-        duration: task.duration,
-        description: task.description
-      }
-    })
+  createEffect(() => {
+    if (!getTasks()) return
 
-    if (!dbTasks) return
-
-    const {data: tasks, error} = await supabase.from("tasks").upsert(dbTasks)
-    console.log(tasks, error)
+    updateDBWithTasks(getTasks()!, props.session.user.id)
   })
 
   const tasks = createMemo<{daily: Task[], scheduled: Task[]} | undefined>(() => 

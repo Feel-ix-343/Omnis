@@ -6,7 +6,9 @@ specifiers:
   '@supabase/supabase-js': ^2.7.1
   '@types/babel__core': ^7.20.0
   '@types/node': ^18.14.0
+  '@types/react': ^18.0.28
   autoprefixer: ^10.4.13
+  flatpickr: ^4.6.13
   motion: ^10.15.5
   node: ^19.6.0
   postcss: ^8.4.21
@@ -21,6 +23,8 @@ dependencies:
   '@motionone/solid': 10.15.5_solid-js@1.6.10
   '@motionone/types': 10.15.1
   '@supabase/supabase-js': 2.7.1
+  '@types/react': 18.0.28
+  flatpickr: 4.6.13
   motion: 10.15.5
   solid-icons: 1.0.4_solid-js@1.6.10
   solid-js: 1.6.10
@@ -793,6 +797,22 @@ packages:
     resolution: {integrity: sha512-L5eZmzw89eXBKkiqVBcJfU1QGx9y+wurRIEgt0cuLH0hwNtVUxtx+6cu0R2STwWj468sjXyBYPYDtGclUd1kjQ==}
     dev: false
 
+  /@types/prop-types/15.7.5:
+    resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
+    dev: false
+
+  /@types/react/18.0.28:
+    resolution: {integrity: sha512-RD0ivG1kEztNBdoAK7lekI9M+azSnitIn85h4iOiaLjaTrMjzslhaqCGaI4IyCJ1RljWiLCEu4jyrLLgqxBTew==}
+    dependencies:
+      '@types/prop-types': 15.7.5
+      '@types/scheduler': 0.16.2
+      csstype: 3.1.1
+    dev: false
+
+  /@types/scheduler/0.16.2:
+    resolution: {integrity: sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew==}
+    dev: false
+
   /acorn-node/1.8.2:
     resolution: {integrity: sha512-8mt+fslDufLYntIoPAaIMUe/lrbrehIiwmR3t2k9LljIzoigEPF27eLk2hy8zSGzmR/ogr7zbRKINMo1u0yh5A==}
     dependencies:
@@ -1118,6 +1138,10 @@ packages:
     dependencies:
       to-regex-range: 5.0.1
     dev: true
+
+  /flatpickr/4.6.13:
+    resolution: {integrity: sha512-97PMG/aywoYpB4IvbvUJi0RQi8vearvU0oov1WW3k0WZPBMrTQVqekSX5CjSG/M4Q3i6A/0FKXC7RyAoAUUSPw==}
+    dev: false
 
   /fraction.js/4.2.0:
     resolution: {integrity: sha512-MhLuK+2gUcnZe8ZHlaaINnQLl0xRIGRfcGk2yl8xoQAfHrSsL3rYu6FCmBdkdbhc9EPlwyGHewaRsvwRMJtAlA==}
