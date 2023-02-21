@@ -4,7 +4,6 @@ import { Accessor, createEffect, createMemo, createSignal, For, onMount, Show, u
 
 import { AiFillMinusCircle, AiFillPlayCircle, AiFillPlusCircle, AiOutlineCaretUp } from 'solid-icons/ai'
 import { supabase } from "./database/supabaseClient"
-import { Database } from "./database/database.types"
 import { Session } from "@supabase/supabase-js"
 import { Motion } from "@motionone/solid"
 import { spring } from "motion"
@@ -345,7 +344,7 @@ function Event(props: {task: Task}) {
   }
 
   return (
-    <Motion.div 
+    <div 
 
       style={{
         "margin-top": `${startTime()}px`,
@@ -389,10 +388,10 @@ function Event(props: {task: Task}) {
 
       <div class="flex flex-row items-center justify-center gap-2">
         <FaSolidHourglassEnd class="fill-primary" size={20} />
-        <h2>{props.task.duration}h</h2>
+        <h2>{props.task.duration != null ? (props.task.duration < 1 ? props.task.duration * 60 + "min" : props.task.duration + "h") : null}</h2>
       </div>
 
-    </Motion.div>
+    </div>
   )
 }
 
