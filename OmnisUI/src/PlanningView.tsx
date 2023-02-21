@@ -73,7 +73,7 @@ export default function(props: {session: Session}) {
         <AddTaskButton onClick={() => setCreatingTask(true)}>Add Task</AddTaskButton>
       </div>
 
-      <div class="rounded-tl-3xl rounded-tr-3xl bg-background-secondary mt-5 h-screen"> {/* TODO: Fix this height? */}
+      <div class="rounded-tl-3xl rounded-tr-3xl bg-background-secondary mt-5 min-h-screen"> {/* TODO: Fix this height? */}
         <div class="flex flex-row justify-start gap-2 items-center p-5">
           <FaRegularSquareCheck size={30} />
           <h1 class="text-2xl font-bold text-primary">Your tasks for today</h1>

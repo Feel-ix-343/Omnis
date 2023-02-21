@@ -10,16 +10,24 @@ import DatePicker from "./components/DatePicker";
 import { supabase } from "./database/supabaseClient";
 import { v4 as randomUUID } from 'uuid';
 
+enum Importance {
+  HIGH="High",
+  MEDIUM="Medium",
+  LOW="Low"
+}
+
 export default function(props: {session: Session, show: boolean, close: () => void}) {
 
   const [taskName, setTaskName] = createSignal<string>()
   const [dueDate, setDueDate] = createSignal<Date>()
-  const [taskImportance, setTaskImportance] = createSignal<string>()
+  const [taskImportance, setTaskImportance] = createSignal<Importance>()
   const [taskDuration, setTaskDuration] = createSignal<number>()
   const [taskDescription, setTaskDescription] = createSignal<string>()
 
 
   const createTask = async () => {
+    // TODO: Implement the importance metric
+
     // Log all properties
     console.log("Task name", taskName())
     console.log("Due date", dueDate())
@@ -28,8 +36,6 @@ export default function(props: {session: Session, show: boolean, close: () => vo
     console.log("Task description", taskDescription())
 
 
-    // TODO: Make this better
-    if (taskName() === undefined || !dueDate() || !taskImportance() || !taskDuration()) return console.log("Fill out all fields")
 
     const task: Task = {
       id: randomUUID(),
@@ -127,7 +133,19 @@ export default function(props: {session: Session, show: boolean, close: () => vo
               <BsFlag size={35} class="fill-secondary" />
 
               <div class="flex flex-row items-center flex-wrap gap-2 gap-y-3">
-                This task has <DropDown choices={["High", "Medium", "Low"]} choice={taskImportance()} setChoice={setTaskImportance}>Select</DropDown> importance in <div class="flex flex-row bg-background-secondary p-1 rounded-full font-bold text-primary text-sm">Being more active in school</div>
+                This task has 
+                <DropDown<Importance>
+                  choices={[
+                    {value: Importance.HIGH, display: Importance.HIGH.toString()},
+                    {value: Importance.MEDIUM, display: Importance.MEDIUM.toString()},
+                    {value: Importance.LOW, display: Importance.LOW.toString()}
+                  ]} 
+                  choiceOutput={taskImportance()?.toString()} 
+                  setChoice={setTaskImportance}
+                >
+                  Select
+                </DropDown>
+                importance in <div class="flex flex-row bg-background-secondary p-1 rounded-full font-bold text-primary text-sm">Being more active in school</div>
               </div>
 
             </div>
@@ -140,7 +158,18 @@ export default function(props: {session: Session, show: boolean, close: () => vo
                 It should take
 
                 {/* TODO: MAke this better */ }
-                <DropDown choices={[".3", "1", "2", "3"]} setChoice={(c: string) => setTaskDuration(parseInt(c))} choice={taskDuration()?.toString()}>Duration</DropDown>
+                <DropDown<number> 
+                  choices={[
+                    {display: "30min", value: .5},
+                    {display: "1hr", value: 1},
+                    {display: "1.5hr", value: 1.5},
+                    {display: "2hr", value: 2},
+                  ]} 
+                  setChoice={(choice: number) => setTaskDuration(choice)} 
+                  choiceOutput={taskDuration() !== undefined ? (taskDuration() < 1 ? `${taskDuration() * 60}min` : `${taskDuration()}hr`) : null}
+                >
+                  Duration
+                </DropDown>
 
               </div>
 
@@ -182,7 +211,12 @@ function Button(props: {children: JSXElement, class?: string, focus?: {focuson: 
   )
 }
 
-function DropDown(props: {children: JSXElement, choices: string[], choice?: string, setChoice: (c: string) => void}) {
+interface DropDownChoice<T> {
+  display: string,
+  value: T
+}
+
+function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[], choiceOutput?: string | null, setChoice: (choiceValue: T) => void}) {
   const [show, setShow] = createSignal(false)
 
   const [ref, setRef] = createSignal<HTMLButtonElement>()
@@ -198,7 +232,7 @@ function DropDown(props: {children: JSXElement, choices: string[], choice?: stri
     <div ref={setRef} class="flex flex-col justify-center items-center">
 
       <Button class={(show() ? "opacity-0" : "") + " w-20 flex items-center justify-center"} focus={{focuson: () => setShow(true), focusoff: () => setShow(false)}}>
-        {props.choice ?? props.children}
+        {props.choiceOutput ?? props.children}
       </Button>
 
       <Presence>
@@ -213,15 +247,13 @@ function DropDown(props: {children: JSXElement, choices: string[], choice?: stri
             }}
 
             exit={{
-              scale: [1, .7],
-              scaleY: [1, .4],
-              opacity: [1, 1, 1, 0]
+              opacity: [1, 0]
             }}
 
             class="w-20 absolute bg-background-secondary rounded-xl shadow-xl border-2 border-neutral-200 p-2 overflow-hidden flex flex-col justify-center items-center"
           >
             <For each={props.choices}>
-              {(choice, index) => <button onClick={() => {props.setChoice(props.choices[index()]); setShow(false)}} class="font-bold text-primary">{choice}</button>}
+              {(choice, index) => <button onClick={() => {props.setChoice(props.choices[index()].value); setShow(false)}} class="font-bold text-primary">{choice.display}</button>}
             </For>
           </Motion.div>
         </Show>
