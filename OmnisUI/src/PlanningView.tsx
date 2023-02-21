@@ -11,6 +11,7 @@ import { AiOutlineClockCircle, AiOutlineHourglass, AiOutlineUnorderedList } from
 import CreateTask from "./CreateTask";
 import { BsStar } from "solid-icons/bs";
 import DatePicker from "./components/DatePicker";
+import { v4 as randomUUID } from 'uuid';
 
 
 export default function(props: {session: Session}) {
@@ -125,7 +126,7 @@ function Tasks(props: {filteredTasks: Task[]}) {
 
   const testTasks: Task[] = [ 
     {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       date: new Date(),
       name: "Test Task",
       description: "This is a test task",
@@ -135,7 +136,7 @@ function Tasks(props: {filteredTasks: Task[]}) {
       completed: false
     },
     {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       date: new Date(),
       name: "USACO",
       description: "Do USACO practice",
@@ -145,7 +146,7 @@ function Tasks(props: {filteredTasks: Task[]}) {
       completed: false
     },
     {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       date: new Date(),
       name: "USACO",
       description: "Do USACO practice",

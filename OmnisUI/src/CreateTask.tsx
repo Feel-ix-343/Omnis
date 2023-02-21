@@ -8,6 +8,7 @@ import { createEffect, createSignal, For, JSXElement, onMount, Show } from "soli
 import Header from "./components/Header";
 import DatePicker from "./components/DatePicker";
 import { supabase } from "./database/supabaseClient";
+import { v4 as randomUUID } from 'uuid';
 
 export default function(props: {session: Session, show: boolean, close: () => void}) {
 
@@ -31,7 +32,7 @@ export default function(props: {session: Session, show: boolean, close: () => vo
     if (taskName() === undefined || !dueDate() || !taskImportance() || !taskDuration()) return console.log("Fill out all fields")
 
     const task: Task = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       date: new Date(),
       name: taskName(),
       time: new Date().getHours(),
@@ -102,7 +103,7 @@ export default function(props: {session: Session, show: boolean, close: () => vo
 
               <input 
                 type="text" 
-                class="w-full px-4 h-7 py-2 font-bold text-center bg-background-secondary text-3xl placeholder-primary" 
+                class="w-full px-4 h-10 py-2 mx-auto font-bold flex justify-center items-center bg-background-secondary text-3xl placeholder-primary" 
                 placeholder="Add Task Name" 
                 onchange={(e) => setTaskName(e.currentTarget.value ?? "")}
               />
@@ -169,12 +170,14 @@ export default function(props: {session: Session, show: boolean, close: () => vo
   )
 }
 
-function Button(props: {children: JSXElement, class?: string, focuschange?: () => void}) {
+function Button(props: {children: JSXElement, class?: string, focus?: {focuson: () => void, focusoff: () => void}}) {
+
+
+
   return (
     <button 
       class={ "bg-background-secondary text-primary font-bold px-3 py-1 rounded-xl shadow-md flex items-center border-2 border-neutral-200 " + props.class } 
-      onfocus={props.focuschange}
-      onfocusout={props.focuschange}
+      ontouchstart={props.focus?.focuson}
     >{props.children}</button>
   )
 }
@@ -182,9 +185,22 @@ function Button(props: {children: JSXElement, class?: string, focuschange?: () =
 function DropDown(props: {children: JSXElement, choices: string[], choice?: string, setChoice: (c: string) => void}) {
   const [show, setShow] = createSignal(false)
 
+  const [ref, setRef] = createSignal<HTMLButtonElement>()
+
+  createEffect(() => {
+    document.addEventListener("touchstart", (e) => {
+      if (ref()?.contains(e.target)) return
+      else setShow(false)
+    })
+  })
+
   return (
-    <div class="flex flex-col justify-center items-center">
-      <Button class={(show() ? "opacity-0" : "") + " w-20 flex items-center justify-center"} focuschange={() => setShow(!show())}>{props.choice ?? props.children}</Button>
+    <div ref={setRef} class="flex flex-col justify-center items-center">
+
+      <Button class={(show() ? "opacity-0" : "") + " w-20 flex items-center justify-center"} focus={{focuson: () => setShow(true), focusoff: () => setShow(false)}}>
+        {props.choice ?? props.children}
+      </Button>
+
       <Presence>
         <Show when={show()}>
           <Motion.div
@@ -205,7 +221,7 @@ function DropDown(props: {children: JSXElement, choices: string[], choice?: stri
             class="w-20 absolute bg-background-secondary rounded-xl shadow-xl border-2 border-neutral-200 p-2 overflow-hidden flex flex-col justify-center items-center"
           >
             <For each={props.choices}>
-              {(choice, index) => <button onClick={() => props.setChoice(props.choices[index()])} class="font-bold text-primary">{choice}</button>}
+              {(choice, index) => <button onClick={() => {props.setChoice(props.choices[index()]); setShow(false)}} class="font-bold text-primary">{choice}</button>}
             </For>
           </Motion.div>
         </Show>
