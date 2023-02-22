@@ -9,17 +9,25 @@ import { Motion, Presence } from "@motionone/solid"
 import { spring } from "motion"
 import EditTask from "./EditTask"
 
+import {newNotification} from "./App"
+import Notification from "./components/Notification"
+
 
 
 const getTasksFromDB = async (session: Session) => {
+  console.log("Getting tasks")
+  newNotification(<Notification type="info" text="Loading Tasks" />)
+
   const {data: tasks, error} = await supabase.from("tasks")
     .select("*")
     .eq("user_id", session.user.id)
 
   if (error) {
     console.error(error)
+    newNotification(<Notification type="error" text={error.message} />)
   }
 
+  newNotification(<Notification type="success" text="Tasks Loaded" />)
   return tasks
 }
 
@@ -352,13 +360,6 @@ function Event(props: {task: Task}) {
 
   return (
     <Motion.div 
-
-      press={{
-        scale: .92 
-      }}
-
-      onclick={() => setEditTask(props.task)}
-
       style={{
         "margin-top": `${startTime()}px`,
         "height": `${height()}px`
@@ -366,16 +367,24 @@ function Event(props: {task: Task}) {
 
       class="absolute bg-opacity-80 flex flex-col justify-start py-3 items-start shadow-lg border-red-300 border-2 bg-red-300 w-80 ml-12 rounded-xl overflow-y-hidden p-2 text-center"
     >
-      <div class="flex gap-3 w-full items-center justify-start">
+      <div class="flex w-full items-center justify-start">
 
         { !props.task.completed ? // Add animations to this
-          <BiRegularCheckbox onclick={() => toggleCompleted(props.task)} size={50} class='fill-primary' /> :
-          <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task)} size={50} class='fill-primary' />
+          <BiRegularCheckbox onclick={() => toggleCompleted(props.task)} size={35} class='fill-primary' /> :
+          <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task)} size={35} class='fill-primary' />
         }
 
         <h1 class="flex items-center text-lg">{props.task.name}</h1>
 
       </div>
+
+      <Motion.span 
+        press={{scale: .9}}
+        class="rounded-full bg-red-300 text-primary shadow-sm font-bold px-3 py-1 absolute top-3 right-3"
+        onclick={() => setEditTask(props.task)}
+      >
+        Open
+      </Motion.span>
 
 
       <AiFillPlayCircle

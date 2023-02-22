@@ -12,6 +12,7 @@ import DatePicker from "./components/DatePicker";
 import { supabase } from "./database/supabaseClient";
 import { v4 as randomUUID } from 'uuid';
 import Notification from "./components/Notification";
+import { newNotification } from "./App";
 
 enum Importance {
   HIGH="High",
@@ -44,6 +45,9 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
   const updateTask = async () => {
     // TODO: Implement the importance metric
 
+    newNotification(<Notification type="info" text="Updating Task" />)
+
+
     // Log all properties
     console.log("Task name", taskName())
     console.log("Due date", dueDate())
@@ -54,7 +58,7 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
 
     // TODO: Make this better
     if (taskName() === undefined || !dueDate() || !taskDuration()) { // TODO: Add importance
-      setNotifications(notifications().concat(<Notification type="error" text="Please fill out all fields" />))
+      newNotification(<Notification type="error" text="Please fill out all fields" />)
       return 
     }
 
@@ -80,10 +84,10 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
     const {data, error} = await supabase.from("tasks").update(DBTask).eq("id", props.task.id)
 
     if (!error) {
-      setNotifications(notifications().concat(<Notification type="success" text="Task updated" />))
+      newNotification(<Notification type="success" text="Task updated" />)
     } else {
       console.log(error)
-      setNotifications(notifications().concat(<Notification type="error" text={ "Error updating task " + error.message } />))
+      newNotification(<Notification type="error" text={ "Error updating task " + error.message } />)
     }
 
     props.onDBChange()
@@ -93,20 +97,17 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
     const {data, error} = await supabase.from("tasks").delete().eq("id", props.task.id)
 
     if (!error) {
-      setNotifications(notifications().concat(<Notification type="success" text="Task deleted" />))
+      newNotification(<Notification type="success" text="Task deleted" />)
     } else {
       console.log(error)
-      setNotifications(notifications().concat(<Notification type="error" text={ "Error deleting task " + error.message } />))
+      newNotification(<Notification type="error" text={ "Error deleting task " + error.message } />)
     }
 
     props.onDBChange()
   }
 
-  const [notifications, setNotifications] = createSignal<JSXElement[]>([])
-
   return (
     <>
-      {notifications()}
       <Presence>
         <Show when={props.show}>
           <Motion.div

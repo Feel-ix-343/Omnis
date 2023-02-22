@@ -1,5 +1,5 @@
 import { Session } from '@supabase/supabase-js';
-import { Component, createEffect, createSignal, onMount } from 'solid-js';
+import { Component, createEffect, createSignal, JSXElement, onMount } from 'solid-js';
 
 import CalendarView from './CalendarView';
 import Nav from './components/Nav';
@@ -10,6 +10,15 @@ import PlanningView from './PlanningView';
 import Notification from './components/Notification';
 import { BsInfo } from 'solid-icons/bs';
 import { FaSolidCircleInfo } from 'solid-icons/fa';
+
+
+const [notifications, setNotifications] = createSignal<JSXElement[]>([])
+/** creates notifications of type `Notification` JSX element`
+@param notif Notification
+*/
+export const newNotification = (notif: JSXElement) => setNotifications(notifications().concat(notif))
+// TODO: Make the notification timing better
+
 
 const App: Component = () => {
   const [getIndex, setIndex] = createSignal(parseInt(localStorage.getItem("index") ?? "1")); // Initialize on the calendar screen
@@ -34,6 +43,9 @@ const App: Component = () => {
 
   return (
     <>
+
+      {notifications()}
+
 
       {getSession() === null ?
         <LoginScreen /> :

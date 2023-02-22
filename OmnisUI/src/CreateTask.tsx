@@ -10,6 +10,7 @@ import DatePicker from "./components/DatePicker";
 import { supabase } from "./database/supabaseClient";
 import { v4 as randomUUID } from 'uuid';
 import Notification from "./components/Notification";
+import {newNotification} from "./App"
 
 enum Importance {
   HIGH="High",
@@ -27,6 +28,8 @@ export default function(props: {session: Session, show: boolean, close: () => vo
 
 
   const createTask = async () => {
+    newNotification(<Notification type="info" text="Creating Task" />)
+
     // TODO: Implement the importance metric
 
     // Log all properties
@@ -39,7 +42,7 @@ export default function(props: {session: Session, show: boolean, close: () => vo
 
     // TODO: Make this better
     if (taskName() === undefined || !dueDate() || !taskImportance() || !taskDuration()) {
-      setNotifications(notifications().concat(<Notification type="error" text="Please fill out all fields" />))
+      newNotification(<Notification type="error" text="Please fill out all fields" />)
       return 
     }
 
@@ -68,18 +71,15 @@ export default function(props: {session: Session, show: boolean, close: () => vo
     const {data, error} = await supabase.from("tasks").insert(DBTask)
 
     if (!error) {
-      setNotifications(notifications().concat(<Notification type="success" text="Task Created" />))
+      newNotification(<Notification type="success" text="Task Created" />)
     } else {
-      setNotifications(notifications().concat(<Notification type="error" text={ "Error creating task " + error.message } />))
+      newNotification(<Notification type="error" text={ "Error creating task " + error.message } />)
     }
 
   }
 
-  const [notifications, setNotifications] = createSignal<JSXElement[]>([])
-
   return (
     <>
-      {notifications()}
       <Presence>
         <Show when={props.show}>
           <Motion.div
