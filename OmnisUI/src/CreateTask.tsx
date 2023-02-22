@@ -9,6 +9,7 @@ import Header from "./components/Header";
 import DatePicker from "./components/DatePicker";
 import { supabase } from "./database/supabaseClient";
 import { v4 as randomUUID } from 'uuid';
+import Notification from "./components/Notification";
 
 enum Importance {
   HIGH="High",
@@ -36,6 +37,11 @@ export default function(props: {session: Session, show: boolean, close: () => vo
     console.log("Task description", taskDescription())
 
 
+    // TODO: Make this better
+    if (taskName() === undefined || !dueDate() || !taskImportance() || !taskDuration()) {
+      setNotifications(notifications().concat(<Notification type="error" text="Please fill out all fields" />))
+      return 
+    }
 
     const task: Task = {
       id: randomUUID(),
@@ -60,11 +66,20 @@ export default function(props: {session: Session, show: boolean, close: () => vo
     console.log("DBTask", DBTask)
 
     const {data, error} = await supabase.from("tasks").insert(DBTask)
-    console.log(data, error)
+
+    if (!error) {
+      setNotifications(notifications().concat(<Notification type="success" text="Task Created" />))
+    } else {
+      setNotifications(notifications().concat(<Notification type="error" text={ "Error creating task " + error.message } />))
+    }
+
   }
+
+  const [notifications, setNotifications] = createSignal<JSXElement[]>([])
 
   return (
     <>
+      {notifications()}
       <Presence>
         <Show when={props.show}>
           <Motion.div

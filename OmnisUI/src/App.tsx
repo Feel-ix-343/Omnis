@@ -7,6 +7,9 @@ import { supabase } from './database/supabaseClient';
 import LoginScreen from './LoginScreen';
 import SettingsView from './SettingsView';
 import PlanningView from './PlanningView';
+import Notification from './components/Notification';
+import { BsInfo } from 'solid-icons/bs';
+import { FaSolidCircleInfo } from 'solid-icons/fa';
 
 const App: Component = () => {
   const [getIndex, setIndex] = createSignal(parseInt(localStorage.getItem("index") ?? "1")); // Initialize on the calendar screen
@@ -31,6 +34,7 @@ const App: Component = () => {
 
   return (
     <>
+
       {getSession() === null ?
         <LoginScreen /> :
         <div>
