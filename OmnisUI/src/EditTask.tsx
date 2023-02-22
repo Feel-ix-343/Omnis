@@ -233,6 +233,8 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
                 class="bg-background-secondary p-2 rounded-lg w-full"
                 placeholder="Why is this important?" 
 
+                value={taskDescription() ?? undefined} // TODO: Lol this is shit
+
                 onChange={(e) => setTaskDescription(e.currentTarget.value ?? "")}
               />
 
