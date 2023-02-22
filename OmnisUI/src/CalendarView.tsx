@@ -5,8 +5,9 @@ import { Accessor, createEffect, createMemo, createSignal, For, onMount, Show, u
 import { AiFillMinusCircle, AiFillPlayCircle, AiFillPlusCircle, AiOutlineCaretUp } from 'solid-icons/ai'
 import { supabase } from "./database/supabaseClient"
 import { Session } from "@supabase/supabase-js"
-import { Motion } from "@motionone/solid"
+import { Motion, Presence } from "@motionone/solid"
 import { spring } from "motion"
+import EditTask from "./EditTask"
 
 
 
@@ -86,6 +87,10 @@ const changeDay = (amount: number) => {
   setDay(newDate)
 }
 
+
+const [editTask, setEditTask] = createSignal<Task | null>(null)
+
+
 export default function CalendarView(props: {session: Session}) {
   // addInitialTasks() // For testing purposes
 
@@ -127,13 +132,11 @@ export default function CalendarView(props: {session: Session}) {
   const dailyTasks = () => tasks()?.daily
   const scheduledTasks = () => tasks()?.scheduled
 
-  // Logging
-  createEffect(() => {
-    console.log("Daily", dailyTasks(), "Scheduled", scheduledTasks())
-  })
 
   return (
     <div class="pt-40">
+
+      <EditTask onDBChange={() => updateTasksWithDatabase(props.session)} session={props.session} task={editTask()!} show={editTask() !== null} close={() => setEditTask(null)} />
 
       <CalendarHeader dailyTasks={dailyTasks()} />
       <CalendarBody tasks={scheduledTasks()} />
@@ -205,7 +208,11 @@ function DailyTask(props: {task: Task, show: boolean}) {
 
   return(
     <div class="flex flex-row gap-2 justify-start items-center text-center h-8 bg-secondary p-2 rounded-lg transition-all"
-      classList={{"opacity-0": !props.show}}>
+      onclick={() => setEditTask(props.task)}
+
+      classList={{"opacity-0": !props.show}}
+    >
+
       {props.task?.completed ?  // Why is this coming as undefiend? dang javascript
         <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task)} size={30} class="fill-primary" /> :
         <BiRegularCheckbox onclick={() => toggleCompleted(props.task)} size={30} class="fill-primary" />
@@ -344,7 +351,13 @@ function Event(props: {task: Task}) {
   }
 
   return (
-    <div 
+    <Motion.div 
+
+      press={{
+        scale: .92 
+      }}
+
+      onclick={() => setEditTask(props.task)}
 
       style={{
         "margin-top": `${startTime()}px`,
@@ -391,7 +404,7 @@ function Event(props: {task: Task}) {
         <h2>{props.task.duration != null ? (props.task.duration < 1 ? props.task.duration * 60 + "min" : props.task.duration + "h") : null}</h2>
       </div>
 
-    </div>
+    </Motion.div>
   )
 }
 
