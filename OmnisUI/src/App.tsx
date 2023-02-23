@@ -37,10 +37,6 @@ const App: Component = () => {
     })
   })
 
-  createEffect(() => {
-    console.log("Session", getSession())
-  })
-
   return (
     <>
 

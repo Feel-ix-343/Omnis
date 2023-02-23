@@ -12,6 +12,12 @@ import CreateTask from "./CreateTask";
 import { BsStar } from "solid-icons/bs";
 import DatePicker from "./components/DatePicker";
 import { v4 as randomUUID } from 'uuid';
+import { supabase } from "./database/supabaseClient";
+
+const getPlannedTasksFromDB = async () => {
+  const {data, error} = await supabase.from("tasks").select("*")
+  .eq("date", new Date().toISOString)
+}
 
 
 export default function(props: {session: Session}) {

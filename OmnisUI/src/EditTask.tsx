@@ -13,6 +13,7 @@ import { supabase } from "./database/supabaseClient";
 import { v4 as randomUUID } from 'uuid';
 import Notification from "./components/Notification";
 import { newNotification } from "./App";
+import { deleteDBTask, upsertTask } from "./database/databaseFunctions";
 
 enum Importance {
   HIGH="High",
@@ -62,26 +63,20 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
       return 
     }
 
+    // Purposly leaving out the scheduled date so that it does not change. 
     const task: Task = {
       id: props.task.id,
       name: taskName()!,
-      duration: taskDuration(),
+      duration: taskDuration() === undefined ? null : taskDuration()!,
       priority: 4,
       completed: false,
-      description: taskDescription()
+      description: taskDescription(),
+      date: dueDate()! // TODO: Update then when you add auto scheduling
     }
 
     console.log("task", task)
 
-    const DBTask: DBTask = {
-      ...task,
-      description: task.description ?? null,
-      user_id: props.session.user.id,
-    }
-
-    console.log("DBTask", DBTask)
-
-    const {data, error} = await supabase.from("tasks").update(DBTask).eq("id", props.task.id)
+    const {data, error} = await upsertTask(task, props.session)
 
     if (!error) {
       newNotification(<Notification type="success" text="Task updated" />)
@@ -94,7 +89,7 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
   }
 
   const deleteTask = async () => {
-    const {data, error} = await supabase.from("tasks").delete().eq("id", props.task.id)
+    const {data, error} = await deleteDBTask(props.task)
 
     if (!error) {
       newNotification(<Notification type="success" text="Task deleted" />)

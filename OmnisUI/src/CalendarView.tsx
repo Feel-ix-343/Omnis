@@ -11,63 +11,27 @@ import EditTask from "./EditTask"
 
 import {newNotification} from "./App"
 import Notification from "./components/Notification"
+import { getTasksFromDB, upsertTasks } from "./database/databaseFunctions"
 
 
 
-const getTasksFromDB = async (session: Session) => {
-  console.log("Getting tasks")
-  newNotification(<Notification type="info" text="Loading Tasks" />)
-
-  const {data: tasks, error} = await supabase.from("tasks")
-    .select("*")
-    .eq("user_id", session.user.id)
-
-  if (error) {
-    console.error(error)
-    newNotification(<Notification type="error" text={error.message} />)
-  }
-
-  newNotification(<Notification type="success" text="Tasks Loaded" />)
-  return tasks
-}
 
 const updateTasksWithDatabase = async (session: Session) => {
-  const dbTasks = await getTasksFromDB(session)
+  const {data: tasks, error} = await getTasksFromDB(session)
 
-  const tasks: Task[] | undefined = dbTasks?.map(task => {
-    return {
-      id: task.id,
-      name: task.name,
-      date: new Date(task.date),
-      time: task.time,
-      completed: task.completed,
-      priority: task.priority,
-      duration: task.duration,
-      description: task.description
-    }
-  })
+  if (error) {
+    console.log(error.message)
+    newNotification(<Notification type="error" text="Failed to load tasks" />)
+    return
+  }
 
-  setTasks(tasks)
+  const displayTasks = tasks ?? []
+  setTasks(displayTasks)
 }
 
-const updateDBWithTasks = async (tasks: Task[], user_id: string) => {
-  const dbTasks: DBTask[] | undefined = getTasks()?.map(task => {
-    return {
-      id: task.id,
-      user_id,
-      name: task.name,
-      date: task.date.toISOString(),
-      time: task.time,
-      completed: task.completed,
-      priority: task.priority,
-      duration: task.duration,
-      description: task.description
-    }
-  })
+const updateDBWithTasks = async (tasks: Task[], session: Session) => {
 
-  if (!dbTasks) return
-
-  const {data, error} = await supabase.from("tasks").upsert(dbTasks)
+  const {data, error} = await upsertTasks(tasks, session)
   console.log(data, error)
 }
 
@@ -117,7 +81,7 @@ export default function CalendarView(props: {session: Session}) {
   createEffect(() => {
     if (!getTasks()) return
 
-    updateDBWithTasks(getTasks()!, props.session.user.id)
+    updateDBWithTasks(getTasks()!, props.session)
   })
 
   const tasks = createMemo<{daily: Task[], scheduled: Task[]} | undefined>(() => 

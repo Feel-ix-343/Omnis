@@ -11,6 +11,7 @@ import { supabase } from "./database/supabaseClient";
 import { v4 as randomUUID } from 'uuid';
 import Notification from "./components/Notification";
 import {newNotification} from "./App"
+import { upsertTask } from "./database/databaseFunctions";
 
 enum Importance {
   HIGH="High",
@@ -59,16 +60,7 @@ export default function(props: {session: Session, show: boolean, close: () => vo
 
     console.log("task", task)
 
-    const DBTask: DBTask = {
-      ...task,
-      description: task.description ?? null,
-      user_id: props.session.user.id,
-      date: task.date.toISOString()
-    }
-
-    console.log("DBTask", DBTask)
-
-    const {data, error} = await supabase.from("tasks").insert(DBTask)
+    const {data, error} = await upsertTask(task, props.session)
 
     if (!error) {
       newNotification(<Notification type="success" text="Task Created" />)
