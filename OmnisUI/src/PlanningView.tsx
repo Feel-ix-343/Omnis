@@ -5,7 +5,9 @@ import { Motion } from "@motionone/solid"
 import { animate, spring } from "motion";
 import Header from "./components/Header";
 import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidCircleInfo, FaSolidPlus, FaSolidSquareCheck } from "solid-icons/fa";
-import { createEffect, createMemo, createSignal, For, JSXElement, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, JSXElement, onMount, Show } from "solid-js";
+
+import { createStore } from "solid-js/store";
 
 import { AiOutlineClockCircle, AiOutlineHourglass, AiOutlineUnorderedList } from "solid-icons/ai";
 import CreateTask from "./CreateTask";
@@ -13,11 +15,10 @@ import { BsStar } from "solid-icons/bs";
 import DatePicker from "./components/DatePicker";
 import { v4 as randomUUID } from 'uuid';
 import { supabase } from "./database/supabaseClient";
+import { getTasksFromDB } from "./database/databaseFunctions";
+import { newNotification } from "./App";
+import Notification from "./components/Notification";
 
-const getPlannedTasksFromDB = async () => {
-  const {data, error} = await supabase.from("tasks").select("*")
-  .eq("date", new Date().toISOString)
-}
 
 
 export default function(props: {session: Session}) {
@@ -30,10 +31,30 @@ export default function(props: {session: Session}) {
 
   const [creatingTask, setCreatingTask] = createSignal(false)
 
+
+  const [sortedTasks, setSortedTasks] = createSignal(Array<Task[]>(4)) // TODO: Make this into a better data structure
+
+  const getPlannedTasksFromDB = async () => {
+    const {data: databaseTasks, error} = await getTasksFromDB(props.session)
+    if (error) {
+      console.log(error)
+      newNotification(<Notification type="error" text="Error Getting tasks" />) // TODO: Add this functionality to the databasefuntions module
+      return
+    }
+    const todaysTasks = (databaseTasks ?? []).filter(task => task.date.toDateString() === new Date().toDateString()) // The days are equal
+
+    const grouped: Task[][] = todaysTasks
+      .reduce((acc, task) => {acc[task.priority - 1] ? acc[task.priority - 1].push(task) : acc[task.priority - 1] = [task]; return acc}, new Array<Task[]>(4))
+
+    setSortedTasks(grouped)
+  }
+
+  onMount(getPlannedTasksFromDB)
+
   return (
     <div class="pt-40">
 
-      <CreateTask show={creatingTask()} session={props.session} close={() => setCreatingTask(false)}/>
+      <CreateTask onDBChange={getPlannedTasksFromDB} show={creatingTask()} session={props.session} close={() => setCreatingTask(false)}/>
 
       <Header>
         <h1 
@@ -87,16 +108,16 @@ export default function(props: {session: Session}) {
 
 
         <PriorityLabel importance="High" urgency="High" />
-        <Tasks filteredTasks={[]} />
+        <Tasks filteredTasks={sortedTasks()[3]} />
 
         <PriorityLabel importance="High" urgency="Low" />
-        <Tasks filteredTasks={[]} />
+        <Tasks filteredTasks={sortedTasks()[2]} />
 
         <PriorityLabel importance="Low" urgency="High" />
-        <Tasks filteredTasks={[]} />
+        <Tasks filteredTasks={sortedTasks()[1]} />
 
         <PriorityLabel importance="Low" urgency="Low" />
-        <Tasks filteredTasks={[]} />
+        <Tasks filteredTasks={sortedTasks()[0]} />
 
       </div>
     </div>
@@ -165,7 +186,7 @@ function Tasks(props: {filteredTasks: Task[]}) {
 
   return (
     <div class="grid grid-flow-col justify-start gap-3 mt-5 px-5 py-5 overflow-x-scroll">
-      <For each={testTasks}>
+      <For each={props.filteredTasks}>
         {(task) => <TaskDisplay task={task} />}
       </For>
     </div>
@@ -193,7 +214,7 @@ function TaskDisplay(props: {task: Task}) {
       <div class="flex flex-row justify-start items-center gap-2 px-3 mt-2 mb-1">
         <div class="flex flex-row items-center justify-center px-3 py-1 gap-1 bg-neutral-100 rounded-full text-secondary">
           <AiOutlineHourglass size={18} class="fill-secondary" />
-          {props.task.time}h
+          {props.task.duration !== null ? (props.task.duration < 1 ? props.task.duration * 60 + "min" : props.task.duration + "h") : null}
         </div>
       </div>
     </div>
