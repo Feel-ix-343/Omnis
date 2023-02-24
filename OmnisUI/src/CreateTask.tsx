@@ -19,13 +19,26 @@ enum Importance {
   LOW="Low"
 }
 
-export default function(props: {session: Session, show: boolean, close: () => void}) {
+export default function(props: {session: Session, show: boolean, close: () => void, onDBChange: () => void}) {
 
+  // TODO: Change these to stores
   const [taskName, setTaskName] = createSignal<string>()
   const [dueDate, setDueDate] = createSignal<Date>()
   const [taskImportance, setTaskImportance] = createSignal<Importance>()
   const [taskDuration, setTaskDuration] = createSignal<number>()
   const [taskDescription, setTaskDescription] = createSignal<string>()
+
+  const resetValues = () => {
+    setTaskName(undefined)
+    setDueDate(undefined)
+    setTaskImportance(undefined)
+    setTaskDuration(undefined)
+    setTaskDescription(undefined)
+  }
+
+  createEffect(() => {
+    if (props.show === true) resetValues()
+  })
 
 
   const createTask = async () => {
@@ -49,13 +62,13 @@ export default function(props: {session: Session, show: boolean, close: () => vo
 
     const task: Task = {
       id: randomUUID(),
-      date: new Date(),
-      name: taskName(),
+      date: dueDate()!,
+      name: taskName()!,
       time: new Date().getHours(),
-      duration: taskDuration(),
-      priority: 4,
+      duration: taskDuration()!, // TODO: Make this not required and the others
+      priority: taskImportance() === Importance.HIGH ? 4 : taskImportance() === Importance.MEDIUM ? 3 : 2,
       completed: false,
-      description: taskDescription()
+      description: taskDescription() ?? ""
     }
 
     console.log("task", task)
@@ -67,6 +80,8 @@ export default function(props: {session: Session, show: boolean, close: () => vo
     } else {
       newNotification(<Notification type="error" text={ "Error creating task " + error.message } />)
     }
+
+    props.onDBChange()
 
   }
 
