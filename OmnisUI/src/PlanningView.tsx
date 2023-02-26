@@ -22,7 +22,7 @@ import Notification from "./components/Notification";
 
 
 export default function(props: {session: Session}) {
-  const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December "]
+  const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December"]
 
   const [ref, setRef] = createSignal<HTMLElement | null>(null)
 

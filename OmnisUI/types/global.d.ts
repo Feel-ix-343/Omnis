@@ -8,6 +8,7 @@ type Task = {
   completed: boolean,
   priority: number,
   description: string | null,
+  steps: {id: string, duration: number, description: string, completed: boolean, edited: boolean}[] | null
 }
 
 type DBTask = import ("../src/database/database.types").Database["public"]["Tables"]["tasks"]["Row"]

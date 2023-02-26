@@ -43,6 +43,7 @@ export interface Database {
           id: string
           name: string
           priority: number
+          steps: Json[] | null
           time: number | null
           user_id: string
         }
@@ -54,6 +55,7 @@ export interface Database {
           id: string
           name: string
           priority: number
+          steps?: Json[] | null
           time?: number | null
           user_id: string
         }
@@ -65,6 +67,7 @@ export interface Database {
           id?: string
           name?: string
           priority?: number
+          steps?: Json[] | null
           time?: number | null
           user_id?: string
         }

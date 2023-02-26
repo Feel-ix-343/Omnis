@@ -6,15 +6,17 @@ function taskToDBTask(task: Task, session: Session): DBTask {
     ...task,
     description: task.description ?? null,
     user_id: session.user.id,
-    date: task.date.toISOString()
+    date: task.date.toISOString(),
   }
 }
 
 function dbTaskToTask(task: DBTask): Task { // TODO: Turn Task into a class so this is more straight forward
+  console.log(task.steps)
   return {
     ...task,
     date: new Date(task.date),
-    description: task.description === undefined ? null : task.description
+    description: task.description === undefined ? null : task.description,
+    steps: task.steps ? task.steps.map((step) => step as NonNullable<Task["steps"]>) : null // TODO: fix error; idk
   }
 }
 

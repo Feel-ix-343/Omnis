@@ -3,7 +3,7 @@
 import { Motion, Presence, PresenceContext } from "@motionone/solid";
 import { Session } from "@supabase/supabase-js";
 import { spring } from "motion";
-import { AiOutlineCalendar, AiOutlineCloseCircle } from "solid-icons/ai";
+import { AiOutlineCalendar, AiOutlineCloseCircle, AiOutlinePlusCircle } from "solid-icons/ai";
 import { IoDocumentTextOutline } from 'solid-icons/io'
 import { BsFlag, BsHourglass } from "solid-icons/bs";
 import { createEffect, createSignal, For, JSXElement, onMount, Show } from "solid-js";
@@ -14,6 +14,7 @@ import { v4 as randomUUID } from 'uuid';
 import Notification from "./components/Notification";
 import { newNotification } from "./App";
 import { deleteDBTask, upsertTask } from "./database/databaseFunctions";
+import { BiRegularCheckbox } from "solid-icons/bi";
 
 enum Importance {
   HIGH="High",
@@ -29,19 +30,28 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
   const [taskDuration, setTaskDuration] = createSignal<number | null>()
   const [taskDescription, setTaskDescription] = createSignal<string | null>()
 
+  const [steps, setSteps] = createSignal<Task["steps"]>()
+
   const populate = () => {
     setTaskName(props.task.name)
     setDueDate(props.task.date)
     setTaskDuration(props.task.duration)
     setTaskDescription(props.task.description)
+    setSteps(props.task.steps)
   }
   
+  const [inputRef, setInputRef] = createSignal<HTMLInputElement>()
+
   createEffect(() => {
     if (props.show) {
       populate()
     }
+    inputRef()?.focus() // TODO: Will this work?
   })
 
+  createEffect(() => {
+    console.log(steps())
+  })
 
   const updateTask = async () => {
     // TODO: Implement the importance metric
@@ -55,6 +65,7 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
     console.log("Task importance", taskImportance())
     console.log("Task duration", taskDuration())
     console.log("Task description", taskDescription())
+    console.log("Task steps", steps())
 
 
     // TODO: Make this better
@@ -70,7 +81,8 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
       duration: taskDuration() === undefined ? null : taskDuration()!,
       priority: 4,
       completed: false,
-      description: taskDescription(),
+      description: taskDescription() ?? "",
+      steps: steps() ?? null,
       date: dueDate()! // TODO: Update then when you add auto scheduling
     }
 
@@ -153,6 +165,7 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
                 placeholder="Add Task Name" 
                 value={taskName()}
                 onchange={(e) => setTaskName(e.currentTarget.value ?? "")}
+                ref={setInputRef}
               />
 
             </div>
@@ -208,13 +221,34 @@ export default function EditTask(props: {session: Session, task: Task, show: boo
                     {display: "2hr", value: 2},
                   ]} 
                   setChoice={(choice: number) => setTaskDuration(choice)} 
-                  choiceOutput={taskDuration() !== undefined ? (taskDuration() < 1 ? `${taskDuration() * 60}min` : `${taskDuration()}hr`) : null}
+                  choiceOutput={taskDuration() !== undefined ? (taskDuration()! < 1 ? `${taskDuration()! * 60}min` : `${taskDuration()}hr`) : null}
                 >
                   Duration
                 </DropDown>
 
               </div>
 
+            </div>
+
+            Steps
+
+            <For each={steps()}>
+              {(step) => 
+                <Step step={step} setStep={(step: Task["steps"][0]) => setSteps(steps()!.map((s) => s.id === step.id ? step : s))} />
+              }
+            </For>
+
+            <div class="flex flex-row items-center justify-start w-[90%] mx-auto gap-1 text-secondary">
+            <AiOutlinePlusCircle 
+                size={25} 
+                class="fill-secondary ml-1" 
+                onclick={() => {
+                  if (steps()) {
+                    setSteps([...steps()!, {id: crypto.randomUUID(), description: "", duration: 1, completed: false, edited: false}])
+                  } else {
+                    setSteps( [ {id: crypto.randomUUID(), description: "", duration: 1, completed: false, edited: false} ]) 
+                  }
+                }} />
             </div>
 
             <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
@@ -260,20 +294,21 @@ interface DropDownChoice<T> {
   value: T
 }
 
-function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[], choiceOutput?: string | null, setChoice: (choiceValue: T) => void}) {
+
+function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[], choiceOutput?: string | null, setChoice: (choiceValue: T) => void, class?: string}) {
   const [show, setShow] = createSignal(false)
 
   const [ref, setRef] = createSignal<HTMLButtonElement>()
 
   createEffect(() => {
     document.addEventListener("touchstart", (e) => {
-      if (ref()?.contains(e.target)) return
+      if (ref()?.contains(e.target)) return // TODO: FIx
       else setShow(false)
     })
   })
 
   return (
-    <div ref={setRef} class="flex flex-col justify-center items-center">
+    <div ref={setRef} class={ "flex flex-col justify-center items-center " + props.class}>
 
       <Button class={(show() ? "opacity-0" : "") + " w-20 flex items-center justify-center"} focus={{focuson: () => setShow(true), focusoff: () => setShow(false)}}>
         {props.choiceOutput ?? props.children}
@@ -303,5 +338,50 @@ function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[],
         </Show>
       </Presence>
     </div>
+  )
+}
+
+
+function Step(props: {step: Task["steps"][0], setStep: (step: Task["steps"][0]) => void}) {
+  return (
+    <div class="flex flex-row items-center justify-start w-[90%] mx-auto gap-1 text-secondary font-semibold">
+      <BiRegularCheckbox size={30} class="fill-secondary" />
+
+      <span 
+        ontouchstart={(e) => { 
+          if(!props.step.edited) {
+            e.currentTarget.textContent = " "
+          }
+
+        }}
+        contenteditable 
+        onfocusout={(e) => {
+          console.log(e.currentTarget.textContent)
+
+          if (e.currentTarget.textContent === "") return
+
+          props.setStep({...props.step, description: e.currentTarget.textContent! ?? "", edited: true})
+        }} 
+        class="min-w-[60%] max-w-[60%]"
+      >
+        {props.step.description !== "" ? props.step.description : "Add step"}
+      </span>
+
+      <span class="flex ml-auto mr-8 flex-row items-center justify-center text-secondary">
+        <DropDown<number> 
+          choices={[
+            {display: "30min", value: .5},
+            {display: "1hr", value: 1},
+            {display: "1.5hr", value: 1.5},
+            {display: "2hr", value: 2},
+          ]} 
+          setChoice={(choice: number) => props.setStep({...props.step, duration: choice})} 
+          choiceOutput={props.step.duration < 1 ? `${props.step.duration * 60}min` : `${props.step.duration}hr`}
+          class="text-xs"
+        >
+        </DropDown>
+      </span>
+    </div>
+
   )
 }
