@@ -18,10 +18,14 @@ import { supabase } from "./database/supabaseClient";
 import { getTasksFromDB } from "./database/databaseFunctions";
 import { newNotification } from "./App";
 import Notification from "./components/Notification";
+import EditTask from "./EditTask";
 
 
 const [sortedTasks, setSortedTasks] = createSignal(Array<Task[]>(4)) // TODO: Make this into a better data structure
 const [allTasks, setAllTasks] = createSignal<Task[]>()
+
+const [creatingTask, setCreatingTask] = createSignal(false)
+const [activeTask, setActiveTask] = createSignal<Task | null>(null)
 
 export default function(props: {session: Session}) {
   const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December"]
@@ -30,8 +34,6 @@ export default function(props: {session: Session}) {
 
   createEffect(() => ref()?.scrollIntoView({block: "center"}))
 
-
-  const [creatingTask, setCreatingTask] = createSignal(false)
 
   const getPlannedTasksFromDB = async () => {
     const {data: databaseTasks, error} = await getTasksFromDB(props.session)
@@ -45,16 +47,18 @@ export default function(props: {session: Session}) {
     setAllTasks(todaysTasks)
 
     const grouped: Task[][] = todaysTasks
-      .reduce((acc, task) => {acc[task.priority - 1] ? acc[task.priority - 1].push(task) : acc[task.priority - 1] = [task]; return acc}, new Array<Task[]>(4))
+    .reduce((acc, task) => {acc[task.priority - 1] ? acc[task.priority - 1].push(task) : acc[task.priority - 1] = [task]; return acc}, new Array<Task[]>(4))
 
     setSortedTasks(grouped)
   }
   onMount(getPlannedTasksFromDB)
 
+
   return (
     <div class="pt-40">
 
       <CreateTask onDBChange={getPlannedTasksFromDB} show={creatingTask()} session={props.session} close={() => setCreatingTask(false)}/>
+      <EditTask onDBChange={() => getPlannedTasksFromDB()} session={props.session} task={activeTask()!} show={activeTask() !== null} close={() => setActiveTask(null)} />
 
       <Header>
         <h1 
@@ -175,7 +179,26 @@ function TaskDisplay(props: {task: Task}) {
 
   // TODO: Figure out subtasks
   return (
-    <div class="rounded-2xl shadow-lg bg-white h-36 w-44">
+    <Motion.div
+
+      transition={{
+        duration: .3,
+        easing: spring()
+      }}
+
+      animate={{
+        scale: [.9, 1],
+        opacity: [0, 1],
+        width: ["0%", "190px"]
+      }}
+
+      press={{
+        scale: [.9]
+      }}
+
+      class="rounded-2xl shadow-lg bg-white h-36 w-44"
+      onclick={() => setActiveTask(props.task)}
+    >
       <div class="flex flex-row justify-start items-center gap-2 px-3 mt-2 mb-1">
         <FaRegularFlag size={18} class="fill-red-400" />
         <div class="flex flex-row items-center justify-center px-3 py-1 gap-2 bg-neutral-100 rounded-full text-secondary text-sm">
@@ -194,7 +217,7 @@ function TaskDisplay(props: {task: Task}) {
           {props.task.duration !== null ? (props.task.duration < 1 ? props.task.duration * 60 + "min" : props.task.duration + "h") : null}
         </div>
       </div>
-    </div>
+    </Motion.div>
   )
 }
 
@@ -259,21 +282,21 @@ function PlanningIndicators() {
     if (!allTasks()) return null
     const totalDuration = allTasks()!.reduce((acc, task) => acc + task.duration!, 0)
     const indicatorSections: Indicatorsection[] = allTasks()!
-      .sort((a, b) =>  b.duration! - a.duration!)
-      .map((task, index) => {
-        const startPercentage = index === 0 ? 0 : allTasks()!.slice(0, index).reduce((acc, task) => acc + task.duration!, 0) / totalDuration * 100
-        const endPercentage = task.duration! / totalDuration * 100 + startPercentage
+    .sort((a, b) =>  b.duration! - a.duration!)
+    .map((task, index) => {
+      const startPercentage = index === 0 ? 0 : allTasks()!.slice(0, index).reduce((acc, task) => acc + task.duration!, 0) / totalDuration * 100
+      const endPercentage = task.duration! / totalDuration * 100 + startPercentage
 
       console.log(startPercentage, endPercentage)
       console.log(task.priority)
 
-        return {
-          startPercentage,
-          endPercentage,
-          color: () => task.priority === 4 ? "red" : task.priority === 3 ? "yellow" : task.priority === 2 ? "lightblue" : "lightgray"
-        }
-      })
-      return indicatorSections
+      return {
+        startPercentage,
+        endPercentage,
+        color: () => task.priority === 4 ? "red" : task.priority === 3 ? "yellow" : task.priority === 2 ? "lightblue" : "lightgray"
+      }
+    })
+    return indicatorSections
   })
 
   const totalDuration = createMemo(() => {
@@ -288,17 +311,17 @@ function PlanningIndicators() {
     <>
       <PlanningIndicator
         icon={<AiOutlineUnorderedList size={16} class="fill-primary" />} 
-        description={<><strong class="text-primary font-extrabold">{percentageTasksWithMeaning() ?? 0}%</strong> of tasks have a plan</>} 
+        description={<><strong class="text-primary font-extrabold">{percentageSteps() ?? 0}%</strong> of tasks have a plan</>} 
         indicatorsections={[
-          {color: (endPercentage: number) => endPercentage > 70 ? "lightgreen" : "lightgray", endPercentage: percentageTasksWithMeaning()},
+          {color: (endPercentage: number) => endPercentage > 80 ? "lightgreen" : "lightgray", endPercentage: percentageSteps()},
         ]}
       />
 
       <PlanningIndicator
         icon={<BsStar size={16} class="fill-primary" />} 
-        description={<><strong class="text-primary font-extrabold">{percentageSteps() ?? 0}%</strong> of tasks have meaning</>} 
+        description={<><strong class="text-primary font-extrabold">{percentageTasksWithMeaning() ?? 0}%</strong> of tasks have meaning</>} 
         indicatorsections={[
-          {color: (endPercentage: number) => endPercentage > 60 ? "lightgreen" : "lightgray", endPercentage: percentageSteps() ?? 0},
+          {color: (endPercentage: number) => endPercentage > 80 ? "lightgreen" : "lightgray", endPercentage: percentageTasksWithMeaning() ?? 0},
         ]}
       />
       <PlanningIndicator
