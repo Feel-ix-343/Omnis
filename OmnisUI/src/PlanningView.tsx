@@ -282,7 +282,9 @@ function PlanningIndicators() {
     if (!allTasks()) return null
     const totalDuration = allTasks()!.reduce((acc, task) => acc + task.duration!, 0)
     const indicatorSections: Indicatorsection[] = allTasks()!
-    .sort((a, b) =>  b.duration! - a.duration!)
+    .slice()
+    .filter(task => task.time !== null)
+    .sort((a, b) =>  b.time! - a.time!) // TODO: Adjust for errors
     .map((task, index) => {
       const startPercentage = index === 0 ? 0 : allTasks()!.slice(0, index).reduce((acc, task) => acc + task.duration!, 0) / totalDuration * 100
       const endPercentage = task.duration! / totalDuration * 100 + startPercentage
