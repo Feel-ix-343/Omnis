@@ -20,6 +20,8 @@ import { newNotification } from "./App";
 import Notification from "./components/Notification";
 
 
+const [sortedTasks, setSortedTasks] = createSignal(Array<Task[]>(4)) // TODO: Make this into a better data structure
+const [allTasks, setAllTasks] = createSignal<Task[]>()
 
 export default function(props: {session: Session}) {
   const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December"]
@@ -31,9 +33,6 @@ export default function(props: {session: Session}) {
 
   const [creatingTask, setCreatingTask] = createSignal(false)
 
-
-  const [sortedTasks, setSortedTasks] = createSignal(Array<Task[]>(4)) // TODO: Make this into a better data structure
-
   const getPlannedTasksFromDB = async () => {
     const {data: databaseTasks, error} = await getTasksFromDB(props.session)
     if (error) {
@@ -43,12 +42,13 @@ export default function(props: {session: Session}) {
     }
     const todaysTasks = (databaseTasks ?? []).filter(task => task.date.toDateString() === new Date().toDateString()) // The days are equal
 
+    setAllTasks(todaysTasks)
+
     const grouped: Task[][] = todaysTasks
       .reduce((acc, task) => {acc[task.priority - 1] ? acc[task.priority - 1].push(task) : acc[task.priority - 1] = [task]; return acc}, new Array<Task[]>(4))
 
     setSortedTasks(grouped)
   }
-
   onMount(getPlannedTasksFromDB)
 
   return (
@@ -69,31 +69,8 @@ export default function(props: {session: Session}) {
       </Header>
 
       <div ref={setRef} class="grid grid-cols-2 gap-2 mt-5 px-3">
-        <PlanningIndicator
-          icon={<BsStar size={16} class="fill-primary" />} 
-          description={<><strong class="text-primary font-extrabold">72%</strong> of tasks have meaning</>} 
-          indicatorsections={[
-            {color: (endPercentage: number) => endPercentage > 70 ? "lightgreen" : "lightgray", endPercentage: 80},
-          ]}
-        />
-        <PlanningIndicator
-          icon={<AiOutlineUnorderedList size={16} class="fill-primary" />} 
-          description={<><strong class="text-primary font-extrabold">40%</strong> of tasks have a plan</>} 
-          indicatorsections={[
-            {color: (endPercentage: number) => endPercentage > 70 ? "lightgreen" : "lightgray", endPercentage: 40},
-          ]}
-        />
-        <PlanningIndicator
-          class="col-span-2"
-          icon={<AiOutlineClockCircle size={20} class="fill-primary" />} 
-          description={<p class="text-lg"><strong class="text-primary font-extrabold text-xl">3:00</strong> of tasks planned</p>} 
-          indicatorsections={[
-            {color: () => "red", endPercentage: 20},
-            {color: () => "orange", endPercentage: 50},
-            {color: () => "lightblue", endPercentage: 70},
-            {color: () => "lightgray", endPercentage: 100},
-          ]}
-        />
+        <PlanningIndicators />
+
       </div>
 
       <div class="flex flex-row justify-start items-center gap-2 mt-5 px-8">
@@ -260,4 +237,79 @@ function PlanningIndicator(props: {icon: JSXElement, class?: string, description
       </div>
     </div>
   )
+}
+
+function PlanningIndicators() {
+
+  const percentageSteps = createMemo(() => {
+    if (!allTasks()) return null
+
+    const numTasksWithSteps = allTasks()!.filter((task) => task.steps?.length && task.steps?.length > 0).length
+    return Math.round(numTasksWithSteps / allTasks()!.length * 100)
+  })
+
+  const percentageTasksWithMeaning = createMemo(() => {
+    if (!allTasks()) return null
+
+    const numTasksWithMeaning = allTasks()!.filter((task) => task.description).length
+    return Math.round(numTasksWithMeaning / sortedTasks().flat().length * 100)
+  })
+
+  const calculateOrderIndicatorSections = createMemo(() => {
+    if (!allTasks()) return null
+    const totalDuration = allTasks()!.reduce((acc, task) => acc + task.duration!, 0)
+    const indicatorSections: Indicatorsection[] = allTasks()!
+      .sort((a, b) =>  b.duration! - a.duration!)
+      .map((task, index) => {
+        const startPercentage = index === 0 ? 0 : allTasks()!.slice(0, index).reduce((acc, task) => acc + task.duration!, 0) / totalDuration * 100
+        const endPercentage = task.duration! / totalDuration * 100 + startPercentage
+
+      console.log(startPercentage, endPercentage)
+      console.log(task.priority)
+
+        return {
+          startPercentage,
+          endPercentage,
+          color: () => task.priority === 4 ? "red" : task.priority === 3 ? "yellow" : task.priority === 2 ? "lightblue" : "lightgray"
+        }
+      })
+      return indicatorSections
+  })
+
+  const totalDuration = createMemo(() => {
+    if (!allTasks()) return null
+    const totalTimeHours = allTasks()!.reduce((acc, task) => acc + task.duration!, 0)
+    const totalHours = Math.floor(totalTimeHours)
+    const totalMinutes = Math.round((totalTimeHours - totalHours) * 60)
+    return totalHours + ":" + (totalMinutes < 10 ? "0" + totalMinutes : totalMinutes)
+  })
+
+  return (
+    <>
+      <PlanningIndicator
+        icon={<AiOutlineUnorderedList size={16} class="fill-primary" />} 
+        description={<><strong class="text-primary font-extrabold">{percentageTasksWithMeaning() ?? 0}%</strong> of tasks have a plan</>} 
+        indicatorsections={[
+          {color: (endPercentage: number) => endPercentage > 70 ? "lightgreen" : "lightgray", endPercentage: percentageTasksWithMeaning()},
+        ]}
+      />
+
+      <PlanningIndicator
+        icon={<BsStar size={16} class="fill-primary" />} 
+        description={<><strong class="text-primary font-extrabold">{percentageSteps() ?? 0}%</strong> of tasks have meaning</>} 
+        indicatorsections={[
+          {color: (endPercentage: number) => endPercentage > 60 ? "lightgreen" : "lightgray", endPercentage: percentageSteps() ?? 0},
+        ]}
+      />
+      <PlanningIndicator
+        class="col-span-2"
+        icon={<AiOutlineClockCircle size={20} class="fill-primary" />} 
+        description={<p class="text-lg"><strong class="text-primary font-extrabold text-xl">{totalDuration()}</strong> of tasks planned</p>} 
+        indicatorsections={
+          calculateOrderIndicatorSections() ?? []
+        }
+      />
+    </>
+  )
+
 }
