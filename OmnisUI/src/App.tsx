@@ -19,6 +19,8 @@ const [notifications, setNotifications] = createSignal<JSXElement[]>([])
 export const newNotification = (notif: JSXElement) => setNotifications(notifications().concat(notif))
 // TODO: Make the notification timing better
 
+// export const
+
 
 const App: Component = () => {
   const [getIndex, setIndex] = createSignal(parseInt(localStorage.getItem("index") ?? "1")); // Initialize on the calendar screen

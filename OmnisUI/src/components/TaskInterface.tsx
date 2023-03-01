@@ -78,9 +78,9 @@ export default function TaskInterface(props: {
   createEffect(() => {
     if (props.show) {
       populate()
-    }
-    if (!props.task?.name) {
-      inputRef()?.focus() // TODO: Will this work?
+      if (!props.task?.name) {
+        inputRef()?.focus() // TODO: Will this work?
+      }
     }
   })
 
