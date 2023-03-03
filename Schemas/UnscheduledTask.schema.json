@@ -20,8 +20,12 @@
       "description": "The duration of the task in hours"
     },
     "importance": {
-      "type": "number",
-      "description": "The importance of the task. This is a number between 0 and 10"
+      "oneOf": [
+        { "const": 1 },
+        { "const": 2 },
+        { "const": 3 }
+      ],
+      "description": "The importance of the task. This is a number between 1 and 3"
     },
     "dueDate": {
       "format": "date-time",
