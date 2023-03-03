@@ -20,7 +20,8 @@
       "description": "The duration of the task in hours"
     },
     "importance": {
-      "type": "number"
+      "type": "number",
+      "description": "The importance of the task. This is a number between 0 and 10"
     },
     "dueDate": {
       "format": "date-time",
