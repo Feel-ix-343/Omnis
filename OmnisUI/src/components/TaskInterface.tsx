@@ -1,51 +1,40 @@
-import { Motion, Presence, PresenceContext } from "@motionone/solid";
+import { Motion, Presence } from "@motionone/solid";
 import { Session } from "@supabase/supabase-js";
 import { spring } from "motion";
 import { AiOutlineCalendar, AiOutlineCloseCircle, AiOutlinePlusCircle } from "solid-icons/ai";
 import { IoDocumentTextOutline } from 'solid-icons/io'
 import { BsFlag, BsHourglass } from "solid-icons/bs";
-import { createEffect, createSignal, For, JSXElement, onMount, Show } from "solid-js";
-import Header from "./components/Header";
+import { createEffect, createSignal, For, JSXElement, Show } from "solid-js";
 import DatePicker from "./DatePicker";
-import { supabase } from "./database/supabaseClient";
 import { v4 as randomUUID } from 'uuid';
-import Notification from "./components/Notification";
-import { newNotification } from "./App";
-import { deleteDBTask, upsertTask } from "./database/databaseFunctions";
 import { BiRegularCheckbox } from "solid-icons/bi";
-
-enum Importance {
-  HIGH="High",
-  MEDIUM="Medium",
-  LOW="Low"
-}
 
 export default function TaskInterface(props: {
   session: Session,
-  task?: Task,
+  task?: UnscheduledTask,
   show: boolean,
   close: () => void,
-  onDelete?: (task: Task) => void,
-  onCreate?: (task: Task) => void,
-  onUpdate?: (task: Task) => void
+  onDelete?: (task: UnscheduledTask) => void,
+  onCreate?: (task: UnscheduledTask) => void,
+  onUpdate?: (task: UnscheduledTask) => void
 }) {
   // How do I click a button that is passed in from the parent, but give the parent the data back for its specific calculation. 
 
   const [taskName, setTaskName] = createSignal<string>()
   const [dueDate, setDueDate] = createSignal<Date>()
   const [taskImportance, setTaskImportance] = createSignal<Importance>() // TODO: Load this up
-  const [taskDuration, setTaskDuration] = createSignal<number | null>()
+  const [taskDuration, setTaskDuration] = createSignal<number | null>() // TODO: Change to minutes
   const [taskDescription, setTaskDescription] = createSignal<string | null>()
 
-  const [steps, setSteps] = createSignal<Task["steps"]>()
+  const [steps, setSteps] = createSignal<UnscheduledTask["steps"]>()
 
   const populate = () => {
     setTaskName(props.task?.name)
-    setDueDate(props.task?.date)
+    setDueDate(props.task?.due_date)
     setTaskDuration(props.task?.duration)
     setTaskDescription(props.task?.description)
     setSteps(props.task?.steps)
-    setTaskImportance(undefined)
+    setTaskImportance(props.task?.importance)
   }
 
   const getTaskFromInputs = () => {
@@ -59,12 +48,13 @@ export default function TaskInterface(props: {
     console.log("Task description", taskDescription())
     console.log("Task steps", steps())
 
-    const task: Task = { // Purposly missing time. Partial type
+    // TODO: checks on types?
+    const task: UnscheduledTask = { // Purposly missing time. Partial type
       id: props.task?.id ?? randomUUID(),
-      date: dueDate()!,
+      due_date: dueDate()!,
       name: taskName()!,
       duration: taskDuration()!, // TODO: Make this not required and the others
-      priority: taskImportance() === Importance.HIGH ? 4 : taskImportance() === Importance.MEDIUM ? 3 : 2,
+      importance: taskImportance()!,
       completed: false,
       description: taskDescription() ?? "",
       steps: steps() ?? null
@@ -175,9 +165,8 @@ export default function TaskInterface(props: {
                 This task has 
                 <DropDown<Importance>
                   choices={[
-                    {value: Importance.HIGH, display: Importance.HIGH.toString()},
-                    {value: Importance.MEDIUM, display: Importance.MEDIUM.toString()},
-                    {value: Importance.LOW, display: Importance.LOW.toString()}
+                    {value: Importance.High, display: Importance.High.toString()},
+                    {value: Importance.Low, display: Importance.Low.toString()}
                   ]} 
                   choiceOutput={taskImportance()?.toString()} 
                   setChoice={setTaskImportance}
@@ -218,7 +207,7 @@ export default function TaskInterface(props: {
 
             <For each={steps()}>
               {(step) => 
-                <Step step={step} setStep={(step: Task["steps"][0]) => setSteps(steps()!.map((s) => s.id === step.id ? step : s))} />
+                <Step step={step} setStep={(step: NonNullable<UnscheduledTask["steps"]>[0]) => setSteps(steps()!.map((s) => s.id === step.id ? step : s))} />
               }
             </For>
 
@@ -285,10 +274,10 @@ function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[],
   const [ref, setRef] = createSignal<HTMLButtonElement>()
 
   createEffect(() => {
-    document.addEventListener("touchstart", (e) => {
-      if (ref()?.contains(e.target)) return // TODO: FIx
+    document.ontouchstart = (e) => {
+      if (ref()?.contains(e.currentTarget! as Node)) return // TODO: FIx
       else setShow(false)
-    })
+    }
   })
 
   return (
@@ -326,7 +315,7 @@ function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[],
 }
 
 
-function Step(props: {step: Task["steps"][0], setStep: (step: Task["steps"][0]) => void}) {
+function Step(props: {step: NonNullable<UnscheduledTask["steps"]>[0], setStep: (step: NonNullable<UnscheduledTask["steps"]>[0]) => void}) {
   return (
     <div class="flex flex-row items-center justify-start w-[90%] mx-auto gap-1 text-secondary font-semibold">
       <BiRegularCheckbox size={30} class="fill-secondary" />

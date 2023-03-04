@@ -17,9 +17,9 @@ import { deleteDBTask, upsertTask } from "./database/databaseFunctions";
 import { BiRegularCheckbox } from "solid-icons/bi";
 import TaskInterface from "./components/TaskInterface";
 
-export default function(props: {session: Session, show: boolean, close: () => void, onDBChange: () => void, task: Task}) {
+export default function(props: {session: Session, show: boolean, close: () => void, onDBChange: () => void, task: UnscheduledTask}) {
 
-  const onDelete = async (task: Task) => {
+  const onDelete = async (task: UnscheduledTask) => {
     console.log("task", task)
 
     const {data, error} = await deleteDBTask(task)
@@ -33,7 +33,7 @@ export default function(props: {session: Session, show: boolean, close: () => vo
     props.onDBChange()
   }
 
-  const onUpdate = async (task: Task) => {
+  const onUpdate = async (task: UnscheduledTask) => {
     console.log("task", task)
 
     const {data, error} = await upsertTask(task, props.session)

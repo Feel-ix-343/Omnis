@@ -1,8 +1,5 @@
 import { Motion, Presence, PresenceContext } from "@motionone/solid";
 import { Session } from "@supabase/supabase-js";
-import { spring } from "motion";
-import { AiOutlineCalendar, AiOutlineCloseCircle, AiOutlinePlus, AiOutlinePlusCircle } from "solid-icons/ai";
-import { IoDocumentTextOutline } from 'solid-icons/io'
 import { BsFlag, BsHourglass } from "solid-icons/bs";
 import { createEffect, createSignal, For, JSXElement, onMount, Show } from "solid-js";
 import Header from "./components/Header";
@@ -18,7 +15,7 @@ import TaskInterface from "./components/TaskInterface";
 
 export default function(props: {session: Session, show: boolean, close: () => void, onDBChange: () => void}) {
 
-  const onCreate = async (task: Task) => {
+  const onCreate = async (task: UnscheduledTask) => {
     const updatedTask = {...task, time: new Date().getHours()}
 
     console.log("task", updatedTask)

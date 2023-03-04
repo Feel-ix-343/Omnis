@@ -12,24 +12,66 @@ import EditTask from "./EditTask"
 import {newNotification} from "./App"
 import Notification from "./components/Notification"
 import { getTasksFromDB, upsertTasks } from "./database/databaseFunctions"
+import { changeTaskProp } from "./type_utils"
 
 
 
 
+
+// TODO: make requests to the auto scheduling UI
 const updateTasksWithDatabase = async (session: Session) => {
-  const {data: tasks, error} = await getTasksFromDB(session)
+  // const {data: tasks, error} = await getTasksFromDB(session)
 
-  if (error) {
-    console.log(error.message)
-    newNotification(<Notification type="error" text="Failed to load tasks" />)
-    return
-  }
+  // if (error) {
+  //   console.log(error.message)
+  //   newNotification(<Notification type="error" text="Failed to load tasks" />)
+  //   return
+  // }
+
+  let tasks: ScheduledTask[] = [
+    {
+      task: {
+        task: {
+          id: "12u39012",
+          name: "Task 1",
+          description: "This is a task",
+          completed: false,
+          steps: null,
+          due_date: new Date(),
+          duration: 60,
+          importance: "High"
+        },
+        urgency: "High"
+      },
+      schedule_datetime: new Date(),
+    },
+    {
+      task: {
+        task: {
+          id: "12u390122",
+          name: "Task 2",
+          description: "This is a task",
+          completed: false,
+          steps: null,
+          due_date: new Date(),
+          duration: 60,
+          importance: "High"
+        },
+        urgency: "High"
+      },
+      schedule_datetime: (() => {
+        const date = new Date()
+        date.setHours(date.getHours() + 1)
+        return date
+      })()
+    }
+  ]
 
   const displayTasks = tasks ?? []
   setTasks(displayTasks)
 }
 
-const updateDBWithTasks = async (tasks: Task[], session: Session) => {
+const updateDBWithTasks = async (tasks: UnscheduledTask[], session: Session) => {
 
   const {data, error} = await upsertTasks(tasks, session)
   console.log(data, error)
@@ -38,17 +80,17 @@ const updateDBWithTasks = async (tasks: Task[], session: Session) => {
 
 
 // All of the displayed tasks
-const [getTasks, setTasks] = createSignal<Task[] | undefined>()
+const [getTasks, setTasks] = createSignal<ScheduledTask[] | undefined>()
 
 
 let activeTimeRef: HTMLDivElement;
 
 /** The scale of 1hr in pixels */
-const [getScale, setScale] = createSignal(150)
+const [get1hScale, setScale] = createSignal(150)
 
 
-const toggleCompleted = (task: Task) => {
-  setTasks(getTasks()?.map(t => t.id === task.id ? {...t, completed: !t.completed} : t))
+const toggleCompleted = (task: ScheduledTask) => {
+  setTasks(getTasks()?.map(t => t.task.task.id === task.task.task.id ? {...t, task: {...t.task, task: {...t.task.task, completed: !t.task.task.completed}}} : t))
 }
 
 
@@ -60,7 +102,7 @@ const changeDay = (amount: number) => {
 }
 
 
-const [editTask, setEditTask] = createSignal<Task | null>(null)
+const [editTask, setEditTask] = createSignal<UnscheduledTask | null>(null)
 
 
 export default function CalendarView(props: {session: Session}) {
@@ -78,18 +120,19 @@ export default function CalendarView(props: {session: Session}) {
   })
 
   // Sync tasks with the database after a user input
-  createEffect(() => {
-    if (!getTasks()) return
+  // TODO: send to the auto scheudling algo
+  // createEffect(() => {
+  //   if (!getTasks()) return
 
-    updateDBWithTasks(getTasks()!, props.session)
-  })
+  //   updateDBWithTasks(getTasks()!, props.session)
+  // })
 
-  const tasks = createMemo<{daily: Task[], scheduled: Task[]} | undefined>(() => 
+  const tasks = createMemo<{daily: ScheduledTask[], scheduled: ScheduledTask[]} | undefined>(() => 
     getTasks()?.reduce(
       (prev, task) => {
-        if (task.date.toDateString() !== day().toDateString()) return prev
+        if (task.schedule_datetime.toDateString() !== day().toDateString()) return prev
 
-        if (task.time !==  null) {
+        if (task.task.task.duration !==  null) {
           prev.scheduled.push(task)
         } else {
           prev.daily.push(task)
@@ -97,7 +140,7 @@ export default function CalendarView(props: {session: Session}) {
 
         return prev
       }, 
-      { daily: new Array<Task>(), scheduled: new Array<Task>() } // The initial
+      { daily: new Array<ScheduledTask>(), scheduled: new Array<ScheduledTask>() } // The initial
     )
   )
 
@@ -117,7 +160,7 @@ export default function CalendarView(props: {session: Session}) {
   )
 }
 
-function CalendarHeader(props: {dailyTasks?: Task[]}) {
+function CalendarHeader(props: {dailyTasks?: ScheduledTask[]}) {
 
   const [getDailyExpanded, setDailyExpanded] = createSignal(false)
 
@@ -150,7 +193,7 @@ function CalendarHeader(props: {dailyTasks?: Task[]}) {
             <DailyTask task={props.dailyTasks[0]} show={true} />
 
             <For each={props.dailyTasks.slice(1)} fallback={null}>
-              {(item, index) => (
+              {(item) => (
                 <DailyTask task={item} show={getDailyExpanded()} />
               )}
             </For>
@@ -176,20 +219,20 @@ function CalendarHeader(props: {dailyTasks?: Task[]}) {
   )
 }
 
-function DailyTask(props: {task: Task, show: boolean}) {
+function DailyTask(props: {task: ScheduledTask, show: boolean}) {
 
   return(
     <div class="flex flex-row gap-2 justify-start items-center text-center h-8 bg-secondary p-2 rounded-lg transition-all"
-      onclick={() => setEditTask(props.task)}
+      onclick={() => setEditTask(props.task.task.task)} // The edit task does not take scheduled task bc it will be rescheudeld on change, so I will sent the unschedueld task version
 
       classList={{"opacity-0": !props.show}}
     >
 
-      {props.task?.completed ?  // Why is this coming as undefiend? dang javascript
+      {props.task?.task.task.completed ?  // Why is this coming as undefiend? dang javascript
         <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task)} size={30} class="fill-primary" /> :
         <BiRegularCheckbox onclick={() => toggleCompleted(props.task)} size={30} class="fill-primary" />
       }
-      <h3>{props.task.name}</h3>
+      <h3>{props.task.task.task.name}</h3>
     </div>
   )
 }
@@ -223,7 +266,7 @@ function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) 
 
 
 
-function CalendarBody(props: {tasks?: Task[]}) {
+function CalendarBody(props: {tasks?: ScheduledTask[]}) {
   const hours = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   const times = hours.map(i => i + " AM").concat(hours.map(i => i + " PM")).concat("12 PM")
 
@@ -241,7 +284,7 @@ function CalendarBody(props: {tasks?: Task[]}) {
       </div>
       <div>
         <For each={props.tasks} fallback={null}>
-          {(item, index) => (
+          {(item) => (
             <Event task={item} />
           )}
         </For>
@@ -265,7 +308,7 @@ function CalendarTimeLine() { // TODO: Fix the timing of this and the tasks when
       <div
         ref={activeTimeRef}
         style={{
-          "margin-top": minutes() * (getScale() / 60) - 5 + "px"
+          "margin-top": minutes() * (get1hScale() / 60) - 5 + "px"
         }}
         class="flex flex-row h-[3px] bg-red-600 absolute w-full top-1">
       </div>
@@ -276,9 +319,9 @@ function CalendarTimeLine() { // TODO: Fix the timing of this and the tasks when
 function CalendarLine(props: {time: string}) {
   return (
     <div class="flex flex-row items-center mx-auto">
-      <span style={{"margin-top": getScale() + "px"}} class="rounded-full absolute left-2 text-secondary basis-12 text-sm flex items-center justify-center">{props.time}</span>
+      <span style={{"margin-top": get1hScale() + "px"}} class="rounded-full absolute left-2 text-secondary basis-12 text-sm flex items-center justify-center">{props.time}</span>
 
-      <div style={{"margin-top": getScale() - 2 + "px"}} class="w-[85%] ml-auto mr-2 h-[2px] bg-secondary"></div>
+      <div style={{"margin-top": get1hScale() - 2 + "px"}} class="w-[85%] ml-auto mr-2 h-[2px] bg-secondary"></div>
     </div>
   )
 }
@@ -286,11 +329,11 @@ function CalendarLine(props: {time: string}) {
 
 
 
-function Event(props: {task: Task}) {
-  const duration = () => props.task.duration ?? .5
+function Event(props: {task: ScheduledTask}) {
+  const duration = () => props.task.task.task.duration ?? .5
 
-  const startTime = () => (props.task.time! + 1) * getScale()
-  const height = () => duration() * getScale()
+  const startTime = () => (props.task.schedule_datetime.getHours() + props.task.schedule_datetime.getMinutes() / 60 + 1) * get1hScale()
+  const height = () => duration() / 60 * get1hScale()
 
   const changeDuration = (amt: number) => {
     const tasks = getTasks()
@@ -300,19 +343,20 @@ function Event(props: {task: Task}) {
       return
     }
 
-    setTasks(tasks.map(task => task.id === props.task.id && task.duration !== undefined ? {...task, duration: task.duration! + amt} : task)) // TODO: Make better type, but this should not be null
+    setTasks(tasks.map(task => task.task.task.id === props.task.task.task.id ? changeTaskProp(props.task, "duration", props.task.task.task.duration! + amt) : task)) // TODO: Make better type, but this should not be null
   }
 
-  const setStartTime = () => {
-    const tasks = getTasks()
+  // // TODO Implement this into teh algo
+  // const setStartTime = () => {
+  //   const tasks = getTasks()
 
-    if (!tasks) {
-      console.log("No tasks but adding 15 minutes?")
-      return
-    }
+  //   if (!tasks) {
+  //     console.log("No tasks but adding 15 minutes?")
+  //     return
+  //   }
 
-    setTasks(tasks.map(task => task.id === props.task.id && task.duration !== undefined ? {...task, time: new Date().getMinutes() / 60 + new Date().getHours()} : task)) // TODO: Make better type, but this should not be null
-  }
+  //   setTasks(tasks.map(task => task.task.task.id === props.task.task.task.id  ? changeTaskProp(task,  time: new Date().getMinutes() / 60 + new Date().getHours()} : task)) // TODO: Make better type, but this should not be null
+  // }
 
 
   // TODO: Figure out how to only rerender the new events and just update the values of the old events
@@ -333,29 +377,31 @@ function Event(props: {task: Task}) {
     >
       <div class="flex w-full items-center justify-start">
 
-        { !props.task.completed ? // Add animations to this
+        { !props.task.task.task.completed ? // Add animations to this
           <BiRegularCheckbox onclick={() => toggleCompleted(props.task)} size={35} class='fill-primary' /> :
           <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task)} size={35} class='fill-primary' />
         }
 
-        <h1 class="flex items-center text-lg">{props.task.name}</h1>
+        <h1 class="flex items-center text-lg">{props.task.task.task.name}</h1>
 
       </div>
 
       <Motion.span 
         press={{scale: .9}}
         class="rounded-full bg-red-300 text-primary shadow-sm font-bold px-3 py-1 absolute top-3 right-3"
-        onclick={() => setEditTask(props.task)}
+        onclick={() => setEditTask(props.task.task.task)}
       >
         Open
       </Motion.span>
 
 
-      <AiFillPlayCircle
-        class="fill-primary absolute bottom-2 right-[4.5rem]"
-        size={30}
-        onclick={() => setStartTime()}
-      />
+      {/*
+<AiFillPlayCircle
+class="fill-primary absolute bottom-2 right-[4.5rem]"
+size={30}
+onclick={() => setStartTime()}
+/>
+*/}
 
       <AiFillPlusCircle 
         class="fill-primary absolute bottom-2 right-10"
@@ -369,104 +415,105 @@ function Event(props: {task: Task}) {
         onclick={() => changeDuration(-.25)}
       />
 
-      <h3>{getTime(props.task.time!) + "-" + getTime(props.task.time! + duration())}</h3>
+      <h3>{getTime(props.task.schedule_datetime.getHours()) + "-" + getTime(props.task.schedule_datetime.getHours() + duration() / 60)}</h3>
 
 
       <div class="flex flex-row items-center justify-center gap-2">
         <FaSolidHourglassEnd class="fill-primary" size={20} />
-        <h2>{props.task.duration != null ? (props.task.duration < 1 ? props.task.duration * 60 + "min" : props.task.duration + "h") : null}</h2>
+        <h2>{props.task.task.task.duration != null ? (props.task.task.task.duration / 60 < 1 ? props.task.task.task.duration + "min" : props.task.task.task.duration / 60 + "h") : null}</h2> 
       </div>
 
     </Motion.div>
   )
 }
 
-// const addInitialTasks = () => {
-//   const tasks = getTasks()
-//   if (!tasks) {
-//     setTasks(initialTasks)
-//     return
-//   }
-//   setTasks([...tasks, ...initialTasks])
-// }
+  // const addInitialTasks = () => {
+  //   const tasks = getTasks()
+  //   if (!tasks) {
+  //     setTasks(initialTasks)
+  //     return
+  //   }
+  //   setTasks([...tasks, ...initialTasks])
+  // }
 
-// const initialTasks: Task[] = [ // TODO: Change this to be a map from the database
-//   {
-//     id: crypto.randomUUID(),
-//     name: "Walk the dog",
-//     date: new Date(),
-//     time: 2,
-//     completed: false,
-//     priority: 1,
-//     duration: 2,
-//     description: "Walk the dog for 30 minutes"
-//   },
-//   {
-//     id: crypto.randomUUID(),
-//     name: "Walk the dog",
-//     date: new Date(),
-//     completed: false,
-//     priority: 1,
-//     duration: 2,
-//     time: null,
-//     description: "Walk the dog for 30 minutes"
-//   },
-//   {
-//     id: crypto.randomUUID(),
-//     name: "Walk the dog fjdask",
-//     date: new Date(),
-//     completed: false,
-//     time: null,
-//     priority: 1,
-//     duration: 2,
-//     description: "Walk the dog for 30 minutes"
-//   },
-//   {
-//     id: crypto.randomUUID(),
-//     name: "Do the dishes",
-//     date: (() => {
-//       const date = new Date()
-//       date.setDate(date.getDate() + 1)
-//       return date
-//     })(),
-//     completed: false,
-//     priority: 1,
-//     time: null,
-//     duration: 1,
-//     description: "Do the dishes for 30 minutes"
-//   },
-//   {
-//     id: crypto.randomUUID(),
-//     name: "Dishes",
-//     date: (() => {
-//       const date = new Date()
-//       date.setDate(date.getDate() + 1)
-//       return date
-//     })(),
-//     completed: false,
-//     priority: 1,
-//     duration: 1,
-//     time: 9.5,
-//     description: "Do the dishes for 30 minutes"
-//   },
-//   {
-//     id: crypto.randomUUID(),
-//     name: "Task 3",
-//     date: new Date(),
-//     completed: false,
-//     time: 10,
-//     priority: 1,
-//     duration: 1,
-//     description: "Task 3 for 30 minutes"
-//   },
-//   {
-//     id: crypto.randomUUID(),
-//     name: "Task 4",
-//     time: 12,
-//     date: new Date(),
-//     completed: false,
-//     priority: 1,
-//     duration: 2,
-//     description: "Task 3 for 30 minutes"
-//   },
-// ]
+  // const initialTasks: Task[] = [ // TODO: Change this to be a map from the database
+  //   {
+  //     id: crypto.randomUUID(),
+  //     name: "Walk the dog",
+  //     date: new Date(),
+  //     time: 2,
+  //     completed: false,
+  //     priority: 1,
+  //     duration: 2,
+  //     description: "Walk the dog for 30 minutes"
+  //   },
+  //   {
+  //     id: crypto.randomUUID(),
+  //     name: "Walk the dog",
+  //     date: new Date(),
+  //     completed: false,
+  //     priority: 1,
+  //     duration: 2,
+  //     time: null,
+  //     description: "Walk the dog for 30 minutes"
+  //   },
+  //   {
+  //     id: crypto.randomUUID(),
+  //     name: "Walk the dog fjdask",
+  //     date: new Date(),
+  //     completed: false,
+  //     time: null,
+  //     priority: 1,
+  //     duration: 2,
+  //     description: "Walk the dog for 30 minutes"
+  //   },
+  //   {
+  //     id: crypto.randomUUID(),
+  //     name: "Do the dishes",
+  //     date: (() => {
+  //       const date = new Date()
+  //       date.setDate(date.getDate() + 1)
+  //       return date
+  //     })(),
+  //     completed: false,
+  //     priority: 1,
+  //     time: null,
+  //     duration: 1,
+  //     description: "Do the dishes for 30 minutes"
+  //   },
+  //   {
+  //     id: crypto.randomUUID(),
+  //     name: "Dishes",
+  //     date: (() => {
+  //       const date = new Date()
+  //       date.setDate(date.getDate() + 1)
+  //       return date
+  //     })(),
+  //     completed: false,
+  //     priority: 1,
+  //     duration: 1,
+  //     time: 9.5,
+  //     description: "Do the dishes for 30 minutes"
+  //   },
+  //   {
+  //     id: crypto.randomUUID(),
+  //     name: "Task 3",
+  //     date: new Date(),
+  //     completed: false,
+  //     time: 10,
+  //     priority: 1,
+  //     duration: 1,
+  //     description: "Task 3 for 30 minutes"
+  //   },
+  //   {
+  //     id: crypto.randomUUID(),
+  //     name: "Task 4",
+  //     time: 12,
+  //     date: new Date(),
+  //     completed: false,
+  //     priority: 1,
+  //     duration: 2,
+  //     description: "Task 3 for 30 minutes"
+  //   },
+  // ]
+  

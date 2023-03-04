@@ -21,11 +21,11 @@ import Notification from "./components/Notification";
 import EditTask from "./EditTask";
 
 
-const [sortedTasks, setSortedTasks] = createSignal(Array<Task[]>(4)) // TODO: Make this into a better data structure
-const [allTasks, setAllTasks] = createSignal<Task[]>()
+const [sortedTasks, setSortedTasks] = createSignal(Array<ScheduledTask[]>(4)) // TODO: Make this into a better data structure
+const [allTasks, setAllTasks] = createSignal<ScheduledTask[]>()
 
 const [creatingTask, setCreatingTask] = createSignal(false)
-const [activeTask, setActiveTask] = createSignal<Task | null>(null)
+const [activeTask, setActiveTask] = createSignal<UnscheduledTask | null>(null)
 
 export default function(props: {session: Session}) {
   const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December"]
@@ -42,12 +42,59 @@ export default function(props: {session: Session}) {
       newNotification(<Notification type="error" text="Error Getting tasks" />) // TODO: Add this functionality to the databasefuntions module
       return
     }
-    const todaysTasks = (databaseTasks ?? []).filter(task => task.date.toDateString() === new Date().toDateString()) // The days are equal
 
-    setAllTasks(todaysTasks)
+    // TODO: Make calls to the API
+    const tasks_with_urgency: ScheduledTask[] = [
+      {
+        task: {
+          task: {
+            id: crypto.randomUUID(),
+            name: "Task 1",
+            description: "This is a task",
+            importance: "High",
+            due_date: new Date(),
+            completed: false,
+            duration: 60,
+            steps: null
+          },
+          urgency: "High"
+        },
+        schedule_datetime: new Date()
+      },
+      {
+        task: {
+          task: {
+            id: crypto.randomUUID(),
+            name: "Task 2",
+            description: "This is a task",
+            importance: "High",
+            due_date: new Date(),
+            completed: false,
+            duration: 60,
+            steps: null
+          },
+          urgency: "Low"
+        },
+        schedule_datetime: (() => {
+          let date = new Date()
+          date.setHours(new Date().getHours() + 1)
+          return date
+        })()
+      }
+    ]
 
-    const grouped: Task[][] = todaysTasks
-    .reduce((acc, task) => {acc[task.priority - 1] ? acc[task.priority - 1].push(task) : acc[task.priority - 1] = [task]; return acc}, new Array<Task[]>(4))
+    // TODO: Fix this once you decide how to set a start date for tasks
+    // const todaysTasks = (databaseTasks ?? []).filter(task => task.due_date.toDateString() === new Date().toDateString()) // The days are equal
+    const todaysTasks = tasks_with_urgency
+
+    setAllTasks(todaysTasks) // TODO: change this from abnove
+
+    const grouped: ScheduledTask[][] = [
+      todaysTasks.filter(t => t.task.task.importance === "High" && t.task.urgency === "High"),
+      todaysTasks.filter(t => t.task.task.importance === "High" && t.task.urgency === "Low"),
+      todaysTasks.filter(t => t.task.task.importance === "Low" && t.task.urgency === "High"),
+      todaysTasks.filter(t => t.task.task.importance === "Low" && t.task.urgency === "Low")
+    ]
 
     setSortedTasks(grouped)
   }
@@ -89,16 +136,16 @@ export default function(props: {session: Session}) {
 
 
         <PriorityLabel importance="High" urgency="High" />
-        <Tasks filteredTasks={sortedTasks()[3]} />
+        <Tasks filteredTasks={sortedTasks()[0]} />
 
         <PriorityLabel importance="High" urgency="Low" />
-        <Tasks filteredTasks={sortedTasks()[2]} />
-
-        <PriorityLabel importance="Low" urgency="High" />
         <Tasks filteredTasks={sortedTasks()[1]} />
 
+        <PriorityLabel importance="Low" urgency="High" />
+        <Tasks filteredTasks={sortedTasks()[2]} />
+
         <PriorityLabel importance="Low" urgency="Low" />
-        <Tasks filteredTasks={sortedTasks()[0]} />
+        <Tasks filteredTasks={sortedTasks()[3]} />
 
       </div>
     </div>
@@ -129,42 +176,7 @@ function PriorityLabel(props: {importance: Level, urgency: Level}) {
   )
 }
 
-function Tasks(props: {filteredTasks: Task[]}) {
-
-
-  const testTasks: Task[] = [ 
-    {
-      id: randomUUID(),
-      date: new Date(),
-      name: "Test Task",
-      description: "This is a test task",
-      time: 1,
-      duration: 2,
-      priority: 3,
-      completed: false
-    },
-    {
-      id: randomUUID(),
-      date: new Date(),
-      name: "USACO",
-      description: "Do USACO practice",
-      time: 1,
-      duration: 2,
-      priority: 3,
-      completed: false
-    },
-    {
-      id: randomUUID(),
-      date: new Date(),
-      name: "USACO",
-      description: "Do USACO practice",
-      time: 1,
-      duration: 2,
-      priority: 3,
-      completed: false
-    },
-  ]
-
+function Tasks(props: {filteredTasks: ScheduledTask[]}) {
   return (
     <div class="grid grid-flow-col justify-start gap-3 mt-5 px-5 py-5 overflow-x-scroll">
       <For each={props.filteredTasks}>
@@ -174,8 +186,8 @@ function Tasks(props: {filteredTasks: Task[]}) {
   )
 }
 
-function TaskDisplay(props: {task: Task}) {
-  const date = () => props.task.date.getDate() === new Date().getDate() ? "Today" : props.task.date.getDate() + " " + props.task.date.getMonth()
+function TaskDisplay(props: {task: ScheduledTask}) {
+  const date = () => props.task.task.task.due_date.getDate() === new Date().getDate() ? "Today" : props.task.task.task.due_date.getDate() + " " + props.task.task.task.due_date.getMonth()
 
   // TODO: Figure out subtasks
   return (
@@ -197,7 +209,7 @@ function TaskDisplay(props: {task: Task}) {
       }}
 
       class="rounded-2xl shadow-lg bg-white h-36 w-44"
-      onclick={() => setActiveTask(props.task)}
+      onclick={() => setActiveTask(props.task.task.task)}
     >
       <div class="flex flex-row justify-start items-center gap-2 px-3 mt-2 mb-1">
         <FaRegularFlag size={18} class="fill-red-400" />
@@ -207,14 +219,14 @@ function TaskDisplay(props: {task: Task}) {
         </div>
       </div>
 
-      <h1 class="mx-auto px-2">{props.task.name}</h1>
+      <h1 class="mx-auto px-2">{props.task.task.task.name}</h1>
 
-      <p class="text-secondary px-2">{props.task.description}</p>
+      <p class="text-secondary px-2">{props.task.task.task.description}</p>
 
       <div class="flex flex-row justify-start items-center gap-2 px-3 mt-2 mb-1">
         <div class="flex flex-row items-center justify-center px-3 py-1 gap-1 bg-neutral-100 rounded-full text-secondary">
           <AiOutlineHourglass size={18} class="fill-secondary" />
-          {props.task.duration !== null ? (props.task.duration < 1 ? props.task.duration * 60 + "min" : props.task.duration + "h") : null}
+          {props.task.task.task.duration !== null ? (props.task.task.task.duration / 60 < 1 ? props.task.task.task.duration + "min" : props.task.task.task.duration / 60 + "h") : null}
         </div>
       </div>
     </Motion.div>
@@ -267,35 +279,38 @@ function PlanningIndicators() {
   const percentageSteps = createMemo(() => {
     if (!allTasks()) return null
 
-    const numTasksWithSteps = allTasks()!.filter((task) => task.steps?.length && task.steps?.length > 0).length
+    const numTasksWithSteps = allTasks()!.filter((task) => task.task.task.steps?.length && task.task.task.steps?.length > 0).length
     return Math.round(numTasksWithSteps / allTasks()!.length * 100)
   })
 
   const percentageTasksWithMeaning = createMemo(() => {
     if (!allTasks()) return null
 
-    const numTasksWithMeaning = allTasks()!.filter((task) => task.description).length
+    const numTasksWithMeaning = allTasks()!.filter((task) => task.task.task.description).length
     return Math.round(numTasksWithMeaning / sortedTasks().flat().length * 100)
   })
 
   const calculateOrderIndicatorSections = createMemo(() => {
     if (!allTasks()) return null
-    const totalDuration = allTasks()!.reduce((acc, task) => acc + task.duration!, 0)
+    const totalDuration = allTasks()!.reduce((acc, task) => acc + task.task.task.duration!, 0)
     const indicatorSections: Indicatorsection[] = allTasks()!
     .slice()
-    .filter(task => task.time !== null)
-    .sort((a, b) =>  b.time! - a.time!) // TODO: Adjust for errors
+    .filter(task => task.schedule_datetime !== null)
+    .sort((a, b) =>  a.schedule_datetime.getTime() - b.schedule_datetime.getTime()) // Sort by earliest to latest
     .map((task, index) => {
-      const startPercentage = index === 0 ? 0 : allTasks()!.slice(0, index).reduce((acc, task) => acc + task.duration!, 0) / totalDuration * 100
-      const endPercentage = task.duration! / totalDuration * 100 + startPercentage
+      const startPercentage = index === 0 ? 0 : allTasks()!.slice(0, index).reduce((acc, task) => acc + task.task.task.duration!, 0) / totalDuration * 100
+      const endPercentage = task.task.task.duration! / totalDuration * 100 + startPercentage
 
       console.log(startPercentage, endPercentage)
-      console.log(task.priority)
 
       return {
         startPercentage,
         endPercentage,
-        color: () => task.priority === 4 ? "red" : task.priority === 3 ? "yellow" : task.priority === 2 ? "lightblue" : "lightgray"
+        color: () => 
+          task.task.task.importance === "High" && task.task.urgency === "High" ? "red" : 
+            task.task.task.importance === "High" && task.task.urgency === "Low" ? "orange" :
+              task.task.task.importance === "Low" && task.task.urgency === "High" ? "blue" :
+                "lightgray"
       }
     })
     return indicatorSections
@@ -303,7 +318,7 @@ function PlanningIndicators() {
 
   const totalDuration = createMemo(() => {
     if (!allTasks()) return null
-    const totalTimeHours = allTasks()!.reduce((acc, task) => acc + task.duration!, 0)
+    const totalTimeHours = allTasks()!.reduce((acc, task) => acc + task.task.task.duration! / 60, 0)
     const totalHours = Math.floor(totalTimeHours)
     const totalMinutes = Math.round((totalTimeHours - totalHours) * 60)
     return totalHours + ":" + (totalMinutes < 10 ? "0" + totalMinutes : totalMinutes)
@@ -315,7 +330,7 @@ function PlanningIndicators() {
         icon={<AiOutlineUnorderedList size={16} class="fill-primary" />} 
         description={<><strong class="text-primary font-extrabold">{percentageSteps() ?? 0}%</strong> of tasks have a plan</>} 
         indicatorsections={[
-          {color: (endPercentage: number) => endPercentage > 80 ? "lightgreen" : "lightgray", endPercentage: percentageSteps()},
+          {color: (endPercentage: number) => endPercentage > 80 ? "lightgreen" : "lightgray", endPercentage: percentageSteps() ?? 0},
         ]}
       />
 
