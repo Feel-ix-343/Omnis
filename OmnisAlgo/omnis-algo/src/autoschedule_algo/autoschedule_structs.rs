@@ -35,7 +35,7 @@ pub struct Step {
 pub struct UnscheduledTask {
     pub id: String,
     pub name: String,
-    pub description: String,
+    pub description: Option<String>,
     /// Duration of the task in minutes
     pub duration: i64,
 
@@ -48,7 +48,7 @@ pub struct UnscheduledTask {
 
     pub completed: bool,
 
-    pub steps: Vec<Step>
+    pub steps: Option<Vec<Step>>
 }
 
 
