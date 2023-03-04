@@ -1,5 +1,6 @@
 mod autoschedule_algo;
 
+use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, middleware::Logger};
 
 use autoschedule_algo::*;
@@ -58,7 +59,10 @@ async fn main() -> std::io::Result<()> {
 
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     HttpServer::new(|| {
+        let cors = Cors::permissive();
+
         App::new()
+            .wrap(cors)
             .wrap(Logger::default())
             .service(autoschedule)
             .service(hello)
