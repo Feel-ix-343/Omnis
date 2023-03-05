@@ -49,7 +49,7 @@ export default function TaskInterface(props: {
     console.log("Task steps", steps())
 
     // TODO: checks on types?
-    const task: UnscheduledTask = { // Purposly missing time. Partial type
+    const task: UnscheduledTask = {
       id: props.task?.id ?? randomUUID(),
       due_date: dueDate()!,
       name: taskName()!,
@@ -165,8 +165,8 @@ export default function TaskInterface(props: {
                 This task has 
                 <DropDown<Importance>
                   choices={[
-                    {value: Importance.High, display: Importance.High.toString()},
-                    {value: Importance.Low, display: Importance.Low.toString()}
+                    {value: "High", display: "High"},
+                    {value: "Low", display: "Low"}
                   ]} 
                   choiceOutput={taskImportance()?.toString()} 
                   setChoice={setTaskImportance}
@@ -188,13 +188,13 @@ export default function TaskInterface(props: {
                 {/* TODO: MAke this better */ }
                 <DropDown<number> 
                   choices={[
-                    {display: "30min", value: .5},
-                    {display: "1hr", value: 1},
-                    {display: "1.5hr", value: 1.5},
-                    {display: "2hr", value: 2},
+                    {display: "30min", value: 30},
+                    {display: "1hr", value: 60},
+                    {display: "1.5hr", value: 90},
+                    {display: "2hr", value: 120},
                   ]} 
                   setChoice={(choice: number) => setTaskDuration(choice)} 
-                  choiceOutput={taskDuration() !== undefined ? (taskDuration()! < 1 ? `${taskDuration()! * 60}min` : `${taskDuration()}hr`) : null}
+                  choiceOutput={taskDuration() !== undefined ? (taskDuration()! / 60 < 1 ? `${taskDuration()! * 60}min` : `${taskDuration()! / 60}hr`) : null}
                 >
                   Duration
                 </DropDown>
@@ -274,10 +274,10 @@ function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[],
   const [ref, setRef] = createSignal<HTMLButtonElement>()
 
   createEffect(() => {
-    document.ontouchstart = (e) => {
-      if (ref()?.contains(e.currentTarget! as Node)) return // TODO: FIx
+    document.addEventListener("touchstart", (e) => {
+      if (ref()?.contains(e.target)) return // TODO: FIx
       else setShow(false)
-    }
+    })
   })
 
   return (

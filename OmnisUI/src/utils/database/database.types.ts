@@ -37,38 +37,35 @@ export interface Database {
       tasks: {
         Row: {
           completed: boolean
-          date: string
           description: string | null
+          due_date: string
           duration: number | null
           id: string
+          importance: string
           name: string
-          priority: number
           steps: Json[] | null
-          time: number | null
           user_id: string
         }
         Insert: {
           completed: boolean
-          date: string
           description?: string | null
+          due_date: string
           duration?: number | null
           id: string
+          importance: string
           name: string
-          priority: number
           steps?: Json[] | null
-          time?: number | null
           user_id: string
         }
         Update: {
           completed?: boolean
-          date?: string
           description?: string | null
+          due_date?: string
           duration?: number | null
           id?: string
+          importance?: string
           name?: string
-          priority?: number
           steps?: Json[] | null
-          time?: number | null
           user_id?: string
         }
       }

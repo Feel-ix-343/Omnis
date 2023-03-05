@@ -1,5 +1,5 @@
 import { Session } from "@supabase/supabase-js"
-import { supabase } from "./database/supabaseClient"
+import { supabase } from "./utils/database/supabaseClient"
 
 export default function SettingsView(props: {session: Session}) {
 

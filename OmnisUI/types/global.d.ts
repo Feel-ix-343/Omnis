@@ -1,12 +1,13 @@
 type Importance = "High" | "Low"
 
+// TODO: Add a start date propr
 type UnscheduledTask = {
   id: string,
   name: string,
   description: string | null,
 
   /**Duration in minutes */
-  duration: number | null,
+  duration: number | null, // TODO: Duration should have a daily type
 
 
   importance: Importance
@@ -28,14 +29,14 @@ type UnscheduledTaskWithUrgency = {
 
 type ScheduledTask = {
   task: UnscheduledTaskWithUrgency,
-  schedule_datetime: Date
+  scheduled_datetime: Date
 }
 
 
 
 // TODO: Algo does not accept tasks without a duration. If duration is null, the task will be considered a daily task. TODO: Make this more clear with types
 
-type DBTask = import ("../src/database/database.types").Database["public"]["Tables"]["tasks"]["Row"]
+type DBTask = import ("../src/utils/database/database.types").Database["public"]["Tables"]["tasks"]["Row"]
 
 
 

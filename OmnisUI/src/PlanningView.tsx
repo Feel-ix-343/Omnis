@@ -5,7 +5,7 @@ import { Motion } from "@motionone/solid"
 import { animate, spring } from "motion";
 import Header from "./components/Header";
 import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidCircleInfo, FaSolidPlus, FaSolidSquareCheck } from "solid-icons/fa";
-import { createEffect, createMemo, createSignal, For, JSXElement, onMount, Show } from "solid-js";
+import { createEffect, createMemo, createResource, createSignal, For, JSXElement, onMount, Show } from "solid-js";
 
 import { createStore } from "solid-js/store";
 
@@ -14,98 +14,78 @@ import CreateTask from "./CreateTask";
 import { BsStar } from "solid-icons/bs";
 import DatePicker from "./components/DatePicker";
 import { v4 as randomUUID } from 'uuid';
-import { supabase } from "./database/supabaseClient";
-import { getTasksFromDB } from "./database/databaseFunctions";
+import { supabase } from "./utils/database/supabaseClient";
+import { getTasksFromDB } from "./utils/database/databaseFunctions";
 import { newNotification } from "./App";
 import Notification from "./components/Notification";
 import EditTask from "./EditTask";
+import { scheduleTasks } from "./utils/schedulingFunctions";
 
 
-const [sortedTasks, setSortedTasks] = createSignal(Array<ScheduledTask[]>(4)) // TODO: Make this into a better data structure
-const [allTasks, setAllTasks] = createSignal<ScheduledTask[]>()
+const [session, setSession] = createSignal<Session>()
+
+// TODO: Turn this into a global state in the App.tsx
+const [getAllTasks, setAllTasks] = createSignal<UnscheduledTask[]>()
+// Get all tasks from the DB. This will then be used to schedule the tasks, then filtere for the day, then display
+const getAllTasksFromDB = async (session: Session | undefined) => {
+  if (!session) return
+
+  const {data: databaseTasks, error} = await getTasksFromDB(session)
+  if (error) {
+    console.log(error)
+    newNotification(<Notification type="error" text="Error Getting tasks" />) // TODO: Add this functionality to the databasefuntions module
+    return
+  }
+
+  setAllTasks(databaseTasks ?? [])
+}
+const [getPlannedTasksFromDB, {mutate: mutateDB, refetch: refetchDB}] = createResource(session, getAllTasksFromDB)
+
+// Schedule the tasks
+async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
+  if (!tasks) return
+
+  const durationTasks = tasks.filter(task => task.duration !== null)
+  return await scheduleTasks(durationTasks)
+}
+const [autoscheduledTasks] = createResource(getAllTasks, getScheduledTasks)
+
+
+const todaysTasks = createMemo<ScheduledTask[]>(() => {
+  const tasks = autoscheduledTasks()
+  // TODO: Change this to use the start ddate of the task, not he scheudled date
+  return tasks?.filter(task => task.scheduled_datetime.toDateString() === new Date().toDateString()) ?? [] // Tasks for today
+})
+
+
+const sortedTasks = createMemo<readonly [ScheduledTask[], ScheduledTask[], ScheduledTask[], ScheduledTask[]]>(() => {
+  const tasks = todaysTasks()
+  return [
+    tasks.filter(t => t.task.task.importance === "High" && t.task.urgency === "High"),
+    tasks.filter(t => t.task.task.importance === "High" && t.task.urgency === "Low"),
+    tasks.filter(t => t.task.task.importance === "Low" && t.task.urgency === "High"),
+    tasks.filter(t => t.task.task.importance === "Low" && t.task.urgency === "Low")
+  ] as const
+})
 
 const [creatingTask, setCreatingTask] = createSignal(false)
 const [activeTask, setActiveTask] = createSignal<UnscheduledTask | null>(null)
 
+
 export default function(props: {session: Session}) {
+  onMount(() => setSession(props.session))
+  onMount(refetchDB)
   const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December"]
 
   const [ref, setRef] = createSignal<HTMLElement | null>(null)
 
   createEffect(() => ref()?.scrollIntoView({block: "center"}))
 
-
-  const getPlannedTasksFromDB = async () => {
-    const {data: databaseTasks, error} = await getTasksFromDB(props.session)
-    if (error) {
-      console.log(error)
-      newNotification(<Notification type="error" text="Error Getting tasks" />) // TODO: Add this functionality to the databasefuntions module
-      return
-    }
-
-    // TODO: Make calls to the API
-    const tasks_with_urgency: ScheduledTask[] = [
-      {
-        task: {
-          task: {
-            id: crypto.randomUUID(),
-            name: "Task 1",
-            description: "This is a task",
-            importance: "High",
-            due_date: new Date(),
-            completed: false,
-            duration: 60,
-            steps: null
-          },
-          urgency: "High"
-        },
-        schedule_datetime: new Date()
-      },
-      {
-        task: {
-          task: {
-            id: crypto.randomUUID(),
-            name: "Task 2",
-            description: "This is a task",
-            importance: "High",
-            due_date: new Date(),
-            completed: false,
-            duration: 60,
-            steps: null
-          },
-          urgency: "Low"
-        },
-        schedule_datetime: (() => {
-          let date = new Date()
-          date.setHours(new Date().getHours() + 1)
-          return date
-        })()
-      }
-    ]
-
-    // TODO: Fix this once you decide how to set a start date for tasks
-    // const todaysTasks = (databaseTasks ?? []).filter(task => task.due_date.toDateString() === new Date().toDateString()) // The days are equal
-    const todaysTasks = tasks_with_urgency
-
-    setAllTasks(todaysTasks) // TODO: change this from abnove
-
-    const grouped: ScheduledTask[][] = [
-      todaysTasks.filter(t => t.task.task.importance === "High" && t.task.urgency === "High"),
-      todaysTasks.filter(t => t.task.task.importance === "High" && t.task.urgency === "Low"),
-      todaysTasks.filter(t => t.task.task.importance === "Low" && t.task.urgency === "High"),
-      todaysTasks.filter(t => t.task.task.importance === "Low" && t.task.urgency === "Low")
-    ]
-
-    setSortedTasks(grouped)
-  }
-  onMount(getPlannedTasksFromDB)
-
-
   return (
     <div class="pt-40">
 
-      <CreateTask onDBChange={getPlannedTasksFromDB} show={creatingTask()} session={props.session} close={() => setCreatingTask(false)}/>
-      <EditTask onDBChange={() => getPlannedTasksFromDB()} session={props.session} task={activeTask()!} show={activeTask() !== null} close={() => setActiveTask(null)} />
+      <CreateTask onDBChange={refetchDB} show={creatingTask()} session={props.session} close={() => setCreatingTask(false)}/>
+      <EditTask onDBChange={refetchDB} session={props.session} task={activeTask()!} show={activeTask() !== null} close={() => setActiveTask(null)} />
 
       <Header>
         <h1 
@@ -277,28 +257,28 @@ function PlanningIndicator(props: {icon: JSXElement, class?: string, description
 function PlanningIndicators() {
 
   const percentageSteps = createMemo(() => {
-    if (!allTasks()) return null
+    if (!todaysTasks()) return null
 
-    const numTasksWithSteps = allTasks()!.filter((task) => task.task.task.steps?.length && task.task.task.steps?.length > 0).length
-    return Math.round(numTasksWithSteps / allTasks()!.length * 100)
+    const numTasksWithSteps = todaysTasks()!.filter((task) => task.task.task.steps?.length && task.task.task.steps?.length > 0).length
+    return Math.round(numTasksWithSteps / todaysTasks()!.length * 100)
   })
 
   const percentageTasksWithMeaning = createMemo(() => {
-    if (!allTasks()) return null
+    if (!todaysTasks()) return null
 
-    const numTasksWithMeaning = allTasks()!.filter((task) => task.task.task.description).length
+    const numTasksWithMeaning = todaysTasks()!.filter((task) => task.task.task.description).length
     return Math.round(numTasksWithMeaning / sortedTasks().flat().length * 100)
   })
 
   const calculateOrderIndicatorSections = createMemo(() => {
-    if (!allTasks()) return null
-    const totalDuration = allTasks()!.reduce((acc, task) => acc + task.task.task.duration!, 0)
-    const indicatorSections: Indicatorsection[] = allTasks()!
+    if (!todaysTasks()) return null
+    const totalDuration = todaysTasks()!.reduce((acc, task) => acc + task.task.task.duration!, 0)
+    const indicatorSections: Indicatorsection[] = todaysTasks()!
     .slice()
-    .filter(task => task.schedule_datetime !== null)
-    .sort((a, b) =>  a.schedule_datetime.getTime() - b.schedule_datetime.getTime()) // Sort by earliest to latest
+    .filter(task => task.scheduled_datetime !== null)
+    .sort((a, b) =>  a.scheduled_datetime.getTime() - b.scheduled_datetime.getTime()) // Sort by earliest to latest
     .map((task, index) => {
-      const startPercentage = index === 0 ? 0 : allTasks()!.slice(0, index).reduce((acc, task) => acc + task.task.task.duration!, 0) / totalDuration * 100
+      const startPercentage = index === 0 ? 0 : todaysTasks()!.slice(0, index).reduce((acc, task) => acc + task.task.task.duration!, 0) / totalDuration * 100
       const endPercentage = task.task.task.duration! / totalDuration * 100 + startPercentage
 
       console.log(startPercentage, endPercentage)
@@ -317,8 +297,8 @@ function PlanningIndicators() {
   })
 
   const totalDuration = createMemo(() => {
-    if (!allTasks()) return null
-    const totalTimeHours = allTasks()!.reduce((acc, task) => acc + task.task.task.duration! / 60, 0)
+    if (!todaysTasks()) return null
+    const totalTimeHours = todaysTasks()!.reduce((acc, task) => acc + task.task.task.duration! / 60, 0)
     const totalHours = Math.floor(totalTimeHours)
     const totalMinutes = Math.round((totalTimeHours - totalHours) * 60)
     return totalHours + ":" + (totalMinutes < 10 ? "0" + totalMinutes : totalMinutes)

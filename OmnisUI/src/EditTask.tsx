@@ -9,11 +9,13 @@ import { BsFlag, BsHourglass } from "solid-icons/bs";
 import { createEffect, createSignal, For, JSXElement, onMount, Show } from "solid-js";
 import Header from "./components/Header";
 import DatePicker from "./components/DatePicker";
-import { supabase } from "./database/supabaseClient";
+
+import { supabase } from "./utils/database/supabaseClient";
+
 import { v4 as randomUUID } from 'uuid';
 import Notification from "./components/Notification";
 import { newNotification } from "./App";
-import { deleteDBTask, upsertTask } from "./database/databaseFunctions";
+import { deleteDBTask, upsertTask } from "./utils/database/databaseFunctions";
 import { BiRegularCheckbox } from "solid-icons/bi";
 import TaskInterface from "./components/TaskInterface";
 
