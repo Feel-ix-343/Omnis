@@ -15,7 +15,7 @@ use env_logger;
 #[derive(Debug, Serialize, Deserialize)]
 struct AutoscheduleRequest {
     unscheduled_tasks: Vec<UnscheduledTask>,
-    user_preferences: UserPreferences,
+    user_preferences: Option<UserPreferences>,
     obstacles: Option<Vec<Obstacle>>,
 }
 
@@ -31,16 +31,16 @@ async fn autoschedule(request: web::Json<AutoscheduleRequest>) -> impl Responder
 
 
     let ordered_tasks = order_tasks(&tasks);
-    let scheduled_tasks = schedule_tasks(&ordered_tasks, Utc::now().with_hour(0).expect("Reset hour to 0").naive_utc());// TODO: Will need to fix this for the user
+    let scheduled_tasks = schedule_tasks(&ordered_tasks, Utc::now());// TODO: Will need to fix this for the user
 
-    let tasks_in_working_hours = adjust_for_working_hours(&scheduled_tasks, &request.user_preferences.start_time, &request.user_preferences.end_time);
+    // let tasks_in_working_hours = adjust_for_working_hours(&scheduled_tasks, request.user_preferences.start_time, request.user_preferences.end_time); // TODO: Fix TZs
 
     if let Some(obstacles) = &request.obstacles {
-        let tasks_with_obstacles = adjust_for_obstacles(&tasks_in_working_hours, obstacles);
+        let tasks_with_obstacles = adjust_for_obstacles(&scheduled_tasks, obstacles);
         return HttpResponse::Ok().json(tasks_with_obstacles);
     }
 
-    return HttpResponse::Ok().json(tasks_in_working_hours)
+    return HttpResponse::Ok().json(scheduled_tasks)
 }
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -1,18 +1,18 @@
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, DateTime, FixedOffset, Utc};
 use serde::{Serialize, Deserialize};
 
-use super::omnis_date_format;
+// use super::omnis_date_format;
 
 
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct UserPreferences {
     /// Hour of the day that the user wants to start working. This should be in naive time
-    #[serde(with = "omnis_date_format")]
-    pub start_time: NaiveDateTime,
+    // #[serde(with = "omnis_date_format")]
+    pub start_time: DateTime<Utc>,
     /// Hour of the day that the user wants to end working. This should be in naive time
-    #[serde(with = "omnis_date_format")]
-    pub end_time: NaiveDateTime,
+    // #[serde(with = "omnis_date_format")]
+    pub end_time: DateTime<Utc>,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy, Serialize, Deserialize)]
@@ -43,8 +43,7 @@ pub struct UnscheduledTask {
     pub importance: Importance,
 
     /// Due date in days away from current date. Tihs has time, but it is really just date
-    #[serde(with = "omnis_date_format")]
-    pub due_date: NaiveDateTime, 
+    pub due_date: DateTime<Utc>, 
 
     pub completed: bool,
 
@@ -68,15 +67,12 @@ pub struct UnscheduledTaskWithUrgency {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ScheduledTask {
     pub task: UnscheduledTaskWithUrgency,
-    #[serde(with = "omnis_date_format")]
-    pub scheduled_datetime: NaiveDateTime,
+    pub scheduled_datetime: DateTime<Utc>,
 }
 
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Obstacle {
-    #[serde(with = "omnis_date_format")]
-    pub start_time: NaiveDateTime,
-    #[serde(with = "omnis_date_format")]
-    pub end_time: NaiveDateTime,
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
 }

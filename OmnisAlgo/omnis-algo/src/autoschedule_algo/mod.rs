@@ -1,5 +1,5 @@
 
-use chrono::{NaiveDateTime, Timelike, Duration, Utc};
+use chrono::{NaiveDateTime, Timelike, Duration, Utc, DateTime};
 
 mod omnis_date_format;
 
@@ -39,9 +39,9 @@ pub fn order_tasks(tasks: &Vec<UnscheduledTask>) -> Vec<UnscheduledTaskWithUrgen
 /// This takes a list of tasks and the current time, and lays the tasks in a timeline from the current time
 /// current_time takes date, hours, and minutes into account. TODO: Think about local time vs server time
 /// Should convert from the data base time to NaiveDateTime
-pub fn schedule_tasks(tasks: &Vec<UnscheduledTaskWithUrgency>, first_time: NaiveDateTime) -> Vec<ScheduledTask> {
+pub fn schedule_tasks(tasks: &Vec<UnscheduledTaskWithUrgency>, first_time: DateTime<Utc>) -> Vec<ScheduledTask> {
     // THe current time is an object, but it needs to be turned into a number in order to easily schedule tasks on it.
-    let mut time = first_time.timestamp() as f64 / 60.0; // current time in minutes
+    let mut time = first_time;  // Fierst time is copied
 
     let mut scheduled_tasks: Vec<ScheduledTask> = Vec::new();
 
@@ -49,10 +49,10 @@ pub fn schedule_tasks(tasks: &Vec<UnscheduledTaskWithUrgency>, first_time: Naive
         scheduled_tasks.push(
             ScheduledTask {
                 task: task.clone(),
-                scheduled_datetime: NaiveDateTime::from_timestamp_opt((time * 60.0) as i64, 0).expect("Could not convert time to NaiveDateTime")
+                scheduled_datetime: time
             }
         );
-        time += task.task.duration as f64
+        time += Duration::minutes(task.task.duration)
     }
 
     return scheduled_tasks
@@ -89,16 +89,16 @@ pub fn adjust_for_obstacles(scheduled_tasks: &Vec<ScheduledTask>, obstacles: &Ve
 }
 
 
-pub fn adjust_for_working_hours(scheduled_tasks: &Vec<ScheduledTask>, start_time: &NaiveDateTime, end_time: &NaiveDateTime) -> Vec<ScheduledTask> {
-    let midnight = Utc::now().naive_utc().with_hour(0).expect("Could not set midnight").with_minute(0).expect("Could not set midnight").with_second(0).expect("Could not set midnight");
+pub fn adjust_for_working_hours(scheduled_tasks: &Vec<ScheduledTask>, start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Vec<ScheduledTask> {
+    let midnight = Utc::now().with_hour(0).expect("Could not set midnight").with_minute(0).expect("Could not set midnight").with_second(0).expect("Could not set midnight");
 
     let before_work = Obstacle {
         start_time: midnight,
-        end_time: *start_time // Deref bc naivedate is copyable
+        end_time: start_time // Deref bc naivedate is copyable
     };
 
     let after_work = Obstacle {
-        start_time: *end_time,
+        start_time: end_time,
         end_time: midnight + Duration::days(1)
     };
 
