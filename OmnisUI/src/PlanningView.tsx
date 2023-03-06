@@ -157,7 +157,7 @@ function PriorityLabel(props: {importance: Level, urgency: Level}) {
         {props.importance} Importance
       </div>
       <div class="bg-white text-secondary p-2 px-2 rounded-full shadow-sm"> 
-        {props.importance} Urgency
+        {props.urgency} Urgency
       </div>
     </div>
   )
