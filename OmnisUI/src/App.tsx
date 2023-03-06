@@ -12,7 +12,6 @@ import { BsInfo } from 'solid-icons/bs';
 import { FaSolidCircleInfo } from 'solid-icons/fa';
 import { testServer } from './utils/schedulingFunctions';
 
-
 const [notifications, setNotifications] = createSignal<JSXElement[]>([])
 /** creates notifications of type `Notification` JSX element`
 @param notif Notification
@@ -24,7 +23,8 @@ export const newNotification = (notif: JSXElement) => setNotifications(notificat
 
 
 const App: Component = () => {
-  testServer()
+
+
   const [getIndex, setIndex] = createSignal(parseInt(localStorage.getItem("index") ?? "1")); // Initialize on the calendar screen
 
   createEffect(() => localStorage.setItem("index", getIndex().toString()))

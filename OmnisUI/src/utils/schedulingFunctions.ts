@@ -1,10 +1,14 @@
+import { ScheduledTask } from "./taskStates";
+
 console.log("Prod?", import.meta.env.PROD)
 const omnis_algo_addr: string = import.meta.env.PROD ? import.meta.env.VITE_OMNIS_ALGO_ADDR_PROD : import.meta.env.VITE_OMNIS_ALGO_ADDR;
 
 
-export async function scheduleTasks(tasks: UnscheduledTask[]) {
+export async function scheduleTasks(tasks: UnscheduledTask[], obstacles: Obstacle[]) {
+  console.log("Scheduling", tasks, obstacles)
   const autoschedulingRequest = {
     unscheduled_tasks: tasks,
+    obstacles: obstacles
   }
 
   const response = await fetch(
@@ -22,16 +26,16 @@ export async function scheduleTasks(tasks: UnscheduledTask[]) {
 
   console.log(json)
   const scheduledTasks: ScheduledTask[] = json.map(obj => {
-    return {
-      task: {
+    return new ScheduledTask(
+      {
         ...obj.task,
         task: {
           ...obj.task.task,
           due_date: new Date(obj.task.task.due_date),
         },
       },
-      scheduled_datetime: new Date(obj.scheduled_datetime),
-    } 
+      new Date(obj.scheduled_datetime),
+    )
   })
 
   console.log(scheduledTasks)

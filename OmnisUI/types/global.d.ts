@@ -1,5 +1,6 @@
 type Importance = "High" | "Low"
 
+
 // TODO: Add a start date propr
 type UnscheduledTask = {
   id: string,
@@ -7,7 +8,7 @@ type UnscheduledTask = {
   description: string | null,
 
   /**Duration in minutes */
-  duration: number | null, // TODO: Duration should have a daily type
+  duration: number, // TODO: Duration should have a daily type
 
 
   importance: Importance
@@ -15,21 +16,22 @@ type UnscheduledTask = {
   /** Due date of the task. Only the date matters */
   due_date: Date,
 
-  completed: boolean,
-
   steps: {id: string, duration: number, description: string, completed: boolean, edited: boolean}[] | null
 }
 
 type Urgency = "High" | "Low"
 
+
+// TODO: this is uncessary for the UI. Refactor
 type UnscheduledTaskWithUrgency = {
   task: UnscheduledTask,
-  urgency: Urgency
+  urgency: Urgency,
 }
 
-type ScheduledTask = {
-  task: UnscheduledTaskWithUrgency,
-  scheduled_datetime: Date
+// Another scheudling algo type
+type Obstacle = {
+  start_time: Date,
+  end_time: Date
 }
 
 

@@ -2,7 +2,7 @@ import { FaRegularSquareCheck, FaSolidHourglassEnd, FaSolidSquareCheck } from "s
 import { BiRegularCheckbox, BiSolidCheckboxChecked } from 'solid-icons/bi'
 import { Accessor, createEffect, createMemo, createResource, createSignal, For, onMount, Show, untrack } from "solid-js"
 
-import { AiFillMinusCircle, AiFillPlayCircle, AiFillPlusCircle, AiOutlineCaretUp } from 'solid-icons/ai'
+import { AiFillCloseCircle, AiFillMinusCircle, AiFillPlayCircle, AiFillPlusCircle, AiFillStop, AiOutlineCaretUp } from 'solid-icons/ai'
 import { Session } from "@supabase/supabase-js"
 import { Motion, Presence } from "@motionone/solid"
 import { spring } from "motion"
@@ -12,11 +12,14 @@ import {newNotification} from "./App"
 import Notification from "./components/Notification"
 import { getTasksFromDB, upsertTasks } from "./utils/database/databaseFunctions"
 import { scheduleTasks } from "./utils/schedulingFunctions"
+import { BsStopCircleFill } from "solid-icons/bs"
+import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } from "./utils/taskStates"
 
 
 
 
 
+// change to a solid js resource
 const updateTasksWithDatabase = async (session: Session) => {
   const {data: unscheduledTasks, error} = await getTasksFromDB(session)
 
@@ -26,7 +29,7 @@ const updateTasksWithDatabase = async (session: Session) => {
     return
   }
 
-  setTasks(unscheduledTasks ?? undefined) // TODO: This is such good cod3
+  setUnscheduledTasks(unscheduledTasks ?? undefined) // TODO: This is such good cod3
 }
 
 const updateDBWithTasks = async (tasks: UnscheduledTask[], session: Session) => {
@@ -37,8 +40,14 @@ const updateDBWithTasks = async (tasks: UnscheduledTask[], session: Session) => 
 
 
 
-// All of the displayed tasks
-const [getTasks, setTasks] = createSignal<UnscheduledTask[] | undefined>()
+// All of the unscheudled tasks that will be scheduled and displayed
+const [unscheduledTasks, setUnscheduledTasks] = createSignal<UnscheduledTask[] | undefined>()
+
+// The current working task
+const [workingTasks, setWorkingTask] = createSignal<WorkingTask[]>()
+
+// The completed tasks
+const [completedTasks, setCompletedTasks] = createSignal<CompletedTask[]>()
 
 
 let activeTimeRef: HTMLDivElement;
@@ -47,8 +56,30 @@ let activeTimeRef: HTMLDivElement;
 const [get1hScale, setScale] = createSignal(150)
 
 
-const toggleCompleted = (id: string) => {
-  setTasks(getTasks()?.map(t => t.id === id ? {...t, completed: !t.completed} : t))
+// ---------------------------- User task operations -------------------------
+// TODO: fix this bad types
+const completeTask = (task: Completable) => {
+  // TODO: handle scheudledTask
+  setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id))
+  setWorkingTask(workingTasks()?.filter(t => t.task.task.id !== task.task.task.id))
+  setCompletedTasks([...completedTasks() ?? [], task.completed_task()])
+}
+
+const uncompleteTask = (task: CompletedTask) => {
+// TODO: Check if task was a working task? Handle this?
+  setUnscheduledTasks([...unscheduledTasks() ?? [], task.uncompleted()])
+  setCompletedTasks(completedTasks()?.filter(t => t.task.task.id !== task.task.task.id))
+}
+
+// TODO: only able to have 1 working task at once
+const startTask = (task: ScheduledTask) => {
+  setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id))
+  setWorkingTask([ ...workingTasks() ?? [], task.started()])
+}
+
+const stopTask = (task: WorkingTask) => {
+  setUnscheduledTasks([...unscheduledTasks() ?? [], task.stoped()])
+  setWorkingTask(workingTasks()?.filter(t => t.task.task.id !== task.task.task.id))
 }
 
 
@@ -61,6 +92,7 @@ const changeDay = (amount: number) => {
 }
 
 
+// The task that is currently being edited in the popup view
 const [editTask, setEditTask] = createSignal<UnscheduledTask | null>(null)
 
 
@@ -80,52 +112,74 @@ export default function CalendarView(props: {session: Session}) {
 
   // Sync user tasks with database
   createEffect(() => {
-    if (!getTasks()) return
+    if (!unscheduledTasks()) return
 
-    updateDBWithTasks(getTasks()!, props.session)
+    updateDBWithTasks(unscheduledTasks()!, props.session)
   })
 
-  async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
-    if (!tasks) return
+  /** Schedules that unscheudled tasks using the working and completed tasks as obstacles */
+  async function getScheduledTasks(args: {unscheduled: UnscheduledTask[] | undefined, completed: CompletedTask[] | undefined, working: WorkingTask[] | undefined}) {
+    const {unscheduled, completed, working} = args
+    if (!unscheduled) return
+    const scheduledTasks = await scheduleTasks(
+      unscheduled,
+      [
+        completed?.map(t => { return {
+          start_time: t.start_time, 
+          end_time: t.end_time
+        } }) ?? [],
+        working?.map(t => { return {
+          start_time: t.scheduled_datetime, 
+          end_time: (() => {const d = new Date(t.scheduled_datetime); d.setMinutes(d.getMinutes() + t.task.task.duration!); return d})()
+        } }) ?? []
+      ].flat()
+    )
 
-    const [durationTasks, nonDurationTasks] = tasks.reduce((prev, task) => {
-      if (task.duration !== null) {
-        prev[0].push(task)
-      } else {
-        prev[1].push(task)
-      }
-      return prev
-    }, [new Array<UnscheduledTask>(), new Array<UnscheduledTask>()])
+    return scheduledTasks
+
+    // const [durationTasks, nonDurationTasks] = unscheduled.reduce((prev, task) => {
+    //   if (task.duration !== null) {
+    //     prev[0].push(task)
+    //   } else {
+    //     prev[1].push(task)
+    //   }
+    //   return prev
+    // }, [new Array<UnscheduledTask>(), new Array<UnscheduledTask>()])
 
 
-    const nonDurationTasksScheduled: ScheduledTask[] = nonDurationTasks.map(t => {
-      return {
-        task: {
-          task: t,
-          urgency: "Low"
-        },
-        scheduled_datetime: new Date()
-      }
-    })
+    // const nonDurationTasksScheduled: ScheduledTask[] = nonDurationTasks.map(t => {
+    //   return {
+    //     task: {
+    //       task: t,
+    //       urgency: "Low"
+    //     },
+    //     scheduled_datetime: new Date(),
+    //     state: "Scheduled"
+    //   }
+    // })
 
-    console.log(durationTasks)
 
-
-    return [await scheduleTasks(durationTasks),  nonDurationTasksScheduled   ].flat()
+    // return [await scheduleTasks(durationTasks, [
+    //   completed?.map(t => {return {start_time: t.start_time, end_time: t.end_time}}) ?? [],
+    //   working?.map(t => {return {start_time: t.scheduled_datetime, end_time: (() => {const d = new Date(t.scheduled_datetime); d.setMinutes(d.getMinutes() + t.task.task.duration!); return d})()}}) ?? []
+    // ].flat()),  nonDurationTasksScheduled   ].flat()
   }
 
-  const [autoscheduledTasks] = createResource(getTasks, getScheduledTasks)
+  const tasks = () => {return {unscheduled: unscheduledTasks(), completed: completedTasks(), working: workingTasks()}}
+  const [autoscheduledTasks] = createResource(tasks, getScheduledTasks)
 
   const todaysTasks = createMemo<{daily: ScheduledTask[], scheduled: ScheduledTask[]} | undefined>(() => 
     autoscheduledTasks()?.reduce(
       (prev, task) => {
         if (task.scheduled_datetime.toDateString() !== day().toDateString()) return prev
 
-        if (task.task.task.duration !==  null) {
-          prev.scheduled.push(task)
-        } else {
-          prev.daily.push(task)
-        }
+        prev.scheduled.push(task)
+
+        // if (task.task.task.duration !==  null) {
+        //   prev.scheduled.push(task)
+        // } else {
+        //   prev.daily.push(task)
+        // }
 
         return prev
       }, 
@@ -133,7 +187,7 @@ export default function CalendarView(props: {session: Session}) {
     )
   )
 
-  const dailyTasks = () => todaysTasks()?.daily
+  // const dailyTasks = () => todaysTasks()?.daily
   const scheduledTasks = () => todaysTasks()?.scheduled
 
 
@@ -142,14 +196,16 @@ export default function CalendarView(props: {session: Session}) {
 
       <EditTask onDBChange={() => updateTasksWithDatabase(props.session)} session={props.session} task={editTask()!} show={editTask() !== null} close={() => setEditTask(null)} />
 
-      <CalendarHeader dailyTasks={dailyTasks()} />
-      <CalendarBody tasks={scheduledTasks()} />
+      {/*<CalendarHeader dailyTasks={dailyTasks()} /> */}
+      <CalendarHeader />
+      <CalendarBody scheduledTasks={scheduledTasks()} workingTasks={workingTasks()} completedTasks={completedTasks()} />
 
     </ div>
   )
 }
 
-function CalendarHeader(props: {dailyTasks?: ScheduledTask[]}) {
+// function CalendarHeader(props: {dailyTasks?: ScheduledTask[]}) {
+function CalendarHeader() {
 
   const [getDailyExpanded, setDailyExpanded] = createSignal(false)
 
@@ -176,6 +232,7 @@ function CalendarHeader(props: {dailyTasks?: ScheduledTask[]}) {
         <CalendarDate date={dates()[4]} click={() => changeDay(+2)} />
       </div>
 
+      {/* TODO: Add this back
       {props.dailyTasks !== undefined && props.dailyTasks.length && (<>
         <div class="flex flex-row mt-3 w-10/12" classList={{"gap-2": !getDailyExpanded()}}>
           <div class="flex-grow flex flex-col" classList={{"gap-1": props.dailyTasks?.length > 1, "gap-0": props.dailyTasks?.length <= 1}}>
@@ -201,6 +258,7 @@ function CalendarHeader(props: {dailyTasks?: ScheduledTask[]}) {
           onclick={() => setDailyExpanded(false)}
         />
       </>)}
+      */}
 
 
 
@@ -208,23 +266,24 @@ function CalendarHeader(props: {dailyTasks?: ScheduledTask[]}) {
   )
 }
 
-function DailyTask(props: {task: ScheduledTask, show: boolean}) {
-
-  return(
-    <div class="flex flex-row gap-2 justify-start items-center text-center h-8 bg-secondary p-2 rounded-lg transition-all"
-      onclick={() => setEditTask(props.task.task.task)} // The edit task does not take scheduled task bc it will be rescheudeld on change, so I will sent the unschedueld task version
-
-      classList={{"opacity-0": !props.show}}
-    >
-
-      {props.task?.task.task.completed ?  // Why is this coming as undefiend? dang javascript
-        <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task.task.task.id)} size={30} class="fill-primary" /> :
-        <BiRegularCheckbox onclick={() => toggleCompleted(props.task.task.task.id)} size={30} class="fill-primary" />
-      }
-      <h3>{props.task.task.task.name}</h3>
-    </div>
-  )
-}
+// // TODO: fix this for other task states
+// function DailyTask(props: {task: ScheduledTask | CompletedTask, show: boolean}) {
+// 
+//   return(
+//     <div class="flex flex-row gap-2 justify-start items-center text-center h-8 bg-secondary p-2 rounded-lg transition-all"
+//       onclick={() => setEditTask(props.task.task.task)} // The edit task does not take scheduled task bc it will be rescheudeld on change, so I will sent the unschedueld task version
+// 
+//       classList={{"opacity-0": !props.show}}
+//     >
+// 
+//       { props.task.state === "Completed" ? // Add animations to this
+//         <BiRegularCheckbox onclick={() => uncompleteTask(props.task as CompletedTask)} size={35} class='fill-primary' /> :
+//         <BiSolidCheckboxChecked onclick={() => completeTask(props.task as ScheduledTask)} size={35} class='fill-primary' />
+//       }
+//       <h3>{props.task.task.task.name}</h3>
+//     </div>
+//   )
+// }
 
 
 function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) {
@@ -255,9 +314,10 @@ function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) 
 
 
 
-function CalendarBody(props: {tasks?: ScheduledTask[]}) {
+function CalendarBody(props: {scheduledTasks?: ScheduledTask[], workingTasks?: WorkingTask[], completedTasks?: CompletedTask[]}) {
   const hours = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   const times = hours.map(i => i + " AM").concat(hours.map(i => i + " PM")).concat("12 PM")
+
 
   return(
     <>
@@ -272,7 +332,7 @@ function CalendarBody(props: {tasks?: ScheduledTask[]}) {
         <CalendarTimeLine />
       </div>
       <div>
-        <For each={props.tasks} fallback={null}>
+        <For each={[props.scheduledTasks ?? [], props.workingTasks ?? [], props.completedTasks ?? []].flat()} fallback={null}>
           {(item) => (
             <Event task={item} />
           )}
@@ -282,7 +342,7 @@ function CalendarBody(props: {tasks?: ScheduledTask[]}) {
   )
 }
 
-function CalendarTimeLine() { // TODO: Fix the timing of this and the tasks when time gets late
+function CalendarTimeLine() {
   const date = new Date;
 
   const [minutes, setMinutes] = createSignal<number>(date.getMinutes() + ((date.getHours() + 1) * 60)) // + 1 because 12 = 0 on the cal
@@ -316,23 +376,30 @@ function CalendarLine(props: {time: string}) {
 }
 
 
+/** Only give on argument; I can't figure out how to do type checking so I have to do this shit */
+function Event(props: {task: Scheduleable}) {
 
+  const duration = () => (props.task.end_time.getTime() - props.task.start_time.getTime())/1000/60
 
-function Event(props: {task: ScheduledTask}) {
-  const duration = () => props.task.task.task.duration ?? 30
-
-  const startTime = () => (props.task.scheduled_datetime.getHours() + props.task.scheduled_datetime.getMinutes() / 60 + 1) * get1hScale()
+  const startTime = () => (props.task.start_time.getHours() + props.task.start_time.getMinutes() / 60 + 1) * get1hScale()
   const height = () => duration() / 60 * get1hScale()
 
   const changeDuration = (amt: number) => {
-    const tasks = getTasks()
+    const tasks = unscheduledTasks()
 
     if (!tasks) {
       console.log("No tasks but adding 15 minutes?")
       return
     }
 
-    setTasks(tasks.map(task => task.id === props.task.task.task.id ?  {...task, duration: props.task.task.task.duration! + amt} : task)) // TODO: Make better type, but this should not be null
+    if (props.task instanceof CompletedTask) return
+    else if (props.task instanceof WorkingTask) {
+      const workingTask = props.task
+      setWorkingTask(workingTasks()?.map(task => task.task.task.id === workingTask.task.task.id ? workingTask.changed_duration(amt) : task))
+    } else if (props.task instanceof ScheduledTask) {
+      const scheduledTask = props.task
+      setUnscheduledTasks(unscheduledTasks()?.map(task => task.id === scheduledTask.task.task.id ? scheduledTask.changed_duration(amt).task.task : task))
+    }
   }
 
   // // TODO Implement this into teh algo
@@ -366,9 +433,9 @@ function Event(props: {task: ScheduledTask}) {
     >
       <div class="flex w-full items-center justify-start">
 
-        { !props.task.task.task.completed ? // Add animations to this
-          <BiRegularCheckbox onclick={() => toggleCompleted(props.task.task.task.id)} size={35} class='fill-primary' /> :
-          <BiSolidCheckboxChecked onclick={() => toggleCompleted(props.task.task.task.id)} size={35} class='fill-primary' />
+        { props.task instanceof CompletedTask  ? // Add animations to this
+          <BiSolidCheckboxChecked onclick={() => uncompleteTask(props.task as CompletedTask)} size={35} class='fill-primary' /> :
+          <BiRegularCheckbox onclick={() => completeTask(props.task as ScheduledTask | WorkingTask)} size={35} class='fill-primary' />
         }
 
         <h1 class="flex items-center text-lg">{props.task.task.task.name}</h1>
@@ -384,27 +451,36 @@ function Event(props: {task: ScheduledTask}) {
       </Motion.span>
 
 
-      {/*
-<AiFillPlayCircle
-class="fill-primary absolute bottom-2 right-[4.5rem]"
-size={30}
-onclick={() => setStartTime()}
-/>
-*/}
+      { props.task instanceof ScheduledTask ?
+        <AiFillPlayCircle
+          class="fill-primary absolute bottom-2 right-[4.5rem]"
+          size={30}
+          onclick={() =>  startTask(props.task as ScheduledTask)} // Bad JSX! Gimme my type checking!
+        />
+        : props.task instanceof WorkingTask ? 
+          <AiFillCloseCircle 
+            class="fill-primary absolute bottom-2 right-[4.5rem]"
+            size={30}
+            onclick={() => stopTask(props.task as WorkingTask)} // Same here!
+          /> 
+          : null
+      }
 
-      <AiFillPlusCircle 
-        class="fill-primary absolute bottom-2 right-10"
-        size={30}
-        onclick={() => changeDuration(15)}
-      />
+      <Show when={props.task instanceof ScheduledTask || props.task instanceof WorkingTask}>
+        <AiFillPlusCircle 
+          class="fill-primary absolute bottom-2 right-10"
+          size={30}
+          onclick={() => changeDuration(15)}
+        />
 
-      <AiFillMinusCircle
-        class="fill-primary absolute bottom-2 right-2"
-        size={30}
-        onclick={() => changeDuration(-15)}
-      />
+        <AiFillMinusCircle
+          class="fill-primary absolute bottom-2 right-2"
+          size={30}
+          onclick={() => changeDuration(-15)}
+        />
+      </Show>
 
-      <h3>{getTime(props.task.scheduled_datetime.getHours() + props.task.scheduled_datetime.getMinutes() / 60) + "-" + getTime(props.task.scheduled_datetime.getHours() + props.task.scheduled_datetime.getMinutes() / 60 + duration() / 60)}</h3>
+      <h3>{getTime(props.task.start_time.getHours() + props.task.start_time.getMinutes() / 60) + "-" + getTime(props.task.start_time.getHours() + props.task.start_time.getMinutes() / 60 + duration() / 60)}</h3>
 
 
       <div class="flex flex-row items-center justify-center gap-2">
