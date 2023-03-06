@@ -1,7 +1,5 @@
 
-use chrono::{NaiveDateTime, Timelike, Duration, Utc, DateTime};
-
-mod omnis_date_format;
+use chrono::{Duration, Utc, DateTime};
 
 
 
@@ -89,23 +87,23 @@ pub fn adjust_for_obstacles(scheduled_tasks: &Vec<ScheduledTask>, obstacles: &Ve
 }
 
 
-pub fn adjust_for_working_hours(scheduled_tasks: &Vec<ScheduledTask>, start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Vec<ScheduledTask> {
-    let midnight = Utc::now().with_hour(0).expect("Could not set midnight").with_minute(0).expect("Could not set midnight").with_second(0).expect("Could not set midnight");
-
-    let before_work = Obstacle {
-        start_time: midnight,
-        end_time: start_time // Deref bc naivedate is copyable
-    };
-
-    let after_work = Obstacle {
-        start_time: end_time,
-        end_time: midnight + Duration::days(1)
-    };
-
-    let new_scheduled_tasks = adjust_for_obstacles(scheduled_tasks, &vec![before_work, after_work]);
-
-    return new_scheduled_tasks
-}
+// pub fn adjust_for_working_hours(scheduled_tasks: &Vec<ScheduledTask>, start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Vec<ScheduledTask> {
+//     let midnight = Utc::now().with_hour(0).expect("Could not set midnight").with_minute(0).expect("Could not set midnight").with_second(0).expect("Could not set midnight");
+// 
+//     let before_work = Obstacle {
+//         start_time: midnight,
+//         end_time: start_time // Deref bc naivedate is copyable
+//     };
+// 
+//     let after_work = Obstacle {
+//         start_time: end_time,
+//         end_time: midnight + Duration::days(1)
+//     };
+// 
+//     let new_scheduled_tasks = adjust_for_obstacles(scheduled_tasks, &vec![before_work, after_work]);
+// 
+//     return new_scheduled_tasks
+// }
 
 
 // #[cfg(test)]

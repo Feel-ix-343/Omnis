@@ -1,12 +1,12 @@
 mod autoschedule_algo;
 
 use actix_cors::Cors;
+use chrono::Utc;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, middleware::Logger};
 
 use autoschedule_algo::*;
 use autoschedule_algo::autoschedule_structs::*;
 
-use chrono::{Utc, Timelike};
 use serde::{Serialize, Deserialize};
 
 use env_logger;
