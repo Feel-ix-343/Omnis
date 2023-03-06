@@ -19,7 +19,7 @@ import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } 
 
 
 
-// change to a solid js resource
+// TODO: change to a solid js resource
 const updateTasksWithDatabase = async (session: Session) => {
   const {data, error} = await getTasksFromDB(session)
   if (!data) return

@@ -90,27 +90,32 @@ export async function getTasksFromDB(session: Session): Promise<{data: {unschedu
   const { data: unscheudledTasks, error: unscheduledError } = await supabase.from("tasks").select("*").eq("user_id", session.user.id)
   if (unscheduledError) return {data: null, error: unscheduledError}
 
-  const { data: workingTasks, error: workingError } = await supabase.from("working_tasks").select("*").eq("user_id", session.user.id)
+  const { data: workingTasksRes, error: workingError } = await supabase.from("working_tasks").select("*").eq("user_id", session.user.id)
   if (workingError) return {data: null, error: workingError}
 
-  const { data: completedTasks, error: completedError } = await supabase.from("completed_tasks").select('*').eq("user_id", session.user.id)
+  const { data: completedTasksRes, error: completedError } = await supabase.from("completed_tasks").select('*').eq("user_id", session.user.id)
   if (completedError) return {data: null, error: completedError}
 
   // TODO: is this slow? Maybe replace it with a join query
-  const workingTasksData = workingTasks !== null ? await Promise.all(workingTasks.map(async t => await dbWorkingTaskToWorkingTask(t))) : null
-  const completedTasksData = completedTasks !== null ? await Promise.all(completedTasks.map(async t => await dbCompletedTaskToCompletedTask(t))) : null
+  const workingTasksData = workingTasksRes !== null ? await Promise.all(workingTasksRes.map(async t => await dbWorkingTaskToWorkingTask(t))) : null
+  const completedTasksData = completedTasksRes !== null ? await Promise.all(completedTasksRes.map(async t => await dbCompletedTaskToCompletedTask(t))) : null
 
   // TODO: It shuold return all of the errors, but its find for now
   if (workingTasksData !== null && workingTasksData.some(t => t.error !== null || t.data === null)) return {data: null, error: workingTasksData.find(t => t.error !== null)!.error}
   if (completedTasksData !== null && completedTasksData.some(t => t.error !== null || t.data === null)) return {data: null, error: completedTasksData.find(t => t.error !== null)!.error}
 
+  const workingTasks = workingTasksData !== null ? workingTasksData.map(t => t.data!) : null
+  const completedTasks = completedTasksData !== null ? completedTasksData.map(t => t.data!) : null
+
+  const filteredUnscheduledTasks: UnscheduledTask[] | null = unscheudledTasks !== null ? (unscheudledTasks.filter(t => !(workingTasks ?? []).some(wt => wt.task.task.id == t.id) && !(completedTasks ?? []).some(ct => ct.task.task.id == t.id))).map(t => dbUnscheduledTaskToTask(t)) : null
+
 
   // TODO: AHHHHH SO UGLY
   return { 
     data: {
-      unscheduledTasks: unscheudledTasks !== null ? unscheudledTasks.map(t => dbUnscheduledTaskToTask(t)) : null, // I wish this was rust
-      workingTasks: workingTasksData !== null ? workingTasksData.map(t => t.data!) : null,
-      completedTasks: completedTasksData !== null ? completedTasksData.map(t => t.data!) : null
+      unscheduledTasks: filteredUnscheduledTasks,
+      workingTasks, 
+      completedTasks
     }, error: null}
 }
 
