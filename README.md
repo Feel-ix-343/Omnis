@@ -4,7 +4,8 @@ A daily planning app for people with executive disfunctioning disorder
 
 **Creators:** Siddharth Gupta, Vignesh Peddi, Felix Zeller
 
-Website Link: https://www.omnisplanning.com/#
+- Website Link: https://www.omnisplanning.com/#
+- API Link: https://api.omnisplanning.com TODO: document the nginx reverse proxy
 
 **Abstract**
 
