@@ -34,12 +34,37 @@ export interface Database {
   }
   public: {
     Tables: {
+      completed_tasks: {
+        Row: {
+          completed_time: string
+          id: string
+          ref_task: string
+          start_time: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          completed_time: string
+          id: string
+          ref_task: string
+          start_time: string
+          urgency: string
+          user_id: string
+        }
+        Update: {
+          completed_time?: string
+          id?: string
+          ref_task?: string
+          start_time?: string
+          urgency?: string
+          user_id?: string
+        }
+      }
       tasks: {
         Row: {
-          completed: boolean
           description: string | null
           due_date: string
-          duration: number | null
+          duration: number
           id: string
           importance: string
           name: string
@@ -47,10 +72,9 @@ export interface Database {
           user_id: string
         }
         Insert: {
-          completed: boolean
           description?: string | null
           due_date: string
-          duration?: number | null
+          duration: number
           id: string
           importance: string
           name: string
@@ -58,14 +82,39 @@ export interface Database {
           user_id: string
         }
         Update: {
-          completed?: boolean
           description?: string | null
           due_date?: string
-          duration?: number | null
+          duration?: number
           id?: string
           importance?: string
           name?: string
           steps?: Json[] | null
+          user_id?: string
+        }
+      }
+      working_tasks: {
+        Row: {
+          end_time: string
+          id: string
+          ref_task: string
+          start_time: string
+          urgency: string
+          user_id: string
+        }
+        Insert: {
+          end_time: string
+          id: string
+          ref_task: string
+          start_time: string
+          urgency: string
+          user_id: string
+        }
+        Update: {
+          end_time?: string
+          id?: string
+          ref_task?: string
+          start_time?: string
+          urgency?: string
           user_id?: string
         }
       }

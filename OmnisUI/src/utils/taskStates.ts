@@ -94,7 +94,7 @@ export class WorkingTask implements Scheduleable, ChangeableDuration, Completabl
     return new CompletedTask(
       this.task,
       this.start_time,
-      this.end_time
+      new Date()
     )
   }
 }

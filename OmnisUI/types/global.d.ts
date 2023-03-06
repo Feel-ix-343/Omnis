@@ -36,9 +36,6 @@ type Obstacle = {
 
 
 
-// TODO: Algo does not accept tasks without a duration. If duration is null, the task will be considered a daily task. TODO: Make this more clear with types
-
-type DBTask = import ("../src/utils/database/database.types").Database["public"]["Tables"]["tasks"]["Row"]
 
 
 

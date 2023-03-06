@@ -20,12 +20,11 @@ import { newNotification } from "./App";
 import Notification from "./components/Notification";
 import EditTask from "./EditTask";
 import { scheduleTasks } from "./utils/schedulingFunctions";
+import { ScheduledTask } from "./utils/taskStates";
 
 
 const [session, setSession] = createSignal<Session>()
 
-// TODO: Turn this into a global state in the App.tsx
-const [getAllTasks, setAllTasks] = createSignal<UnscheduledTask[]>()
 // Get all tasks from the DB. This will then be used to schedule the tasks, then filtere for the day, then display
 const getAllTasksFromDB = async (session: Session | undefined) => {
   if (!session) return
@@ -37,9 +36,13 @@ const getAllTasksFromDB = async (session: Session | undefined) => {
     return
   }
 
-  setAllTasks(databaseTasks ?? [])
+  return databaseTasks?.unscheduledTasks ?? []
 }
-const [getPlannedTasksFromDB, {mutate: mutateDB, refetch: refetchDB}] = createResource(session, getAllTasksFromDB)
+const [getAllTasks, {mutate: mutateDB, refetch: refetchDB}] = createResource(session, getAllTasksFromDB)
+
+
+
+
 
 // Schedule the tasks
 async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
@@ -49,6 +52,10 @@ async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
   return await scheduleTasks(durationTasks)
 }
 const [autoscheduledTasks] = createResource(getAllTasks, getScheduledTasks)
+
+
+
+
 
 
 const todaysTasks = createMemo<ScheduledTask[]>(() => {

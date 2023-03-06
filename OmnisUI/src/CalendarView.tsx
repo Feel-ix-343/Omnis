@@ -10,7 +10,7 @@ import EditTask from "./EditTask"
 
 import {newNotification} from "./App"
 import Notification from "./components/Notification"
-import { getTasksFromDB, upsertTasks } from "./utils/database/databaseFunctions"
+import { deleteDBCompletedTasks, deleteDBWorkingTasks, getTasksFromDB, upsertCompletedTasks, upsertTasks, upsertWorkingTasks } from "./utils/database/databaseFunctions"
 import { scheduleTasks } from "./utils/schedulingFunctions"
 import { BsStopCircleFill } from "solid-icons/bs"
 import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } from "./utils/taskStates"
@@ -21,7 +21,10 @@ import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } 
 
 // change to a solid js resource
 const updateTasksWithDatabase = async (session: Session) => {
-  const {data: unscheduledTasks, error} = await getTasksFromDB(session)
+  const {data, error} = await getTasksFromDB(session)
+  if (!data) return
+
+  const {unscheduledTasks, completedTasks, workingTasks} = data
 
   if (error) {
     console.log(error.message)
@@ -29,7 +32,9 @@ const updateTasksWithDatabase = async (session: Session) => {
     return
   }
 
-  setUnscheduledTasks(unscheduledTasks ?? undefined) // TODO: This is such good cod3
+  setUnscheduledTasks(unscheduledTasks ?? undefined) // TODO: This is such good cod3; don't fix it pls
+  setWorkingTask(workingTasks ?? undefined)
+  setCompletedTasks(completedTasks ?? undefined)
 }
 
 const updateDBWithTasks = async (tasks: UnscheduledTask[], session: Session) => {
@@ -110,11 +115,45 @@ export default function CalendarView(props: {session: Session}) {
     activeTimeRef?.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
   })
 
-  // Sync user tasks with database
+  // Sync unscheduled user tasks with database. This will not delete
   createEffect(() => {
     if (!unscheduledTasks()) return
 
     updateDBWithTasks(unscheduledTasks()!, props.session)
+  })
+
+  createEffect<WorkingTask[] | undefined>((prev) => {
+    const tasks = workingTasks()
+    if (!tasks) return
+
+    // find removed working tasks and remove them from database
+    const removed = prev?.filter(t => !tasks.find(t2 => t2.task.task.id === t.task.task.id))
+    if (removed && removed?.length !== 0) {
+      console.log("Working Removed", removed)
+      deleteDBWorkingTasks(removed)
+    }
+
+    upsertWorkingTasks(tasks, props.session)
+
+    // return the last computed value to calculate the diffs in the futue
+    return tasks
+  }, workingTasks())
+
+  createEffect<CompletedTask[] | undefined>((prev) => {
+    const tasks = completedTasks()
+    if (!tasks) return
+
+    // find removed completed tasks and remove them from database
+    const removed = prev?.filter(t => !tasks.find(t2 => t2.task.task.id === t.task.task.id))
+    if (removed && removed?.length !== 0) {
+      console.log("Completed Removed", removed)
+      deleteDBCompletedTasks(removed)
+    }
+
+    upsertCompletedTasks(tasks, props.session)
+
+    // return the last computed value to calculate the diffs in the futue
+    return tasks
   })
 
   /** Schedules that unscheudled tasks using the working and completed tasks as obstacles */
@@ -233,32 +272,32 @@ function CalendarHeader() {
       </div>
 
       {/* TODO: Add this back
-      {props.dailyTasks !== undefined && props.dailyTasks.length && (<>
-        <div class="flex flex-row mt-3 w-10/12" classList={{"gap-2": !getDailyExpanded()}}>
-          <div class="flex-grow flex flex-col" classList={{"gap-1": props.dailyTasks?.length > 1, "gap-0": props.dailyTasks?.length <= 1}}>
-            <DailyTask task={props.dailyTasks[0]} show={true} />
+{props.dailyTasks !== undefined && props.dailyTasks.length && (<>
+<div class="flex flex-row mt-3 w-10/12" classList={{"gap-2": !getDailyExpanded()}}>
+<div class="flex-grow flex flex-col" classList={{"gap-1": props.dailyTasks?.length > 1, "gap-0": props.dailyTasks?.length <= 1}}>
+<DailyTask task={props.dailyTasks[0]} show={true} />
 
-            <For each={props.dailyTasks.slice(1)} fallback={null}>
-              {(item) => (
-                <DailyTask task={item} show={getDailyExpanded()} />
-              )}
-            </For>
-          </div>
-          <div 
-            class="bg-white rounded-full h-8 text-sm text-primary bg-opacity-75 flex justify-center items-center border-2 border-neutral-200 whitespace-nowrap transition-all"
-            classList={{"w-0 opacity-0 px-0 pointer-events-none": getDailyExpanded() || props.dailyTasks?.length === 1, "w-20 px-3": !getDailyExpanded() && !(props.dailyTasks?.length === 1)}}
-            onclick={() => setDailyExpanded(true)}
-          >
-            {props.dailyTasks.length - 1} more
-          </div>
-        </div>
+<For each={props.dailyTasks.slice(1)} fallback={null}>
+{(item) => (
+<DailyTask task={item} show={getDailyExpanded()} />
+)}
+</For>
+</div>
+<div 
+class="bg-white rounded-full h-8 text-sm text-primary bg-opacity-75 flex justify-center items-center border-2 border-neutral-200 whitespace-nowrap transition-all"
+classList={{"w-0 opacity-0 px-0 pointer-events-none": getDailyExpanded() || props.dailyTasks?.length === 1, "w-20 px-3": !getDailyExpanded() && !(props.dailyTasks?.length === 1)}}
+onclick={() => setDailyExpanded(true)}
+>
+{props.dailyTasks.length - 1} more
+</div>
+</div>
 
-        <AiOutlineCaretUp 
-          class="bg-white w-32 mt-3 rounded-full border-2 border-neutral-200"
-          onclick={() => setDailyExpanded(false)}
-        />
-      </>)}
-      */}
+<AiOutlineCaretUp 
+class="bg-white w-32 mt-3 rounded-full border-2 border-neutral-200"
+onclick={() => setDailyExpanded(false)}
+/>
+</>)}
+*/}
 
 
 

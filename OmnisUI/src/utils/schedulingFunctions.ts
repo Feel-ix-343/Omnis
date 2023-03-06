@@ -4,7 +4,7 @@ console.log("Prod?", import.meta.env.PROD)
 const omnis_algo_addr: string = import.meta.env.PROD ? import.meta.env.VITE_OMNIS_ALGO_ADDR_PROD : import.meta.env.VITE_OMNIS_ALGO_ADDR;
 
 
-export async function scheduleTasks(tasks: UnscheduledTask[], obstacles: Obstacle[]) {
+export async function scheduleTasks(tasks: UnscheduledTask[], obstacles?: Obstacle[]) {
   console.log("Scheduling", tasks, obstacles)
   const autoschedulingRequest = {
     unscheduled_tasks: tasks,

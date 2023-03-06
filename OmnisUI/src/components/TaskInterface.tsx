@@ -55,7 +55,6 @@ export default function TaskInterface(props: {
       name: taskName()!,
       duration: taskDuration()!, // TODO: Make this not required and the others
       importance: taskImportance()!,
-      completed: false,
       description: taskDescription() ?? "",
       steps: steps() ?? null
     }
