@@ -49,8 +49,8 @@ export class ScheduledTask implements Scheduleable, ChangeableDuration, Completa
   public completed_task() {
     return new CompletedTask(
       this.task,
-      this.start_time,
-      this.end_time
+      (() => {const d = new Date(); d.setMinutes(d.getMinutes() - this.task.task.duration); return d})(),
+      new Date()
     )
   }
 
