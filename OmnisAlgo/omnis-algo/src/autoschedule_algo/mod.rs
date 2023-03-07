@@ -86,19 +86,26 @@ pub fn adjust_for_obstacles(scheduled_tasks: &Vec<ScheduledTask>, obstacles: &Ve
         let mut new_task = task.clone();
         new_task.scheduled_datetime += accumulated_timing;
 
-        // Find obstacle that overlaps with the task
+        // Find obstacles that overlap with the task
         // TODO: Make this faster. 
-        let end_time = new_task.scheduled_datetime + Duration::minutes(new_task.task.task.duration); // TODO: Fix this dumb syntax
-        let obstacle = obstacles.iter().find(|obs| 
+        let end_time = new_task.scheduled_datetime + Duration::minutes(new_task.task.task.duration);
+        let obstacles = obstacles.iter().filter(|obs| 
             obs.end_time >= new_task.scheduled_datetime && new_task.scheduled_datetime >= obs.start_time || // Task starts in obstacle
             obs.end_time > end_time && end_time > obs.start_time || // Task ends in obstacle
             new_task.scheduled_datetime <= obs.start_time && end_time >= obs.end_time // Obstacle is inside task
-        );
+        ).collect_vec();
 
 
-        if let Some(obs) = obstacle {
+        if obstacles.len() != 0 {
+            if task.task.task.name == "Iron out planning -> schedule" {
+                println!("Obstacles: {:?}", obstacles);
+                println!("Accumulated timing: {:?}", accumulated_timing);
+            }
+            // Find the obstacle that end the latest
+            let obs = obstacles.iter().max_by_key(|obs| obs.end_time).expect("I thought there was at least one obstacle");
+
             new_task.scheduled_datetime = obs.end_time;
-            accumulated_timing = accumulated_timing + (obs.end_time - task.scheduled_datetime);
+            accumulated_timing = obs.end_time - task.scheduled_datetime;
         }
 
         new_scheduled_tasks.push(new_task)
@@ -109,23 +116,32 @@ pub fn adjust_for_obstacles(scheduled_tasks: &Vec<ScheduledTask>, obstacles: &Ve
 }
 
 
-// pub fn adjust_for_working_hours(scheduled_tasks: &Vec<ScheduledTask>, start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Vec<ScheduledTask> {
-//     let midnight = Utc::now().with_hour(0).expect("Could not set midnight").with_minute(0).expect("Could not set midnight").with_second(0).expect("Could not set midnight");
-// 
-//     let before_work = Obstacle {
-//         start_time: midnight,
-//         end_time: start_time // Deref bc naivedate is copyable
-//     };
-// 
-//     let after_work = Obstacle {
-//         start_time: end_time,
-//         end_time: midnight + Duration::days(1)
-//     };
-// 
-//     let new_scheduled_tasks = adjust_for_obstacles(scheduled_tasks, &vec![before_work, after_work]);
-// 
-//     return new_scheduled_tasks
-// }
+/// Scheuled task should not be empty
+pub fn non_working_obstacles(scheduled_tasks: &Vec<ScheduledTask>, pref_start_time: DateTime<Utc>, pref_end_time: DateTime<Utc>) -> Vec<Obstacle> {
+
+    let first_task_date = scheduled_tasks.iter()
+        .min_by_key(|task| task.scheduled_datetime)
+        .expect("I thought scheduled task was not empty! READ THE DOCS")
+        .scheduled_datetime;
+
+    let last_task_date = scheduled_tasks.iter()
+        .max_by_key(|task| task.scheduled_datetime)
+        .expect("I thought scheduled task was not empty! READ THE DOCS")
+        .scheduled_datetime;
+
+    let difference = last_task_date - first_task_date;
+
+
+    let today = Utc::now();
+    let non_working_time_obstalces = ( 0..difference.num_days() + 2 )
+        .map(|i| Obstacle {
+            start_time: pref_end_time - Duration::days((today - first_task_date).num_days() + 1 - i),
+            end_time: pref_start_time - Duration::days((today - first_task_date).num_days() - i)
+        })
+        .collect_vec();
+
+    return non_working_time_obstalces
+}
 
 
 // #[cfg(test)]

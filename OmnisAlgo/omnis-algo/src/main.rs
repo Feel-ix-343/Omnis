@@ -29,14 +29,20 @@ async fn hello() -> impl Responder {
 async fn autoschedule(request: web::Json<AutoscheduleRequest>) -> impl Responder {
     let tasks = request.unscheduled_tasks.clone();
 
-
     let ordered_tasks = order_tasks(&tasks);
-    let scheduled_tasks = schedule_tasks(&ordered_tasks, Utc::now());// TODO: Will need to fix this for the user
+    let scheduled_tasks = schedule_tasks(&ordered_tasks, Utc::now());
 
-    // let tasks_in_working_hours = adjust_for_working_hours(&scheduled_tasks, request.user_preferences.start_time, request.user_preferences.end_time); // TODO: Fix TZs
+    let mut obstacles = Vec::new();
 
-    if let Some(obstacles) = &request.obstacles {
-        let tasks_with_obstacles = adjust_for_obstacles(&scheduled_tasks, obstacles);
+    if let Some(user_preferences) = &request.user_preferences {
+        let mut obs = non_working_obstacles(&scheduled_tasks, user_preferences.start_time, user_preferences.end_time);
+        obstacles.append(&mut obs)
+    }
+
+    if let Some(req_obstacles) = &request.obstacles {
+        let mut r = req_obstacles.clone();
+        obstacles.append(&mut r);
+        let tasks_with_obstacles = adjust_for_obstacles(&scheduled_tasks, &obstacles);
         return HttpResponse::Ok().json(tasks_with_obstacles);
     }
 
