@@ -78,12 +78,12 @@ const uncompleteTask = (task: CompletedTask) => {
 
 // TODO: only able to have 1 working task at once
 const startTask = (task: ScheduledTask) => {
-  if (workingTask() !== null) stopTask(workingTask()!)
+  // Stop the old working task
+  if (workingTask() !== null) stopTask(workingTask()!) // TODO: I could probably figure out a better rendering system for this.
 
   // remove from unscheduled tasks
   setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id)) // TODO: Use the solid apis for this
 
-  // Set and remove the old working task
   setWorkingTask(task.started())
 }
 
@@ -209,6 +209,7 @@ export default function CalendarView(props: {session: Session}) {
 
   const tasks = () => {return {unscheduled: unscheduledTasks(), completed: completedTasks(), working: workingTask()}}
   const [autoscheduledTasks, {refetch: reschedule, mutate}] = createResource(tasks, getScheduledTasks)
+  setInterval(() => reschedule(), 1000 * 60 * 1) // reschedule every 5 minutes
 
   interface TodaysTasks {daily: ScheduledTask[], scheduled: ScheduledTask[], working: WorkingTask | null, completed: CompletedTask[]}  
   const todaysTasks = createMemo<TodaysTasks | undefined>(() => 
@@ -470,8 +471,8 @@ function Event(props: {task: Scheduleable}) {
       classList={{
         "border-green-400 bg-highlight": props.task instanceof CompletedTask,
         "border-red-300 bg-red-300": props.task.task.urgency === "High" && props.task.task.task.importance === "High" && !(props.task instanceof CompletedTask),
-        "border-orange-300 bg-orange-300": props.task.task.urgency === "High" && props.task.task.task.importance === "Low" && !(props.task instanceof CompletedTask),
-        "border-blue-300 bg-blue-300": props.task.task.urgency === "Low" && props.task.task.task.importance === "High" && !(props.task instanceof CompletedTask),
+        "border-orange-300 bg-orange-300": props.task.task.urgency === "Low" && props.task.task.task.importance === "High" && !(props.task instanceof CompletedTask),
+        "border-blue-300 bg-blue-300": props.task.task.urgency === "High" && props.task.task.task.importance === "Low" && !(props.task instanceof CompletedTask),
         "border-neutral-300 bg-neutral-300": props.task.task.urgency === "Low" && props.task.task.task.importance === "Low" && !(props.task instanceof CompletedTask),
       }}
     >

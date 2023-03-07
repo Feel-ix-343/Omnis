@@ -193,7 +193,7 @@ export default function TaskInterface(props: {
                     {display: "2hr", value: 120},
                   ]} 
                   setChoice={(choice: number) => setTaskDuration(choice)} 
-                  choiceOutput={taskDuration() !== undefined ? (taskDuration()! / 60 < 1 ? `${taskDuration()! * 60}min` : `${taskDuration()! / 60}hr`) : null}
+                  choiceOutput={taskDuration() ? (taskDuration()! / 60 < 1 ? `${taskDuration()!}min` : `${taskDuration()! / 60}hr`) : null}
                 >
                   Duration
                 </DropDown>
