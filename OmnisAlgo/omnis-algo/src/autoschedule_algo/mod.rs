@@ -1,5 +1,6 @@
 
 use chrono::{Duration, Utc, DateTime};
+use itertools::Itertools;
 
 
 
@@ -9,14 +10,35 @@ use autoschedule_structs::*;
 
 // TODO: Why would the first half of the tasks be high urgency and the second half low urgency? This seems abitrary.
 fn tasks_to_urgency(tasks: &Vec<UnscheduledTask>) -> Vec<UnscheduledTaskWithUrgency> {
-    let mut tasks_ordered_by_date: Vec<UnscheduledTask> = tasks.clone();
-    tasks_ordered_by_date.sort_by_key(|task| task.due_date);
+    // Group tasks by their due date and assign urgency based mediad calculations in the list. Edges: all tasks are due on the same day -> all are high urgency
+    let tasks_by_date_groups = tasks.iter()
+        .group_by(|task| task.due_date);
 
-    // Map the first half of the tasks to high urgency and the second half to low urgency
-    let tasks_with_urgency: Vec<UnscheduledTaskWithUrgency> = vec![
-        tasks_ordered_by_date[0..tasks_ordered_by_date.len() / 2].to_vec().iter().map(|task| UnscheduledTaskWithUrgency{task: task.clone(), urgency: Urgency::High}).collect::<Vec<UnscheduledTaskWithUrgency>>(),
-        tasks_ordered_by_date[tasks_ordered_by_date.len() / 2..].to_vec().iter().map(|task| UnscheduledTaskWithUrgency{task: task.clone(), urgency: Urgency::Low}).collect::<Vec<UnscheduledTaskWithUrgency>>(),
-    ].into_iter().flatten().collect();
+    let tasks_by_date_sorted = tasks_by_date_groups
+        .into_iter()
+        .sorted_by_key(|(date, _)| *date);
+
+    let tasks_with_urgency: Vec<UnscheduledTaskWithUrgency> = match tasks_by_date_sorted.exactly_one() {
+        Ok((_, tasks)) => tasks.map(|task| UnscheduledTaskWithUrgency{task: task.clone(), urgency: Urgency::High}).collect_vec(),
+        Err(tasks_by_date_sorted) => {
+            let midpoint = match tasks_by_date_sorted.len() % 2 {
+                0 => tasks_by_date_sorted.len() / 2,
+                _ => tasks_by_date_sorted.len() / 2 + 1
+            };
+            let tasks_vec: Vec<(DateTime<Utc>, Vec<&UnscheduledTask>)> = tasks_by_date_sorted.map(|(date, tasks)| (date, tasks.collect_vec())).collect_vec();
+            let high_urgency = tasks_vec[0..midpoint]
+                .into_iter()
+                .flat_map(|(_, tasks)| tasks.into_iter().map(|&task| UnscheduledTaskWithUrgency{task: task.clone(), urgency: Urgency::High}))
+                .collect_vec();
+
+            let low_urgency = tasks_vec[midpoint..]
+                .into_iter()
+                .flat_map(|(_, group)| group.into_iter().map(|&task| UnscheduledTaskWithUrgency{task: task.clone(), urgency: Urgency::Low}))
+                .collect_vec();
+
+            return vec![high_urgency, low_urgency].into_iter().flatten().collect_vec();
+        }
+    };
 
     return tasks_with_urgency
 }
