@@ -85,36 +85,37 @@ async function dbCompletedTaskToCompletedTask(task: DBCompletedTask): Promise<{d
   }
 }
 
-export async function getTasksFromDB(session: Session): Promise<{data: {unscheduledTasks: UnscheduledTask[] | null, workingTasks: WorkingTask[] | null, completedTasks: CompletedTask[] | null} | null, error: PostgrestError | null}> { 
+export async function getTasksFromDB(session: Session): Promise<{data: {unscheduledTasks: UnscheduledTask[] | null, workingTask: WorkingTask | null, completedTasks: CompletedTask[] | null} | null, error: PostgrestError | null}> { 
 
   const { data: unscheudledTasks, error: unscheduledError } = await supabase.from("tasks").select("*").eq("user_id", session.user.id)
   if (unscheduledError) return {data: null, error: unscheduledError}
 
-  const { data: workingTasksRes, error: workingError } = await supabase.from("working_tasks").select("*").eq("user_id", session.user.id)
+  const { data: workingTaskRes, error: workingError } = await supabase.from("working_tasks").select("*").eq("user_id", session.user.id).maybeSingle()
   if (workingError) return {data: null, error: workingError}
 
   const { data: completedTasksRes, error: completedError } = await supabase.from("completed_tasks").select('*').eq("user_id", session.user.id)
   if (completedError) return {data: null, error: completedError}
 
+  console.log("workingTaskRes", workingTaskRes)
   // TODO: is this slow? Maybe replace it with a join query
-  const workingTasksData = workingTasksRes !== null ? await Promise.all(workingTasksRes.map(async t => await dbWorkingTaskToWorkingTask(t))) : null
+  const workingTaskData = workingTaskRes !== null ? await dbWorkingTaskToWorkingTask(workingTaskRes) : null
   const completedTasksData = completedTasksRes !== null ? await Promise.all(completedTasksRes.map(async t => await dbCompletedTaskToCompletedTask(t))) : null
 
   // TODO: It shuold return all of the errors, but its find for now
-  if (workingTasksData !== null && workingTasksData.some(t => t.error !== null || t.data === null)) return {data: null, error: workingTasksData.find(t => t.error !== null)!.error}
+  if (workingTaskData !== null && workingTaskData.error !== null) return {data: null, error: workingTaskData.error}
   if (completedTasksData !== null && completedTasksData.some(t => t.error !== null || t.data === null)) return {data: null, error: completedTasksData.find(t => t.error !== null)!.error}
 
-  const workingTasks = workingTasksData !== null ? workingTasksData.map(t => t.data!) : null
+  const workingTask = workingTaskData !== null ? workingTaskData.data : null
   const completedTasks = completedTasksData !== null ? completedTasksData.map(t => t.data!) : null
 
-  const filteredUnscheduledTasks: UnscheduledTask[] | null = unscheudledTasks !== null ? (unscheudledTasks.filter(t => !(workingTasks ?? []).some(wt => wt.task.task.id == t.id) && !(completedTasks ?? []).some(ct => ct.task.task.id == t.id))).map(t => dbUnscheduledTaskToTask(t)) : null
+  const filteredUnscheduledTasks: UnscheduledTask[] | null = unscheudledTasks !== null ? (unscheudledTasks.filter(t => workingTask?.task.task.id !== t.id && !(completedTasks ?? []).some(ct => ct.task.task.id == t.id))).map(t => dbUnscheduledTaskToTask(t)) : null
 
 
   // TODO: AHHHHH SO UGLY
   return { 
     data: {
       unscheduledTasks: filteredUnscheduledTasks,
-      workingTasks, 
+      workingTask: workingTask, 
       completedTasks
     }, error: null}
 }
@@ -141,11 +142,6 @@ export async function upsertTasks(tasks: UnscheduledTask[], session: Session) {
   return await supabase.from("tasks").upsert(tasks.map(task => taskToDBTask(task, session)))
 }
 
-export async function upsertWorkingTasks(tasks: WorkingTask[], session: Session) {
-  console.log("Updating", tasks)
-  return await supabase.from("working_tasks").upsert(tasks.map(task => workingTaskToDBWorkingTask(task, session)))
-}
-
 export async function upsertCompletedTasks(tasks: CompletedTask[], session: Session) {
   console.log("Updating", tasks)
   return await supabase.from("completed_tasks").upsert(tasks.map(task => completedTaskToDBCompletedTask(task, session)))
@@ -155,8 +151,8 @@ export async function deleteDBTask(task: UnscheduledTask) {
   return await supabase.from("tasks").delete().eq("id", task.id)
 }
 
-export async function deleteDBWorkingTasks(tasks: WorkingTask[]) {
-  return await supabase.from("working_tasks").delete().eq("id", tasks.map(t => t.task.task.id))
+export async function deleteDBWorkingTasks(task: WorkingTask) {
+  return await supabase.from("working_tasks").delete().eq("id", task.task.task.id)
 }
 
 export async function deleteDBCompletedTasks(tasks: CompletedTask[]) {

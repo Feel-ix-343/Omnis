@@ -10,7 +10,7 @@ import EditTask from "./EditTask"
 
 import {newNotification} from "./App"
 import Notification from "./components/Notification"
-import { deleteDBCompletedTasks, deleteDBWorkingTasks, getTasksFromDB, upsertCompletedTasks, upsertTasks, upsertWorkingTasks } from "./utils/database/databaseFunctions"
+import { deleteDBCompletedTasks, deleteDBWorkingTasks, getTasksFromDB, upsertCompletedTasks, upsertTasks, upsertWorkingTask } from "./utils/database/databaseFunctions"
 import { scheduleTasks } from "./utils/schedulingFunctions"
 import { BsStopCircleFill } from "solid-icons/bs"
 import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } from "./utils/taskStates"
@@ -24,7 +24,7 @@ const updateTasksWithDatabase = async (session: Session) => {
   const {data, error} = await getTasksFromDB(session)
   if (!data) return
 
-  const {unscheduledTasks, completedTasks, workingTasks} = data
+  const {unscheduledTasks, completedTasks, workingTask: workingTasks} = data
 
   if (error) {
     console.log(error.message)
@@ -33,7 +33,7 @@ const updateTasksWithDatabase = async (session: Session) => {
   }
 
   setUnscheduledTasks(unscheduledTasks ?? undefined) // TODO: This is such good cod3; don't fix it pls
-  setWorkingTask(workingTasks ?? undefined)
+  setWorkingTask(workingTasks)
   setCompletedTasks(completedTasks ?? undefined)
 }
 
@@ -46,10 +46,10 @@ const updateDBWithTasks = async (tasks: UnscheduledTask[], session: Session) => 
 
 
 // All of the unscheudled tasks that will be scheduled and displayed
-const [unscheduledTasks, setUnscheduledTasks] = createSignal<UnscheduledTask[] | undefined>()
+const [unscheduledTasks, setUnscheduledTasks] = createSignal<UnscheduledTask[]>()
 
 // The current working task
-const [workingTasks, setWorkingTask] = createSignal<WorkingTask[]>()
+const [workingTask, setWorkingTask] = createSignal<WorkingTask | null>(null)
 
 // The completed tasks
 const [completedTasks, setCompletedTasks] = createSignal<CompletedTask[]>()
@@ -66,7 +66,7 @@ const [get1hScale, setScale] = createSignal(150)
 const completeTask = (task: Completable) => {
   // TODO: handle scheudledTask
   setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id))
-  setWorkingTask(workingTasks()?.filter(t => t.task.task.id !== task.task.task.id))
+  if (task instanceof WorkingTask) setWorkingTask(null)
   setCompletedTasks([...completedTasks() ?? [], task.completed_task()])
 }
 
@@ -78,13 +78,18 @@ const uncompleteTask = (task: CompletedTask) => {
 
 // TODO: only able to have 1 working task at once
 const startTask = (task: ScheduledTask) => {
-  setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id))
-  setWorkingTask([ ...workingTasks() ?? [], task.started()])
+  if (workingTask() !== null) stopTask(workingTask()!)
+
+  // remove from unscheduled tasks
+  setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id)) // TODO: Use the solid apis for this
+
+  // Set and remove the old working task
+  setWorkingTask(task.started())
 }
 
 const stopTask = (task: WorkingTask) => {
   setUnscheduledTasks([...unscheduledTasks() ?? [], task.stoped()])
-  setWorkingTask(workingTasks()?.filter(t => t.task.task.id !== task.task.task.id))
+  setWorkingTask(null)
 }
 
 
@@ -122,22 +127,20 @@ export default function CalendarView(props: {session: Session}) {
     updateDBWithTasks(unscheduledTasks()!, props.session)
   })
 
-  createEffect<WorkingTask[] | undefined>((prev) => {
-    const tasks = workingTasks()
-    if (!tasks) return
+  createEffect<WorkingTask | null>((prev) => {
+    const task = workingTask()
 
-    // find removed working tasks and remove them from database
-    const removed = prev?.filter(t => !tasks.find(t2 => t2.task.task.id === t.task.task.id))
-    if (removed && removed?.length !== 0) {
-      console.log("Working Removed", removed)
-      deleteDBWorkingTasks(removed)
+    console.log("Prev", prev)
+    if (prev) {
+      console.log("Working Removed", prev)
+      deleteDBWorkingTasks(prev)
     }
 
-    upsertWorkingTasks(tasks, props.session)
+    if (task) upsertWorkingTask(task, props.session)
 
     // return the last computed value to calculate the diffs in the futue
-    return tasks
-  }, workingTasks())
+    return task
+  }, workingTask())
 
   createEffect<CompletedTask[] | undefined>((prev) => {
     const tasks = completedTasks()
@@ -157,7 +160,7 @@ export default function CalendarView(props: {session: Session}) {
   })
 
   /** Schedules that unscheudled tasks using the working and completed tasks as obstacles */
-  async function getScheduledTasks(args: {unscheduled: UnscheduledTask[] | undefined, completed: CompletedTask[] | undefined, working: WorkingTask[] | undefined}) {
+  async function getScheduledTasks(args: {unscheduled: UnscheduledTask[] | undefined, completed: CompletedTask[] | undefined, working: WorkingTask | null}) {
     const {unscheduled, completed, working} = args
     if (!unscheduled) return
     const scheduledTasks = await scheduleTasks(
@@ -167,10 +170,10 @@ export default function CalendarView(props: {session: Session}) {
           start_time: t.start_time, 
           end_time: t.end_time
         } }) ?? [],
-        working?.map(t => { return {
-          start_time: t.scheduled_datetime, 
-          end_time: (() => {const d = new Date(t.scheduled_datetime); d.setMinutes(d.getMinutes() + t.task.task.duration!); return d})()
-        } }) ?? []
+        working !== null ? [{
+          start_time: working.start_time,
+          end_time: (() => {const d = new Date(working.scheduled_datetime); d.setMinutes(d.getMinutes() + working.task.task.duration!); return d})()
+        }] : []
       ].flat()
     )
 
@@ -204,15 +207,19 @@ export default function CalendarView(props: {session: Session}) {
     // ].flat()),  nonDurationTasksScheduled   ].flat()
   }
 
-  const tasks = () => {return {unscheduled: unscheduledTasks(), completed: completedTasks(), working: workingTasks()}}
-  const [autoscheduledTasks] = createResource(tasks, getScheduledTasks)
+  const tasks = () => {return {unscheduled: unscheduledTasks(), completed: completedTasks(), working: workingTask()}}
+  const [autoscheduledTasks, {refetch: reschedule, mutate}] = createResource(tasks, getScheduledTasks)
 
-  const todaysTasks = createMemo<{daily: ScheduledTask[], scheduled: ScheduledTask[]} | undefined>(() => 
-    autoscheduledTasks()?.reduce(
+  interface TodaysTasks {daily: ScheduledTask[], scheduled: ScheduledTask[], working: WorkingTask | null, completed: CompletedTask[]}  
+  const todaysTasks = createMemo<TodaysTasks | undefined>(() => 
+    [autoscheduledTasks() ?? [], workingTask() ?? [], completedTasks() ?? []].flat().reduce(
       (prev, task) => {
-        if (task.scheduled_datetime.toDateString() !== day().toDateString()) return prev
+        const schedulableTask: Scheduleable = task
+        if (schedulableTask.start_time.toDateString() !== day().toDateString()) return prev
 
-        prev.scheduled.push(task)
+        if (task instanceof ScheduledTask) prev.scheduled.push(task)
+        else if (task instanceof WorkingTask) prev.working = task
+        else if (task instanceof CompletedTask) prev.completed.push(task)
 
         // if (task.task.task.duration !==  null) {
         //   prev.scheduled.push(task)
@@ -222,12 +229,14 @@ export default function CalendarView(props: {session: Session}) {
 
         return prev
       }, 
-      { daily: new Array<ScheduledTask>(), scheduled: new Array<ScheduledTask>() } // The initial
+      { daily: new Array<ScheduledTask>(), scheduled: new Array<ScheduledTask>(), working: null, completed: new Array<CompletedTask>() } as TodaysTasks // The initial
     )
   )
 
   // const dailyTasks = () => todaysTasks()?.daily
-  const scheduledTasks = () => todaysTasks()?.scheduled
+  const todaysScheduledTasks = () => todaysTasks()?.scheduled
+  const todaysCompletedTasks = () => todaysTasks()?.completed
+  const todaysWorkingTask = () => todaysTasks()?.working
 
 
   return (
@@ -237,7 +246,7 @@ export default function CalendarView(props: {session: Session}) {
 
       {/*<CalendarHeader dailyTasks={dailyTasks()} /> */}
       <CalendarHeader />
-      <CalendarBody scheduledTasks={scheduledTasks()} workingTasks={workingTasks()} completedTasks={completedTasks()} />
+      <CalendarBody scheduledTasks={todaysScheduledTasks()} workingTask={todaysWorkingTask()} completedTasks={todaysCompletedTasks()} />
 
     </ div>
   )
@@ -353,7 +362,7 @@ function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) 
 
 
 
-function CalendarBody(props: {scheduledTasks?: ScheduledTask[], workingTasks?: WorkingTask[], completedTasks?: CompletedTask[]}) {
+function CalendarBody(props: {scheduledTasks?: ScheduledTask[], workingTask: WorkingTask | undefined | null, completedTasks?: CompletedTask[]}) {
   const hours = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   const times = hours.map(i => i + " AM").concat(hours.map(i => i + " PM")).concat("12 PM")
 
@@ -371,7 +380,7 @@ function CalendarBody(props: {scheduledTasks?: ScheduledTask[], workingTasks?: W
         <CalendarTimeLine />
       </div>
       <div>
-        <For each={[props.scheduledTasks ?? [], props.workingTasks ?? [], props.completedTasks ?? []].flat()} fallback={null}>
+        <For each={[props.scheduledTasks ?? [], props.workingTask ?? [], props.completedTasks ?? []].flat()} fallback={null}>
           {(item) => (
             <Event task={item} />
           )}
@@ -434,24 +443,12 @@ function Event(props: {task: Scheduleable}) {
     if (props.task instanceof CompletedTask) return
     else if (props.task instanceof WorkingTask) {
       const workingTask = props.task
-      setWorkingTask(workingTasks()?.map(task => task.task.task.id === workingTask.task.task.id ? workingTask.changed_duration(amt) : task))
+      setWorkingTask(workingTask.changed_duration(amt))
     } else if (props.task instanceof ScheduledTask) {
       const scheduledTask = props.task
       setUnscheduledTasks(unscheduledTasks()?.map(task => task.id === scheduledTask.task.task.id ? scheduledTask.changed_duration(amt).task.task : task))
     }
   }
-
-  // // TODO Implement this into teh algo
-  // const setStartTime = () => {
-  //   const tasks = getTasks()
-
-  //   if (!tasks) {
-  //     console.log("No tasks but adding 15 minutes?")
-  //     return
-  //   }
-
-  //   setTasks(tasks.map(task => task.task.task.id === props.task.task.task.id  ? changeTaskProp(task,  time: new Date().getMinutes() / 60 + new Date().getHours()} : task)) // TODO: Make better type, but this should not be null
-  // }
 
 
   // TODO: Figure out how to only rerender the new events and just update the values of the old events
@@ -468,7 +465,15 @@ function Event(props: {task: Scheduleable}) {
         "height": `${height()}px`
       }}
 
-      class="absolute bg-opacity-80 flex flex-col justify-start py-3 items-start shadow-lg border-red-300 border-2 bg-red-300 w-80 ml-12 rounded-xl overflow-y-hidden p-2 text-center"
+      class="absolute bg-opacity-80 border-2 flex flex-col justify-start py-3 items-start shadow-lg w-80 ml-12 rounded-xl overflow-y-hidden p-2 text-center"
+
+      classList={{
+        "border-green-400 bg-highlight": props.task instanceof CompletedTask,
+        "border-red-300 bg-red-300": props.task.task.urgency === "High" && props.task.task.task.importance === "High" && !(props.task instanceof CompletedTask),
+        "border-orange-300 bg-orange-300": props.task.task.urgency === "High" && props.task.task.task.importance === "Low" && !(props.task instanceof CompletedTask),
+        "border-blue-300 bg-blue-300": props.task.task.urgency === "Low" && props.task.task.task.importance === "High" && !(props.task instanceof CompletedTask),
+        "border-neutral-300 bg-neutral-300": props.task.task.urgency === "Low" && props.task.task.task.importance === "Low" && !(props.task instanceof CompletedTask),
+      }}
     >
       <div class="flex w-full items-center justify-start">
 
@@ -483,7 +488,7 @@ function Event(props: {task: Scheduleable}) {
 
       <Motion.span 
         press={{scale: .9}}
-        class="rounded-full bg-red-300 text-primary shadow-sm font-bold px-3 py-1 absolute top-3 right-3"
+        class="rounded-full bg-neutral-100 text-primary shadow-sm font-bold px-3 py-1 absolute top-3 right-3"
         onclick={() => setEditTask(props.task.task.task)}
       >
         Open
