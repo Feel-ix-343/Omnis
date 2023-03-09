@@ -28,7 +28,7 @@ pub struct Step {
     pub duration: i64,
     pub description: String,
     pub completed: bool,
-    pub editable: bool,
+    pub edited: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
