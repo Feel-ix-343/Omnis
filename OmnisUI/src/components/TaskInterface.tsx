@@ -1,13 +1,14 @@
 import { Motion, Presence } from "@motionone/solid";
 import { Session } from "@supabase/supabase-js";
 import { spring } from "motion";
-import { AiOutlineCalendar, AiOutlineCloseCircle, AiOutlinePlusCircle } from "solid-icons/ai";
+import { AiOutlineCalendar, AiOutlineCloseCircle, AiOutlinePlusCircle, AiOutlineUnorderedList } from "solid-icons/ai";
 import { IoDocumentTextOutline } from 'solid-icons/io'
 import { BsFlag, BsHourglass } from "solid-icons/bs";
 import { createEffect, createSignal, For, JSXElement, Show } from "solid-js";
 import DatePicker from "./DatePicker";
 import { v4 as randomUUID } from 'uuid';
-import { BiRegularCheckbox } from "solid-icons/bi";
+import { BiRegularCheckbox, BiRegularCheckboxChecked } from "solid-icons/bi";
+import { FaRegularTrashCan } from "solid-icons/fa";
 
 export default function TaskInterface(props: {
   session: Session,
@@ -202,11 +203,14 @@ export default function TaskInterface(props: {
 
             </div>
 
-            Steps
+            <div class="flex flex-row justify-start items-center text-secondary font-bold gap-2 mt-9 px-4">
+              <AiOutlineUnorderedList size={20} class="fill-secondary ml-2" />
+              Steps
+            </div>
 
             <For each={steps()}>
-              {(step) => 
-                <Step step={step} setStep={(step: NonNullable<UnscheduledTask["steps"]>[0]) => setSteps(steps()!.map((s) => s.id === step.id ? step : s))} />
+              {(step, index) => 
+                <Step step={step} delete={() => setSteps(steps()?.filter(s => s.id !== step.id))} setStep={(step: NonNullable<UnscheduledTask["steps"]>[0]) => setSteps(steps()!.map((s) => s.id === step.id ? step : s))} />
               }
             </For>
 
@@ -314,10 +318,14 @@ function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[],
 }
 
 
-function Step(props: {step: NonNullable<UnscheduledTask["steps"]>[0], setStep: (step: NonNullable<UnscheduledTask["steps"]>[0]) => void}) {
+function Step(props: {step: NonNullable<UnscheduledTask["steps"]>[0], setStep: (step: NonNullable<UnscheduledTask["steps"]>[0]) => void, delete: () => void}) {
+  const toggleCompleted = () => props.setStep({...props.step, completed: !props.step.completed})
   return (
-    <div class="flex flex-row items-center justify-start w-[90%] mx-auto gap-1 text-secondary font-semibold">
-      <BiRegularCheckbox size={30} class="fill-secondary" />
+    <div class="flex flex-row items-center justify-start w-[90%] mx-auto gap-1 text-secondary">
+      {props.step.completed ? 
+        <BiRegularCheckboxChecked size={30} class="fill-secondary" onclick={toggleCompleted} />
+      : <BiRegularCheckbox size={30} class="fill-secondary" onclick={toggleCompleted} />
+      }
 
       <span 
         ontouchstart={(e) => { 
@@ -340,18 +348,7 @@ function Step(props: {step: NonNullable<UnscheduledTask["steps"]>[0], setStep: (
       </span>
 
       <span class="flex ml-auto mr-8 flex-row items-center justify-center text-secondary">
-        <DropDown<number> 
-          choices={[
-            {display: "30min", value: .5},
-            {display: "1hr", value: 1},
-            {display: "1.5hr", value: 1.5},
-            {display: "2hr", value: 2},
-          ]} 
-          setChoice={(choice: number) => props.setStep({...props.step, duration: choice})} 
-          choiceOutput={props.step.duration < 1 ? `${props.step.duration * 60}min` : `${props.step.duration}hr`}
-          class="text-xs"
-        >
-        </DropDown>
+        <FaRegularTrashCan size={15} class="fill-secondary" onclick={() => props.delete()} />
       </span>
     </div>
 

@@ -5,10 +5,22 @@ const omnis_algo_addr: string = import.meta.env.PROD ? import.meta.env.VITE_OMNI
 
 
 export async function scheduleTasks(tasks: UnscheduledTask[], obstacles?: Obstacle[]) {
+  if (tasks.length === 0) return
+
+  let start_time = new Date()
+  start_time.setHours(9, 0, 0, 0)
+
+  let end_time = new Date()
+  end_time.setHours(24, 0, 0, 0)
+
   console.log("Scheduling", tasks, obstacles)
   const autoschedulingRequest = {
     unscheduled_tasks: tasks,
-    obstacles: obstacles
+    obstacles: obstacles,
+    user_preferences: {
+      start_time: start_time.toISOString(),
+      end_time: end_time.toISOString()
+    }
   }
 
   const response = await fetch(

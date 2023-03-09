@@ -49,7 +49,7 @@ async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
   if (!tasks) return
 
   const durationTasks = tasks.filter(task => task.duration !== null)
-  return await scheduleTasks(durationTasks)
+  return await scheduleTasks(durationTasks, []) // TODO: Why does this work
 }
 const [autoscheduledTasks] = createResource(getAllTasks, getScheduledTasks)
 
@@ -60,6 +60,7 @@ const [autoscheduledTasks] = createResource(getAllTasks, getScheduledTasks)
 
 const todaysTasks = createMemo<ScheduledTask[]>(() => {
   const tasks = autoscheduledTasks()
+  console.log(tasks)
   // TODO: Change this to use the start ddate of the task, not he scheudled date
   return tasks?.filter(task => task.scheduled_datetime.toDateString() === new Date().toDateString()) ?? [] // Tasks for today
 })
@@ -294,9 +295,9 @@ function PlanningIndicators() {
         startPercentage,
         endPercentage,
         color: () => 
-          task.task.task.importance === "High" && task.task.urgency === "High" ? "red" : 
-            task.task.task.importance === "High" && task.task.urgency === "Low" ? "orange" :
-              task.task.task.importance === "Low" && task.task.urgency === "High" ? "blue" :
+          task.task.task.importance === "High" && task.task.urgency === "High" ? "#ef4444" : 
+            task.task.task.importance === "High" && task.task.urgency === "Low" ? "#fb923c" :
+              task.task.task.importance === "Low" && task.task.urgency === "High" ? "#0ea5e9" :
                 "lightgray"
       }
     })
