@@ -16,7 +16,7 @@ import DatePicker from "./components/DatePicker";
 import { v4 as randomUUID } from 'uuid';
 import { supabase } from "./utils/database/supabaseClient";
 import { getTasksFromDB } from "./utils/database/databaseFunctions";
-import { newNotification } from "./App";
+import { newInfoPopup, newNotification } from "./App";
 import Notification from "./components/Notification";
 import EditTask from "./EditTask";
 import { scheduleTasks } from "./utils/schedulingFunctions";
@@ -46,10 +46,10 @@ const [getAllTasks, {mutate: mutateDB, refetch: refetchDB}] = createResource(ses
 
 // Schedule the tasks
 async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
-  if (!tasks) return
+  if (!tasks || !session()) return
 
   const durationTasks = tasks.filter(task => task.duration !== null)
-  return await scheduleTasks(durationTasks)
+  return await scheduleTasks(durationTasks, [], session()!) // TODO: Why does this work
 }
 const [autoscheduledTasks] = createResource(getAllTasks, getScheduledTasks)
 
@@ -60,6 +60,7 @@ const [autoscheduledTasks] = createResource(getAllTasks, getScheduledTasks)
 
 const todaysTasks = createMemo<ScheduledTask[]>(() => {
   const tasks = autoscheduledTasks()
+  console.log(tasks)
   // TODO: Change this to use the start ddate of the task, not he scheudled date
   return tasks?.filter(task => task.scheduled_datetime.toDateString() === new Date().toDateString()) ?? [] // Tasks for today
 })
@@ -103,7 +104,33 @@ export default function(props: {session: Session}) {
         >{months[new Date().getMonth()] + " " + new Date().getDate()}</h1>
         <h3 class="text-secondary font-bold">Hi {props.session.user.email}, let's plan your day</h3>
 
-        <FaSolidCircleInfo size={30} class="fill-primary absolute right-6 top-12" />
+        <FaSolidCircleInfo size={30} 
+          onclick={() => 
+            newInfoPopup({pages: [
+              {title: "What is Eisenhower Matrix?", description: 
+                <p>The Eisenhower Matrix organizes you tasks into four groups that show the order you should do them.<br /><br />
+
+                  <strong>1.</strong> High Importance, High Urgency (red)<br />
+                  <strong>2.</strong> High Importance, Low Urgency (orange)<br />
+                  <strong>3.</strong> Low Importance, High Urgency (blue)<br />
+                  <strong>4.</strong> Low Importance, Low Urgency (gray)<br /> <br />
+
+                  When you complete your tasks in this order, you will be able to focus on the most important tasks, and not get distracted by the less important tasks!
+                </p>
+              },
+              {title: "Using Eisenhower Matrix", description:
+                <p>Omnis makes it very easy to use the Eisenhower Matrix to schedule your day!<br /><br />
+                As you add each of your tasks to your schedule, you will think about the importance of the task, and enter in task's due date to find the urgency. <strong>Always ask yourself, how important is this task to my goals, and how urgent is it?</strong> Then enter this information in. 
+
+                <br /><br />
+
+                  Then, your tasks will show up on your schedule, and you can press the play button on whichever one you want to complete first. We suggest following the order given, but you can chose which ever order feels the most comfortable, the matrix is just a suggestion. 
+                </p>
+              }
+            ]})
+          } 
+          class="fill-primary absolute right-6 top-12" 
+        />
       </Header>
 
       <div ref={setRef} class="grid grid-cols-2 gap-2 mt-5 px-3">
@@ -174,7 +201,7 @@ function Tasks(props: {filteredTasks: ScheduledTask[]}) {
 }
 
 function TaskDisplay(props: {task: ScheduledTask}) {
-  const date = () => props.task.task.task.due_date.getDate() === new Date().getDate() ? "Today" : props.task.task.task.due_date.getDate() + " " + props.task.task.task.due_date.getMonth()
+  const date = () => props.task.task.task.due_date.getDate() === new Date().getDate() ? "Today" : props.task.task.task.due_date.getMonth() + "/" + props.task.task.task.due_date.getDate()
 
   // TODO: Figure out subtasks
   return (
@@ -188,30 +215,29 @@ function TaskDisplay(props: {task: ScheduledTask}) {
       animate={{
         scale: [.9, 1],
         opacity: [0, 1],
-        width: ["0%", "190px"]
       }}
 
       press={{
         scale: [.9]
       }}
 
-      class="rounded-2xl shadow-lg bg-white h-36 w-44"
+      class="rounded-2xl shadow-lg bg-white min-h-36 min-w-44 max-w-[200px] py-2"
       onclick={() => setActiveTask(props.task.task.task)}
     >
       <div class="flex flex-row justify-start items-center gap-2 px-3 mt-2 mb-1">
         <FaRegularFlag size={18} class="fill-red-400" />
-        <div class="flex flex-row items-center justify-center px-3 py-1 gap-2 bg-neutral-100 rounded-full text-secondary text-sm">
+        <div class="flex flex-row items-center justify-center px-3 py-1 gap-2 bg-neutral-100 rounded-full text-secondary text-xs">
           <FaRegularCalendar size={18} class="fill-secondary" />
           {date()}
         </div>
       </div>
 
-      <h1 class="mx-auto px-2">{props.task.task.task.name}</h1>
+      <h1 class="mx-auto px-2 text-sm overflow-x-auto">{props.task.task.task.name}</h1>
 
-      <p class="text-secondary px-2">{props.task.task.task.description}</p>
+      <p class="text-secondary px-2 text-xs overflow-x-clip">{props.task.task.task.description}</p>
 
       <div class="flex flex-row justify-start items-center gap-2 px-3 mt-2 mb-1">
-        <div class="flex flex-row items-center justify-center px-3 py-1 gap-1 bg-neutral-100 rounded-full text-secondary">
+        <div class="flex flex-row items-center justify-center px-3 py-1 gap-1 bg-neutral-100 rounded-full text-secondary text-xs">
           <AiOutlineHourglass size={18} class="fill-secondary" />
           {props.task.task.task.duration !== null ? (props.task.task.task.duration / 60 < 1 ? props.task.task.task.duration + "min" : props.task.task.task.duration / 60 + "h") : null}
         </div>
@@ -294,9 +320,9 @@ function PlanningIndicators() {
         startPercentage,
         endPercentage,
         color: () => 
-          task.task.task.importance === "High" && task.task.urgency === "High" ? "red" : 
-            task.task.task.importance === "High" && task.task.urgency === "Low" ? "orange" :
-              task.task.task.importance === "Low" && task.task.urgency === "High" ? "blue" :
+          task.task.task.importance === "High" && task.task.urgency === "High" ? "#ef4444" : 
+            task.task.task.importance === "High" && task.task.urgency === "Low" ? "#fb923c" :
+              task.task.task.importance === "Low" && task.task.urgency === "High" ? "#0ea5e9" :
                 "lightgray"
       }
     })

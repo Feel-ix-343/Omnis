@@ -1,14 +1,37 @@
+import { Session } from "@supabase/supabase-js";
+import { newNotification } from "../App";
+import { supabase } from "./database/supabaseClient";
 import { ScheduledTask } from "./taskStates";
+import Notification from "../components/Notification";
 
 console.log("Prod?", import.meta.env.PROD)
 const omnis_algo_addr: string = import.meta.env.PROD ? import.meta.env.VITE_OMNIS_ALGO_ADDR_PROD : import.meta.env.VITE_OMNIS_ALGO_ADDR;
 
 
-export async function scheduleTasks(tasks: UnscheduledTask[], obstacles?: Obstacle[]) {
+export async function scheduleTasks(tasks: UnscheduledTask[], obstacles?: Obstacle[], session: Session) {
+  if (tasks.length === 0) return
+
+  const {data, error} = await supabase.from("user_settings").select("*").eq("user_id", session.user.id).maybeSingle()
+
+  if (error) {
+    console.log(error)
+    return
+  }
+
+  const start_time = new Date()
+  start_time.setHours(data?.start_time ?? 9, 0, 0, 0)
+
+  let end_time = new Date()
+  end_time.setHours(data?.end_time ?? 17, 0, 0, 0)
+
   console.log("Scheduling", tasks, obstacles)
   const autoschedulingRequest = {
     unscheduled_tasks: tasks,
-    obstacles: obstacles
+    obstacles: obstacles,
+    user_preferences: {
+      start_time: start_time.toISOString(),
+      end_time: end_time.toISOString()
+    }
   }
 
   const response = await fetch(

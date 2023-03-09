@@ -11,6 +11,7 @@ import Notification from './components/Notification';
 import { BsInfo } from 'solid-icons/bs';
 import { FaSolidCircleInfo } from 'solid-icons/fa';
 import { testServer } from './utils/schedulingFunctions';
+import InfoPopup, { InfoPopupProps } from './components/InfoPopup';
 
 const [notifications, setNotifications] = createSignal<JSXElement[]>([])
 /** creates notifications of type `Notification` JSX element`
@@ -20,6 +21,9 @@ export const newNotification = (notif: JSXElement) => setNotifications(notificat
 // TODO: Make the notification timing better
 
 // export const
+
+const  [infoPopup, setInfoPopup] = createSignal<JSXElement | null>(null)
+export const newInfoPopup = (props: InfoPopupProps) => setInfoPopup(<InfoPopup pages={props.pages} />)
 
 
 const App: Component = () => {
@@ -45,6 +49,7 @@ const App: Component = () => {
     <>
 
       {notifications()}
+      {infoPopup()}
 
 
       {getSession() === null ?

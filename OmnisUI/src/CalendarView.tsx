@@ -174,7 +174,8 @@ export default function CalendarView(props: {session: Session}) {
           start_time: working.start_time,
           end_time: (() => {const d = new Date(working.scheduled_datetime); d.setMinutes(d.getMinutes() + working.task.task.duration!); return d})()
         }] : []
-      ].flat()
+      ].flat(),
+      props.session
     )
 
     return scheduledTasks

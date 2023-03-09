@@ -92,6 +92,23 @@ export interface Database {
           user_id?: string
         }
       }
+      user_settings: {
+        Row: {
+          end_time: number
+          start_time: number
+          user_id: string
+        }
+        Insert: {
+          end_time: number
+          start_time: number
+          user_id: string
+        }
+        Update: {
+          end_time?: number
+          start_time?: number
+          user_id?: string
+        }
+      }
       working_tasks: {
         Row: {
           end_time: string
