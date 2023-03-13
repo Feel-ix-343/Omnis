@@ -77,16 +77,20 @@ async fn autoschedule(request: web::Json<AutoscheduleRequest>) -> impl Responder
     // Deal with edge of task start date being before today
     let tasks = tasks.into_iter().map(|task| 
         UnscheduledTask {
-            start_date: match task.start_date.date_naive() < period_date {
-                true => DateTime::<Utc>::from_utc(period_date.and_time(start_time), Utc),
-                false => task.start_date
-            },
-            ..task
-        }
+            start_date: Some(match task.start_date {
+                Some(start_date) => match start_date.date_naive() < period_date {
+                    true => DateTime::<Utc>::from_utc(period_date.and_time(start_time), Utc),
+                    false => start_date
+                },
+                None => DateTime::<Utc>::from_utc(period_date.and_time(start_time), Utc)
+        }),
+        ..task
+    }
     );
 
     // First break the tasks into groups of tasks that start on the same day
-    let groups = tasks.into_iter().group_by(|task| task.start_date.date_naive());
+    // TODO: make this unwrap better; htink about turining unscheudeld task into a request type, then translating. 
+    let groups = tasks.into_iter().group_by(|task| task.start_date.unwrap().date_naive());
 
     // Then, for each group, order, schedule the tasks, and bump the tasks that do not get accomplished to the next group. Then do the same with the next group (that has the added tasks)
     let mut scheduled_tasks: Vec<ScheduledTask> = Vec::new();
@@ -184,7 +188,7 @@ async fn main() -> std::io::Result<()> {
             .service(hello)
             .service(testjson)
     })
-    .bind(("0.0.0.0", 8080))? // Binds the app to all interfaces in docker container
-    .run()
+        .bind(("0.0.0.0", 8080))? // Binds the app to all interfaces in docker container
+        .run()
     .await
 }

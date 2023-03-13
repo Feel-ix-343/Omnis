@@ -47,7 +47,7 @@ pub struct UnscheduledTask {
 
     pub steps: Option<Vec<Step>>,
 
-    pub start_date: DateTime<Utc>
+    pub start_date: Option<DateTime<Utc>>
 }
 
 

@@ -12,7 +12,7 @@ function taskToDBTask(task: UnscheduledTask, session: Session): DBUnscheduledTas
     ...task,
     user_id: session.user.id,
     due_date: task.due_date.toISOString(),
-    start_date: task.start_date.toISOString()
+    start_date: task.start_date !== null ? task.start_date.toISOString() : null,
   }
 }
 
@@ -39,12 +39,11 @@ function completedTaskToDBCompletedTask(task: CompletedTask, session: Session): 
 }
 
 function dbUnscheduledTaskToTask(task: DBUnscheduledTask): UnscheduledTask { // TODO: Turn Task into a class so this is more straight forward
-  console.log(new Date(task.start_date)) 
   let out = {
     ...task,
     importance: task.importance as Importance,
     due_date: new Date(task.due_date), // ISOString -> Date,
-    start_date: new Date(task.start_date),
+    start_date: task.start_date ? new Date(task.start_date) : null,
     description: task.description === undefined ? null : task.description,
     steps: task.steps ? task.steps as UnscheduledTask["steps"] : null // TODO: fix error; idk
 

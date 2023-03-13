@@ -68,7 +68,7 @@ export interface Database {
           id: string
           importance: string
           name: string
-          start_date: string
+          start_date: string | null
           steps: Json[] | null
           user_id: string
         }
@@ -79,7 +79,7 @@ export interface Database {
           id: string
           importance: string
           name: string
-          start_date?: string
+          start_date?: string | null
           steps?: Json[] | null
           user_id: string
         }
@@ -90,7 +90,7 @@ export interface Database {
           id?: string
           importance?: string
           name?: string
-          start_date?: string
+          start_date?: string | null
           steps?: Json[] | null
           user_id?: string
         }

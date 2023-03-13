@@ -22,7 +22,7 @@ type UnscheduledTask = {
   due_date: Date,
 
   steps: {id: string, duration: number, description: string, completed: boolean, edited: boolean}[] | null,
-  start_date: Date,
+  start_date: Date | null,
 }
 
 type Urgency = "High" | "Low"
