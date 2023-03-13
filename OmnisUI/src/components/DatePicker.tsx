@@ -11,7 +11,7 @@ export default function DatePicker(props: { class?: string, id: string, placehol
   onMount(() => {
     flatPickerRef = flatpickr(`#${props.id}`, {
       defaultDate: props.value,
-      onChange: (dates: Date[]) => { props.setDate(dates[0]) }
+      onChange: (dates: Date[]) => { console.log(dates); props.setDate(dates[0]) }
     });
   })
 

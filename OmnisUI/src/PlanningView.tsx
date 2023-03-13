@@ -49,7 +49,14 @@ async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
   if (!tasks || !session()) return
 
   const durationTasks = tasks.filter(task => task.duration !== null)
-  return await scheduleTasks(durationTasks, [], session()!) // TODO: Why does this work
+  const res = await scheduleTasks(durationTasks, [], session()!) // TODO: Why does this work
+  if (res.error) {
+    console.log(res.error)
+    newNotification(<Notification type="error" text={res.error} />)
+    return
+  }
+
+  return res.data ?? []
 }
 const [autoscheduledTasks] = createResource(getAllTasks, getScheduledTasks)
 

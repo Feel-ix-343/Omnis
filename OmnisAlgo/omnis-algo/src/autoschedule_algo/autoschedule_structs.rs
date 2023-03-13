@@ -45,7 +45,9 @@ pub struct UnscheduledTask {
     /// Due date in days away from current date. Tihs has time, but it is really just date
     pub due_date: DateTime<Utc>, 
 
-    pub steps: Option<Vec<Step>>
+    pub steps: Option<Vec<Step>>,
+
+    pub start_date: DateTime<Utc>
 }
 
 

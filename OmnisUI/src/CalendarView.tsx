@@ -123,6 +123,7 @@ export default function CalendarView(props: {session: Session}) {
   // Sync unscheduled user tasks with database. This will not delete
   createEffect(() => {
     if (!unscheduledTasks()) return
+    console.log("Unscheduled Tasks", unscheduledTasks())
 
     updateDBWithTasks(unscheduledTasks()!, props.session)
   })
@@ -162,8 +163,9 @@ export default function CalendarView(props: {session: Session}) {
   /** Schedules that unscheudled tasks using the working and completed tasks as obstacles */
   async function getScheduledTasks(args: {unscheduled: UnscheduledTask[] | undefined, completed: CompletedTask[] | undefined, working: WorkingTask | null}) {
     const {unscheduled, completed, working} = args
+    console.log(unscheduled)
     if (!unscheduled) return
-    const scheduledTasks = await scheduleTasks(
+    const res = await scheduleTasks(
       unscheduled,
       [
         completed?.map(t => { return {
@@ -178,7 +180,12 @@ export default function CalendarView(props: {session: Session}) {
       props.session
     )
 
-    return scheduledTasks
+    if (res.error) {
+      newNotification(<Notification type="error" text={res.error} />)
+      return []
+    } else {
+      return res.data
+    }
 
     // const [durationTasks, nonDurationTasks] = unscheduled.reduce((prev, task) => {
     //   if (task.duration !== null) {
@@ -239,6 +246,8 @@ export default function CalendarView(props: {session: Session}) {
   const todaysScheduledTasks = () => todaysTasks()?.scheduled
   const todaysCompletedTasks = () => todaysTasks()?.completed
   const todaysWorkingTask = () => todaysTasks()?.working
+
+  createEffect(() => console.log(todaysScheduledTasks()))
 
 
   return (
@@ -436,6 +445,7 @@ function Event(props: {task: Scheduleable}) {
 
   const changeDuration = (amt: number) => {
     const tasks = unscheduledTasks()
+    console.log(props.task)
 
     if (!tasks) {
       console.log("No tasks but adding 15 minutes?")

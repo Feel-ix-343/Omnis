@@ -26,6 +26,9 @@ export default function TaskInterface(props: {
   const [taskImportance, setTaskImportance] = createSignal<Importance>() // TODO: Load this up
   const [taskDuration, setTaskDuration] = createSignal<number | null>() // TODO: Change to minutes
   const [taskDescription, setTaskDescription] = createSignal<string | null>()
+  const [startDate, setStartDate] = createSignal<Date>()
+
+  createEffect(() => console.log(startDate()))
 
   const [steps, setSteps] = createSignal<UnscheduledTask["steps"]>()
 
@@ -36,11 +39,10 @@ export default function TaskInterface(props: {
     setTaskDescription(props.task?.description)
     setSteps(props.task?.steps)
     setTaskImportance(props.task?.importance)
+    setStartDate(props.task?.start_date)
   }
 
   const getTaskFromInputs = () => {
-    // TODO: Implement the importance metric
-
     // Log all properties
     console.log("Task name", taskName())
     console.log("Due date", dueDate())
@@ -48,8 +50,10 @@ export default function TaskInterface(props: {
     console.log("Task duration", taskDuration())
     console.log("Task description", taskDescription())
     console.log("Task steps", steps())
+    console.log("Task start date", startDate())
 
     // TODO: checks on types?
+
     const task: UnscheduledTask = {
       id: props.task?.id ?? randomUUID(),
       due_date: dueDate()!,
@@ -57,7 +61,8 @@ export default function TaskInterface(props: {
       duration: taskDuration()!, // TODO: Make this not required and the others
       importance: taskImportance()!,
       description: taskDescription() ?? "",
-      steps: steps() ?? null
+      steps: steps() ?? null,
+      start_date: startDate()!
     }
 
     return task
@@ -158,6 +163,20 @@ export default function TaskInterface(props: {
 
             </div>
 
+            <div class="flex flex-row flex-wrap justify-start items-center text-secondary gap-2 mt-5 px-4">
+              <AiOutlineCalendar size={35} class="fill-secondary" />
+
+              <h3 class="text-secondary whitespace-nowrap">Start on</h3>
+
+              <DatePicker 
+                id="startDate" 
+                class="bg-background-secondary text-primary font-bold px-3 py-1 rounded-xl shadow-md flex items-center border-2 border-neutral-200 w-40" 
+                setDate={setStartDate}
+                value={startDate()}
+              />
+
+            </div>
+
             <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
               <BsFlag size={35} class="fill-secondary" />
 
@@ -173,7 +192,7 @@ export default function TaskInterface(props: {
                 >
                   Select
                 </DropDown>
-                importance in <div class="flex flex-row bg-background-secondary p-1 rounded-full font-bold text-primary text-sm">Being more active in school</div>
+                importance
               </div>
 
             </div>

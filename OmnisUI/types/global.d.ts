@@ -1,6 +1,11 @@
 type Importance = "High" | "Low"
 
 
+type OmnisError<T, K> = {
+  data: T | null,
+  error: K | null
+}
+
 // TODO: Add a start date propr
 type UnscheduledTask = {
   id: string,
@@ -16,7 +21,8 @@ type UnscheduledTask = {
   /** Due date of the task. Only the date matters */
   due_date: Date,
 
-  steps: {id: string, duration: number, description: string, completed: boolean, edited: boolean}[] | null
+  steps: {id: string, duration: number, description: string, completed: boolean, edited: boolean}[] | null,
+  start_date: Date,
 }
 
 type Urgency = "High" | "Low"
