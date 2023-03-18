@@ -350,7 +350,7 @@ function PlanningIndicators() {
         icon={<AiOutlineUnorderedList size={16} class="fill-primary" />} 
         description={<><strong class="text-primary font-extrabold">{percentageSteps() ?? 0}%</strong> of tasks have a plan</>} 
         indicatorsections={[
-          {color: (endPercentage: number) => endPercentage > 80 ? "lightgreen" : "lightgray", endPercentage: percentageSteps() ?? 0},
+          {color: (endPercentage: number) => endPercentage > 70 ? "lightgreen" : "lightgray", endPercentage: percentageSteps() ?? 0},
         ]}
       />
 
@@ -358,7 +358,7 @@ function PlanningIndicators() {
         icon={<BsStar size={16} class="fill-primary" />} 
         description={<><strong class="text-primary font-extrabold">{percentageTasksWithMeaning() ?? 0}%</strong> of tasks have meaning</>} 
         indicatorsections={[
-          {color: (endPercentage: number) => endPercentage > 80 ? "lightgreen" : "lightgray", endPercentage: percentageTasksWithMeaning() ?? 0},
+          {color: (endPercentage: number) => endPercentage > 70 ? "lightgreen" : "lightgray", endPercentage: percentageTasksWithMeaning() ?? 0},
         ]}
       />
       <PlanningIndicator
