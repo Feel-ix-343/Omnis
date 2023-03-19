@@ -109,8 +109,12 @@ const [editTask, setEditTask] = createSignal<UnscheduledTask | null>(null)
 export default function CalendarView(props: {session: Session}) {
   // addInitialTasks() // For testing purposes
 
-  // initailize tasks
+  // initailize tasks; clear them then reload
   onMount(() => {
+    setUnscheduledTasks(undefined)
+    setWorkingTask(null)
+    setCompletedTasks(undefined)
+
     console.log("Props session", props.session)
     updateTasksWithDatabase(props.session)
   })
