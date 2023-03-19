@@ -134,6 +134,7 @@ export default function CalendarView(props: {session: Session}) {
 
   createEffect<WorkingTask | null>((prev) => {
     const task = workingTask()
+    if (!unscheduledTasks()) return null
 
     console.log("Prev", prev)
     if (prev) {
