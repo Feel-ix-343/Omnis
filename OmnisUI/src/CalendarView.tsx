@@ -112,7 +112,7 @@ export default function CalendarView(props: {session: Session}) {
   // initailize tasks; clear them then reload
   onMount(() => {
     setUnscheduledTasks(undefined)
-    // setWorkingTask(null) // TODO: this is just a workaround
+    setWorkingTask(null) // TODO: this is just a workaround
     setCompletedTasks(undefined) // TODO: This is another workaroudn
 
     console.log("Props session", props.session)
