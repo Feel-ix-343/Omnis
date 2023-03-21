@@ -63,8 +63,6 @@ async fn autoschedule(request: web::Json<AutoscheduleRequest>) -> impl Responder
     };
 
     let max_duration = tasks.iter().max_by_key(|task| task.duration).expect("Empty?").duration;
-    println!("Max duration: {:?}", max_duration);
-    println!("Signed duration: {:?}", end_time.signed_duration_since(start_time).num_minutes().abs());
     if end_time.signed_duration_since(start_time).num_minutes().abs() <= max_duration {
         return HttpResponse::Ok().json(AutoscheduleResponse {
             scheduled_tasks: vec![],
@@ -85,8 +83,7 @@ async fn autoschedule(request: web::Json<AutoscheduleRequest>) -> impl Responder
                 None => DateTime::<Utc>::from_utc(period_date.and_time(start_time), Utc)
         }),
         ..task
-    }
-    );
+    });
 
     // First break the tasks into groups of tasks that start on the same day
     // TODO: make this unwrap better; htink about turining unscheudeld task into a request type, then translating. 
@@ -121,12 +118,6 @@ async fn autoschedule(request: web::Json<AutoscheduleRequest>) -> impl Responder
 
         // Edge: If you schedule all of the day, get bumped back, your will have doubled up tasks
         let scheduled = schedule(&all_tasks, start_time, end_time, request.obstacles.as_ref(), is_today);
-
-        println!("Start time: {:?}, End time: {:?}", start_time, end_time);
-        println!("ScheduledTasks: {:?}", scheduled_tasks);
-        println!("ScheduledDayTasks: {:?}", scheduled_tasks_for_day);
-        println!("DayTasks: {:?}", day_tasks);
-        println!("All Tasks: {:?}", all_tasks);
 
         scheduled_tasks.extend(scheduled);
 

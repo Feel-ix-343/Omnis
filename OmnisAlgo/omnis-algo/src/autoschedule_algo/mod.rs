@@ -98,8 +98,6 @@ pub fn adjust_for_obstacles(scheduled_tasks: &Vec<ScheduledTask>, obstacles: &Ve
 
         if obstacles.len() != 0 {
             if task.task.task.name == "Iron out planning -> schedule" {
-                println!("Obstacles: {:?}", obstacles);
-                println!("Accumulated timing: {:?}", accumulated_timing);
             }
             // Find the obstacle that end the latest
             let obs = obstacles.iter().max_by_key(|obs| obs.end_time).expect("I thought there was at least one obstacle");
