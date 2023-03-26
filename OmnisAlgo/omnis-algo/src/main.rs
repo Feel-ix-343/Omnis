@@ -101,7 +101,7 @@ async fn autoschedule(request: web::Json<AutoscheduleRequest>) -> impl Responder
 
         let (scheduled_tasks_for_day, scheduled_tasks_prev) = scheduled_tasks
             .into_iter()
-            .partition(|task| task.scheduled_datetime.naive_utc() >= start_time && task.scheduled_datetime.naive_utc() <= end_time);
+            .partition(|task| task.scheduled_datetime.naive_utc() >= start_time);
         scheduled_tasks = scheduled_tasks_prev;
 
         let day_tasks = &tasks.collect_vec();
