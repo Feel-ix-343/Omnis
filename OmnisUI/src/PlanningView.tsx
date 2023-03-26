@@ -19,7 +19,7 @@ import { getTasksFromDB } from "./utils/database/databaseFunctions";
 import { newInfoPopup, newNotification } from "./App";
 import Notification from "./components/Notification";
 import EditTask from "./EditTask";
-import { scheduleTasks } from "./utils/schedulingFunctions";
+import { scheduleTasks, UnscheduledTask } from "./utils/autoscheduling";
 import { ScheduledTask } from "./utils/taskStates";
 
 
@@ -49,7 +49,7 @@ async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
   if (!tasks || !session()) return
 
   const durationTasks = tasks.filter(task => task.duration !== null)
-  const res = await scheduleTasks(durationTasks, [], session()!) // TODO: Why does this work
+  const res = await scheduleTasks(session()!, durationTasks, []) // TODO: Why does this work
   if (res.error) {
     console.log(res.error)
     newNotification(<Notification type="error" text={res.error} />)

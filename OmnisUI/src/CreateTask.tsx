@@ -1,24 +1,19 @@
-import { Motion, Presence, PresenceContext } from "@motionone/solid";
 import { Session } from "@supabase/supabase-js";
-import { BsFlag, BsHourglass } from "solid-icons/bs";
-import { createEffect, createSignal, For, JSXElement, onMount, Show } from "solid-js";
-import Header from "./components/Header";
-import DatePicker from "./components/DatePicker";
-import { supabase } from "./utils/database/supabaseClient";
-import { v4 as randomUUID } from 'uuid';
 import Notification from "./components/Notification";
 import {newNotification} from "./App"
 import { upsertTask } from "./utils/database/databaseFunctions";
-import { BiRegularCheckbox } from "solid-icons/bi";
-import { FaSolidHourglassEnd } from "solid-icons/fa";
 import TaskInterface from "./components/TaskInterface";
+import { UnscheduledTask } from "./utils/autoscheduling";
+
+
+// TODO: DO some data validation here
 
 export default function(props: {session: Session, show: boolean, close: () => void, onDBChange: () => void}) {
 
   const onCreate = async (task: UnscheduledTask) => {
     console.log("task", task)
 
-    const {data, error} = await upsertTask(task, props.session)
+    const {error} = await upsertTask(task, props.session)
 
     if (!error) {
       newNotification(<Notification type="success" text="Task Created" />)

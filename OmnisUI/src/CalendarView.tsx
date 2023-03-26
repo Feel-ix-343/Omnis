@@ -1,18 +1,17 @@
-import { FaRegularSquareCheck, FaSolidHourglassEnd, FaSolidSquareCheck } from "solid-icons/fa"
+import { FaSolidHourglassEnd } from "solid-icons/fa"
 import { BiRegularCheckbox, BiSolidCheckboxChecked } from 'solid-icons/bi'
-import { Accessor, createEffect, createMemo, createResource, createSignal, For, onMount, Show, untrack } from "solid-js"
+import { createEffect, createMemo, createResource, createSignal, For, onMount, Show } from "solid-js"
 
-import { AiFillCloseCircle, AiFillMinusCircle, AiFillPlayCircle, AiFillPlusCircle, AiFillStop, AiOutlineCaretUp } from 'solid-icons/ai'
+import { AiFillCloseCircle, AiFillMinusCircle, AiFillPlayCircle, AiFillPlusCircle } from 'solid-icons/ai'
 import { Session } from "@supabase/supabase-js"
-import { Motion, Presence } from "@motionone/solid"
+import { Motion } from "@motionone/solid"
 import { spring } from "motion"
 import EditTask from "./EditTask"
 
 import {newNotification} from "./App"
 import Notification from "./components/Notification"
 import { deleteDBCompletedTasks, deleteDBWorkingTasks, getTasksFromDB, upsertCompletedTasks, upsertTasks, upsertWorkingTask } from "./utils/database/databaseFunctions"
-import { scheduleTasks } from "./utils/schedulingFunctions"
-import { BsStopCircleFill } from "solid-icons/bs"
+import { scheduleTasks, UnscheduledTask } from "./utils/autoscheduling"
 import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } from "./utils/taskStates"
 
 
@@ -58,7 +57,7 @@ const [completedTasks, setCompletedTasks] = createSignal<CompletedTask[]>()
 let activeTimeRef: HTMLDivElement;
 
 /** The scale of 1hr in pixels */
-const [get1hScale, setScale] = createSignal(150)
+const [get1hScale, _] = createSignal(150)
 
 
 // ---------------------------- User task operations -------------------------
@@ -171,6 +170,7 @@ export default function CalendarView(props: {session: Session}) {
     console.log(unscheduled)
     if (!unscheduled) return
     const res = await scheduleTasks(
+      props.session,
       unscheduled,
       [
         completed?.map(t => { return {
@@ -182,7 +182,6 @@ export default function CalendarView(props: {session: Session}) {
           end_time: (() => {const d = new Date(working.scheduled_datetime); d.setMinutes(d.getMinutes() + working.task.task.duration!); return d})()
         }] : []
       ].flat(),
-      props.session
     )
 
     if (res.error) {
@@ -221,7 +220,7 @@ export default function CalendarView(props: {session: Session}) {
   }
 
   const tasks = () => {return {unscheduled: unscheduledTasks(), completed: completedTasks(), working: workingTask()}}
-  const [autoscheduledTasks, {refetch: reschedule, mutate}] = createResource(tasks, getScheduledTasks)
+  const [autoscheduledTasks, {refetch: reschedule}] = createResource(tasks, getScheduledTasks)
   setInterval(() => reschedule(), 1000 * 60 * 1) // reschedule every 5 minutes
 
   interface TodaysTasks {daily: ScheduledTask[], scheduled: ScheduledTask[], working: WorkingTask | null, completed: CompletedTask[]}  
@@ -271,7 +270,7 @@ export default function CalendarView(props: {session: Session}) {
 // function CalendarHeader(props: {dailyTasks?: ScheduledTask[]}) {
 function CalendarHeader() {
 
-  const [getDailyExpanded, setDailyExpanded] = createSignal(false)
+  const [getDailyExpanded] = createSignal(false)
 
   const dates = createMemo<Date[]>(() => {
     const dates = []
@@ -387,7 +386,7 @@ function CalendarBody(props: {scheduledTasks?: ScheduledTask[], workingTask: Wor
     <>
       <div class="pb-32 absolute z-0 left-0 right-0">
         {
-          times.map((item, index) => {
+          times.map((item, _index) => {
             return <CalendarLine time={item} />
           })
 

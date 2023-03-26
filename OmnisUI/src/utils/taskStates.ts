@@ -1,5 +1,7 @@
 // TODO: I will want to fix the accessing of unscheduled task properties
 
+import { UnscheduledTaskWithUrgency } from "./autoscheduling"
+
 // TODO: Add this to the data base for faster loading? maybe unnecessary
 
 export interface Scheduleable {

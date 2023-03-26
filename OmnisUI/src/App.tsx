@@ -7,10 +7,6 @@ import { supabase } from './utils/database/supabaseClient';
 import LoginScreen from './LoginScreen';
 import SettingsView from './SettingsView';
 import PlanningView from './PlanningView';
-import Notification from './components/Notification';
-import { BsInfo } from 'solid-icons/bs';
-import { FaSolidCircleInfo } from 'solid-icons/fa';
-import { testServer } from './utils/schedulingFunctions';
 import InfoPopup, { InfoPopupProps } from './components/InfoPopup';
 
 const [notifications, setNotifications] = createSignal<JSXElement[]>([])

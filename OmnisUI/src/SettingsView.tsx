@@ -43,10 +43,11 @@ export default function SettingsView(props: {session: Session}) {
       return
     }
 
+    // TODO: Use zod validation here
     const { data, error } = await supabase.from('user_settings').upsert({
       user_id: props.session.user.id,
       start_time: startHour()!,
-      end_time: endHour()
+      end_time: endHour()!
     })
 
     if (error) {

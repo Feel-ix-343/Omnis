@@ -1,30 +1,20 @@
 // TODO: Align this with teh create task. 
 
-import { Motion, Presence, PresenceContext } from "@motionone/solid";
 import { Session } from "@supabase/supabase-js";
-import { spring } from "motion";
-import { AiOutlineCalendar, AiOutlineCloseCircle, AiOutlinePlusCircle } from "solid-icons/ai";
-import { IoDocumentTextOutline } from 'solid-icons/io'
-import { BsFlag, BsHourglass } from "solid-icons/bs";
-import { createEffect, createSignal, For, JSXElement, onMount, Show } from "solid-js";
-import Header from "./components/Header";
-import DatePicker from "./components/DatePicker";
 
-import { supabase } from "./utils/database/supabaseClient";
 
-import { v4 as randomUUID } from 'uuid';
 import Notification from "./components/Notification";
 import { newNotification } from "./App";
 import { deleteDBTask, upsertTask } from "./utils/database/databaseFunctions";
-import { BiRegularCheckbox } from "solid-icons/bi";
 import TaskInterface from "./components/TaskInterface";
+import { UnscheduledTask } from "./utils/autoscheduling";
 
 export default function(props: {session: Session, show: boolean, close: () => void, onDBChange: () => void, task: UnscheduledTask}) {
 
   const onDelete = async (task: UnscheduledTask) => {
     console.log("task", task)
 
-    const {data, error} = await deleteDBTask(task)
+    const {error} = await deleteDBTask(task)
 
     if (!error) {
       newNotification(<Notification type="success" text="Task Deleted" />)
@@ -38,7 +28,7 @@ export default function(props: {session: Session, show: boolean, close: () => vo
   const onUpdate = async (task: UnscheduledTask) => {
     console.log("task", task)
 
-    const {data, error} = await upsertTask(task, props.session)
+    const {error} = await upsertTask(task, props.session)
     
     if (!error) {
       newNotification(<Notification type="success" text="Task Updated" />)
