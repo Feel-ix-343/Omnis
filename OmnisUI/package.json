@@ -28,6 +28,7 @@
     "@types/uuid": "^9.0.0",
     "flatpickr": "^4.6.13",
     "motion": "^10.15.5",
+    "openai": "^3.3.0",
     "solid-icons": "^1.0.4",
     "solid-js": "^1.6.10",
     "uuid": "^9.0.0",

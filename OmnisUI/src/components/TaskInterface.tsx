@@ -9,6 +9,7 @@ import DatePicker from "./DatePicker";
 import { v4 as randomUUID } from 'uuid';
 import { BiRegularCheckbox, BiRegularCheckboxChecked } from "solid-icons/bi";
 import { FaRegularTrashCan } from "solid-icons/fa";
+import { UnscheduledTask } from "../utils/autoscheduling";
 
 export default function TaskInterface(props: {
   session: Session,
@@ -27,6 +28,8 @@ export default function TaskInterface(props: {
   const [taskDuration, setTaskDuration] = createSignal<number | null>() // TODO: Change to minutes
   const [taskDescription, setTaskDescription] = createSignal<string | null>()
   const [startDate, setStartDate] = createSignal<Date>()
+
+
 
   createEffect(() => console.log(startDate()))
 

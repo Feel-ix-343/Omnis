@@ -14,97 +14,6 @@ import { deleteDBCompletedTasks, deleteDBWorkingTasks, getTasksFromDB, upsertCom
 import { scheduleTasks, UnscheduledTask } from "./utils/autoscheduling"
 import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } from "./utils/taskStates"
 
-
-
-
-
-// TODO: change to a solid js resource
-const updateTasksWithDatabase = async (session: Session) => {
-  const {data, error} = await getTasksFromDB(session)
-  if (!data) return
-
-  const {unscheduledTasks, completedTasks, workingTask: workingTasks} = data
-
-  if (error) {
-    console.log(error.message)
-    newNotification(<Notification type="error" text="Failed to load tasks" />)
-    return
-  }
-
-  setUnscheduledTasks(unscheduledTasks ?? undefined) // TODO: This is such good cod3; don't fix it pls
-  setWorkingTask(workingTasks)
-  setCompletedTasks(completedTasks ?? undefined)
-}
-
-const updateDBWithTasks = async (tasks: UnscheduledTask[], session: Session) => {
-
-  const {data, error} = await upsertTasks(tasks, session)
-  console.log(data, error)
-}
-
-
-
-// All of the unscheudled tasks that will be scheduled and displayed
-const [unscheduledTasks, setUnscheduledTasks] = createSignal<UnscheduledTask[]>()
-
-// The current working task
-const [workingTask, setWorkingTask] = createSignal<WorkingTask | null>(null)
-
-// The completed tasks
-const [completedTasks, setCompletedTasks] = createSignal<CompletedTask[]>()
-
-
-let activeTimeRef: HTMLDivElement;
-
-/** The scale of 1hr in pixels */
-const [get1hScale, _] = createSignal(150)
-
-
-// ---------------------------- User task operations -------------------------
-// TODO: fix this bad types
-const completeTask = (task: Completable) => {
-  // TODO: handle scheudledTask
-  setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id))
-  if (task instanceof WorkingTask) setWorkingTask(null)
-  setCompletedTasks([...completedTasks() ?? [], task.completed_task()])
-}
-
-const uncompleteTask = (task: CompletedTask) => {
-// TODO: Check if task was a working task? Handle this?
-  setUnscheduledTasks([...unscheduledTasks() ?? [], task.uncompleted()])
-  setCompletedTasks(completedTasks()?.filter(t => t.task.task.id !== task.task.task.id))
-}
-
-// TODO: only able to have 1 working task at once
-const startTask = (task: ScheduledTask) => {
-  // Stop the old working task
-  if (workingTask() !== null) stopTask(workingTask()!) // TODO: I could probably figure out a better rendering system for this.
-
-  // remove from unscheduled tasks
-  setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id)) // TODO: Use the solid apis for this
-
-  setWorkingTask(task.started())
-}
-
-const stopTask = (task: WorkingTask) => {
-  setUnscheduledTasks([...unscheduledTasks() ?? [], task.stoped()])
-  setWorkingTask(null)
-}
-
-
-
-const [day, setDay] = createSignal<Date>(new Date)
-const changeDay = (amount: number) => {
-  const newDate = new Date(day())
-  newDate.setDate(newDate.getDate() + amount)
-  setDay(newDate)
-}
-
-
-// The task that is currently being edited in the popup view
-const [editTask, setEditTask] = createSignal<UnscheduledTask | null>(null)
-
-
 export default function CalendarView(props: {session: Session}) {
   // addInitialTasks() // For testing purposes
 
@@ -266,6 +175,99 @@ export default function CalendarView(props: {session: Session}) {
     </ div>
   )
 }
+
+const test = (a: number) => {
+  return a;
+}
+
+
+// TODO: change to a solid js resource
+const updateTasksWithDatabase = async (session: Session) => {
+  
+  const {data, error} = await getTasksFromDB(session)
+  if (!data) return
+
+  const {unscheduledTasks, completedTasks, workingTask: workingTasks} = data
+
+  if (error) {
+    console.log(error.message)
+    newNotification(<Notification type="error" text="Failed to load tasks" />)
+    return
+  }
+
+  setUnscheduledTasks(unscheduledTasks ?? undefined) // TODO: This is such good cod3; don't fix it pls
+  setWorkingTask(workingTasks)
+  setCompletedTasks(completedTasks ?? undefined)
+}
+
+const updateDBWithTasks = async (tasks: UnscheduledTask[], session: Session) => {
+
+  const {data, error} = await upsertTasks(tasks, session)
+  console.log(data, error)
+}
+
+
+
+// All of the unscheudled tasks that will be scheduled and displayed
+const [unscheduledTasks, setUnscheduledTasks] = createSignal<UnscheduledTask[]>()
+
+// The current working task
+const [workingTask, setWorkingTask] = createSignal<WorkingTask | null>(null)
+
+// The completed tasks
+const [completedTasks, setCompletedTasks] = createSignal<CompletedTask[]>()
+
+
+let activeTimeRef: HTMLDivElement;
+
+/** The scale of 1hr in pixels */
+const [get1hScale, _] = createSignal(150)
+
+
+// ---------------------------- User task operations -------------------------
+// TODO: fix this bad types
+const completeTask = (task: Completable) => {
+  // TODO: handle scheudledTask
+  setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id))
+  if (task instanceof WorkingTask) setWorkingTask(null)
+  setCompletedTasks([...completedTasks() ?? [], task.completed_task()])
+}
+
+const uncompleteTask = (task: CompletedTask) => {
+// TODO: Check if task was a working task? Handle this?
+  setUnscheduledTasks([...unscheduledTasks() ?? [], task.uncompleted()])
+  setCompletedTasks(completedTasks()?.filter(t => t.task.task.id !== task.task.task.id))
+}
+
+// TODO: only able to have 1 working task at once
+const startTask = (task: ScheduledTask) => {
+  // Stop the old working task
+  if (workingTask() !== null) stopTask(workingTask()!) // TODO: I could probably figure out a better rendering system for this.
+
+  // remove from unscheduled tasks
+  setUnscheduledTasks(unscheduledTasks()?.filter(t => t.id !== task.task.task.id)) // TODO: Use the solid apis for this
+
+  setWorkingTask(task.started())
+}
+
+const stopTask = (task: WorkingTask) => {
+  setUnscheduledTasks([...unscheduledTasks() ?? [], task.stoped()])
+  setWorkingTask(null)
+}
+
+const [day, setDay] = createSignal<Date>(new Date)
+const changeDay = (amount: number) => {
+  const newDate = new Date(day())
+  newDate.setDate(newDate.getDate() + amount)
+  setDay(newDate)
+}
+
+
+// The task that is currently being edited in the popup view
+const [editTask, setEditTask] = createSignal<UnscheduledTask | null>(null)
+
+
+
 
 // function CalendarHeader(props: {dailyTasks?: ScheduledTask[]}) {
 function CalendarHeader() {

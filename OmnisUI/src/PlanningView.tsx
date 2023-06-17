@@ -4,14 +4,14 @@ import { Motion } from "@motionone/solid"
 
 import { animate, spring } from "motion";
 import Header from "./components/Header";
-import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidCircleInfo, FaSolidPlus, FaSolidSquareCheck } from "solid-icons/fa";
+import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidBrain, FaSolidCircleInfo, FaSolidPaperPlane, FaSolidPlus, FaSolidSquareCheck } from "solid-icons/fa";
 import { createEffect, createMemo, createResource, createSignal, For, JSXElement, onMount, Show } from "solid-js";
 
 import { createStore } from "solid-js/store";
 
 import { AiOutlineClockCircle, AiOutlineHourglass, AiOutlineUnorderedList } from "solid-icons/ai";
 import CreateTask from "./CreateTask";
-import { BsStar } from "solid-icons/bs";
+import { BsFlower2, BsStar } from "solid-icons/bs";
 import DatePicker from "./components/DatePicker";
 import { v4 as randomUUID } from 'uuid';
 import { supabase } from "./utils/database/supabaseClient";
@@ -21,7 +21,179 @@ import Notification from "./components/Notification";
 import EditTask from "./EditTask";
 import { scheduleTasks, UnscheduledTask } from "./utils/autoscheduling";
 import { ScheduledTask } from "./utils/taskStates";
+import { title } from "process";
+import { IoFlowerSharp, IoPaperPlaneSharp, IoReload, IoReloadCircleSharp } from "solid-icons/io";
+import { reflection } from "./utils/gpt";
+import { ChatCompletionRequestMessage } from "openai";
 
+export default function(props: {session: Session}) {
+  onMount(() => setSession(props.session))
+  onMount(refetchDB)
+  const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December"]
+
+  const [ref, setRef] = createSignal<HTMLElement | null>(null)
+
+  createEffect(() => ref()?.scrollIntoView({block: "center"}))
+
+  return (
+    <div class="pt-40">
+
+      <CreateTask onDBChange={refetchDB} show={creatingTask()} session={props.session} close={() => setCreatingTask(false)}/>
+      <EditTask onDBChange={refetchDB} session={props.session} task={activeTask()!} show={activeTask() !== null} close={() => setActiveTask(null)} />
+
+      <Header>
+        <h1 
+          class="text-primary text-4xl font-black"
+          style={{
+            "text-shadow": "0px 0px 10px rgba(0, 0, 0, 0.25)"
+          }}
+        >{months[new Date().getMonth()] + " " + new Date().getDate()}</h1>
+        <h3 class="text-secondary font-bold">Hi {props.session.user.email}, let's plan your day</h3>
+
+        <IoFlowerSharp
+          size={30} 
+          onclick={() => {
+            let [message, setMessage] = createSignal<string>("");
+
+
+
+            const startingMessages: ChatCompletionRequestMessage[] = [
+              {
+                role: "system",
+                content: "You are a cognitive behavioral therapist. You first ask a question, then wait for the user to respond. You are guiding a client through a daily reflection"
+              },
+              {
+                role: "user",
+                content: `Here is what my day looks like. Scheduled: ${JSON.stringify(getAllTasks())}; Completed Tasks: ${JSON.stringify(getCompletedTasks())}; Working Task (the one I am doing right now): ${JSON.stringify(getWorkingTask)} Use this for my reflection`
+              }
+            ]
+
+            let [messages, setMessages] = createSignal<ChatCompletionRequestMessage[]>(startingMessages)
+
+            createEffect(() => console.log(messages()))
+
+            const [getGPT, {refetch: newGPTMessage}] = createResource(messages, reflection)
+
+
+            newInfoPopup({pages: [{
+              title: "12pm Reflection",
+              description: <div class="">
+
+                <div class="overflow-y-scroll max-h-[500px]">
+                  <For each={getGPT()?.slice(2)}>
+                    {(message) => <>
+                      <div class="flex flex-row gap-3 justify-start items-start my-2">
+
+                        {message.role == "assistant" ? <IoFlowerSharp size={20} class="mt-0.5" /> : message.role == "user" ? <FaSolidBrain class="mt-0.5" /> : null}
+                        <p>{message.content}</p>
+                      </div>
+                    </>}
+                  </For>
+                </div>
+
+                {getGPT.loading ? "loading..." : null}
+
+                <div class="mt-4 flex flex-row justify-center items-center gap-5">
+                  <textarea
+
+                    style={{
+                      "box-shadow": "inset 0px 3px 4px 1px rgba(0, 0, 0, 0.15)",
+                    }}
+
+                    class="bg-background-secondary p-2 rounded-lg w-full"
+                    placeholder="Respond" 
+
+                    value={message()} 
+
+                    onChange={(e) => setMessage(e.currentTarget.value ?? "")}
+                  />
+
+                  <div class="flex flex-col justify-center items-center">
+                    <IoReloadCircleSharp size={30} onclick={() => setMessages(startingMessages)} />
+                    <FaSolidPaperPlane onclick={() => {
+                      let newMessage: ChatCompletionRequestMessage = {
+                        role: "user",
+                        content: message()
+                      }
+
+                      setMessages([...messages(), newMessage])
+
+                      setMessage("")
+                    }} />
+                  </div>
+
+                </div>
+
+
+              </div>
+
+            }]})
+          }} 
+
+          class="fill-primary absolute right-16 top-12"
+        />
+
+        <FaSolidCircleInfo size={30} 
+          onclick={() => 
+            newInfoPopup({pages: [
+              {title: "What is Eisenhower Matrix?", description: 
+                <p>The Eisenhower Matrix organizes you tasks into four groups that show the order you should do them.<br /><br />
+
+                  <strong>1.</strong> High Importance, High Urgency (red)<br />
+                  <strong>2.</strong> High Importance, Low Urgency (orange)<br />
+                  <strong>3.</strong> Low Importance, High Urgency (blue)<br />
+                  <strong>4.</strong> Low Importance, Low Urgency (gray)<br /> <br />
+
+                  When you complete your tasks in this order, you will be able to focus on the most important tasks, and not get distracted by the less important tasks!
+                </p>
+              },
+              {title: "Using Eisenhower Matrix", description:
+                <p>Omnis makes it very easy to use the Eisenhower Matrix to schedule your day!<br /><br />
+                  As you add each of your tasks to your schedule, you will think about the importance of the task, and enter in task's due date to find the urgency. <strong>Always ask yourself, how important is this task to my goals, and how urgent is it?</strong> Then enter this information in. 
+
+                  <br /><br />
+
+                  Then, your tasks will show up on your schedule, and you can press the play button on whichever one you want to complete first. We suggest following the order given, but you can chose which ever order feels the most comfortable, the matrix is just a suggestion. 
+                </p>
+              }
+            ]})
+          } 
+          class="fill-primary absolute right-6 top-12" 
+        />
+      </Header>
+
+      <div ref={setRef} class="grid grid-cols-2 gap-2 mt-5 px-3">
+        <PlanningIndicators />
+
+      </div>
+
+      <div class="flex flex-row justify-start items-center gap-2 mt-5 px-8">
+        <AddTaskButton onClick={() => setCreatingTask(true)}>Add Task</AddTaskButton>
+      </div>
+
+      <div class="rounded-tl-3xl rounded-tr-3xl bg-background-secondary mt-5 min-h-screen"> {/* TODO: Fix this height? */}
+        <div class="flex flex-row justify-start gap-2 items-center p-5">
+          <FaRegularSquareCheck size={30} />
+          <h1 class="text-2xl font-bold text-primary">Your tasks for today</h1>
+        </div>
+
+
+        <PriorityLabel importance="High" urgency="High" />
+        <Tasks filteredTasks={sortedTasks()[0]} />
+
+        <PriorityLabel importance="High" urgency="Low" />
+        <Tasks filteredTasks={sortedTasks()[1]} />
+
+        <PriorityLabel importance="Low" urgency="High" />
+        <Tasks filteredTasks={sortedTasks()[2]} />
+
+        <PriorityLabel importance="Low" urgency="Low" />
+        <Tasks filteredTasks={sortedTasks()[3]} />
+
+      </div>
+    </div>
+  )
+}
 
 const [session, setSession] = createSignal<Session>()
 
@@ -38,11 +210,39 @@ const getAllTasksFromDB = async (session: Session | undefined) => {
 
   return databaseTasks?.unscheduledTasks ?? []
 }
+
 const [getAllTasks, {mutate: mutateDB, refetch: refetchDB}] = createResource(session, getAllTasksFromDB)
 
+const getCompletedTasksFromDB = async (session: Session | undefined) => {
+  if (!session) return
+
+  const {data: databaseTasks, error} = await getTasksFromDB(session)
+  if (error) {
+    console.log(error)
+    newNotification(<Notification type="error" text="Error Getting tasks" />) // TODO: Add this functionality to the databasefuntions module
+    return
+  }
+
+  return databaseTasks?.completedTasks ?? []
+}
+
+const [getCompletedTasks] = createResource(session, getCompletedTasksFromDB)
 
 
+const getWorkingTaskFromDB = async (session: Session | undefined) => {
+  if (!session) return
 
+  const {data: databaseTasks, error} = await getTasksFromDB(session)
+  if (error) {
+    console.log(error)
+    newNotification(<Notification type="error" text="Error Getting tasks" />) // TODO: Add this functionality to the databasefuntions module
+    return
+  }
+
+  return databaseTasks?.workingTask
+}
+
+const [getWorkingTask] = createResource(session, getWorkingTaskFromDB)
 
 // Schedule the tasks
 async function getScheduledTasks(tasks: UnscheduledTask[] | undefined) {
@@ -87,91 +287,6 @@ const [creatingTask, setCreatingTask] = createSignal(false)
 const [activeTask, setActiveTask] = createSignal<UnscheduledTask | null>(null)
 
 
-export default function(props: {session: Session}) {
-  onMount(() => setSession(props.session))
-  onMount(refetchDB)
-  const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December"]
-
-  const [ref, setRef] = createSignal<HTMLElement | null>(null)
-
-  createEffect(() => ref()?.scrollIntoView({block: "center"}))
-
-  return (
-    <div class="pt-40">
-
-      <CreateTask onDBChange={refetchDB} show={creatingTask()} session={props.session} close={() => setCreatingTask(false)}/>
-      <EditTask onDBChange={refetchDB} session={props.session} task={activeTask()!} show={activeTask() !== null} close={() => setActiveTask(null)} />
-
-      <Header>
-        <h1 
-          class="text-primary text-4xl font-black"
-          style={{
-            "text-shadow": "0px 0px 10px rgba(0, 0, 0, 0.25)"
-          }}
-        >{months[new Date().getMonth()] + " " + new Date().getDate()}</h1>
-        <h3 class="text-secondary font-bold">Hi {props.session.user.email}, let's plan your day</h3>
-
-        <FaSolidCircleInfo size={30} 
-          onclick={() => 
-            newInfoPopup({pages: [
-              {title: "What is Eisenhower Matrix?", description: 
-                <p>The Eisenhower Matrix organizes you tasks into four groups that show the order you should do them.<br /><br />
-
-                  <strong>1.</strong> High Importance, High Urgency (red)<br />
-                  <strong>2.</strong> High Importance, Low Urgency (orange)<br />
-                  <strong>3.</strong> Low Importance, High Urgency (blue)<br />
-                  <strong>4.</strong> Low Importance, Low Urgency (gray)<br /> <br />
-
-                  When you complete your tasks in this order, you will be able to focus on the most important tasks, and not get distracted by the less important tasks!
-                </p>
-              },
-              {title: "Using Eisenhower Matrix", description:
-                <p>Omnis makes it very easy to use the Eisenhower Matrix to schedule your day!<br /><br />
-                As you add each of your tasks to your schedule, you will think about the importance of the task, and enter in task's due date to find the urgency. <strong>Always ask yourself, how important is this task to my goals, and how urgent is it?</strong> Then enter this information in. 
-
-                <br /><br />
-
-                  Then, your tasks will show up on your schedule, and you can press the play button on whichever one you want to complete first. We suggest following the order given, but you can chose which ever order feels the most comfortable, the matrix is just a suggestion. 
-                </p>
-              }
-            ]})
-          } 
-          class="fill-primary absolute right-6 top-12" 
-        />
-      </Header>
-
-      <div ref={setRef} class="grid grid-cols-2 gap-2 mt-5 px-3">
-        <PlanningIndicators />
-
-      </div>
-
-      <div class="flex flex-row justify-start items-center gap-2 mt-5 px-8">
-        <AddTaskButton onClick={() => setCreatingTask(true)}>Add Task</AddTaskButton>
-      </div>
-
-      <div class="rounded-tl-3xl rounded-tr-3xl bg-background-secondary mt-5 min-h-screen"> {/* TODO: Fix this height? */}
-        <div class="flex flex-row justify-start gap-2 items-center p-5">
-          <FaRegularSquareCheck size={30} />
-          <h1 class="text-2xl font-bold text-primary">Your tasks for today</h1>
-        </div>
-
-
-        <PriorityLabel importance="High" urgency="High" />
-        <Tasks filteredTasks={sortedTasks()[0]} />
-
-        <PriorityLabel importance="High" urgency="Low" />
-        <Tasks filteredTasks={sortedTasks()[1]} />
-
-        <PriorityLabel importance="Low" urgency="High" />
-        <Tasks filteredTasks={sortedTasks()[2]} />
-
-        <PriorityLabel importance="Low" urgency="Low" />
-        <Tasks filteredTasks={sortedTasks()[3]} />
-
-      </div>
-    </div>
-  )
-}
 
 
 function AddTaskButton(props: {children: JSXElement, onClick: () => void}) {
