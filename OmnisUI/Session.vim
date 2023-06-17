@@ -29,6 +29,7 @@ badd +1 ~/coding/LargerIdeas/Omnis/OmnisUI/.gitignore
 badd +9 LoginScreen.tsx
 badd +7 utils/autoscheduling.ts
 badd +27 App.tsx
+badd +8 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/vite@4.1.1_@types+node@18.14.0/node_modules/vite/types/importMeta.d.ts
 argglobal
 %argdel
 $argadd ~/coding/LargerIdeas/Omnis/OmnisUI
@@ -76,12 +77,12 @@ setlocal fdn=99
 setlocal fen
 25
 normal! zo
-let s:l = 27 - ((8 * winheight(0) + 19) / 38)
+let s:l = 27 - ((26 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 27
-normal! 054|
+normal! 043|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
