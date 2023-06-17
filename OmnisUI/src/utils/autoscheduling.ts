@@ -4,7 +4,7 @@ import { ScheduledTask } from "./taskStates";
 import z from "zod";
 
 console.log("Prod?", import.meta.env.PROD)
-const omnis_algo_addr: string = import.meta.env.PROD ? import.meta.env.VITE_OMNIS_ALGO_ADDR_PROD : import.meta.env.VITE_OMNIS_ALGO_ADDR;
+const omnis_algo_addr: string = import.meta.env.VITE_OMNIS_ALGO_ADDR;
 
 export const Importance = z.enum(["High", "Low"])
 

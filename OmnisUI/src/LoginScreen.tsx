@@ -2,14 +2,11 @@ import { supabase } from "./utils/database/supabaseClient"
 
 
 export default function LoginScreen() {
-  console.log(import.meta.env.VITE_PROD_URL)
-  console.log(import.meta.env.PROD)
-  console.log(import.meta.env.VITE_DEV_URL)
   const logInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: import.meta.env.PROD ? import.meta.env.VITE_PROD_URL : import.meta.env.VITE_DEV_URL
+        redirectTo: import.meta.env.VITE_URL
       } // TODO: handle redirect for prod and dev
     })
   }
