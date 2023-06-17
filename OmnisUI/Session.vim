@@ -76,12 +76,12 @@ setlocal fdn=99
 setlocal fen
 25
 normal! zo
-let s:l = 27 - ((26 * winheight(0) + 19) / 38)
+let s:l = 27 - ((8 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 27
-normal! 026|
+normal! 054|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
