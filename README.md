@@ -1,11 +1,10 @@
 # Omnis
-
-A daily planning app for people with executive disfunctioning disorder
+A daily planning app for people with executive disfunctioning disorder.
 
 **Creators:** Siddharth Gupta, Vignesh Peddi, Felix Zeller
 
 - Website Link: https://www.omnisplanning.com/#
-- API Link: https://api.omnisplanning.com TODO: document the nginx reverse proxy
+- API Link: https://api.omnisplanning.com
 
 **Abstract**
 
@@ -14,4 +13,6 @@ Executive dysfunction often prevents people from creating effective schedules. S
 
 There are already many task management apps, but all of them are made for neurotypical people, with little consideration for accessibility. Their customizability makes them overly complicated and they require background knowledge of scheduling theory to be most useful. On the other hand, our platform is tailored to people with executive functioning disorder. Our software is more structured than other task management tools like Workflowy or Clickup. Those platforms are simply places where people go to document tasks. On the other hand, we structure the user’s day, send them notifications, and block their time using the Pomodoro method — we’re a one-stop shop for productivity. 
 
-This app was created for the 2023 Rhode Island Science and Engineering Fair.
+This app was created for the 2023 Rhode Island Science and Engineering Fair and won a First Grant at the competition.
+
+*After the conclusion of the 2023 RISEF, we disabled our domain. www.omnisplanning.com is no longer functional.*
