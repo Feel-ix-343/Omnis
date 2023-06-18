@@ -2,8 +2,9 @@ import { supabase } from "./utils/database/supabaseClient"
 
 
 export default function LoginScreen() {
-  console.log(import.meta.env.VERCEL_URL)
-  console.log(import.meta.env.VITE_URL)
+  console.log("VCEL URL", import.meta.env.VERCEL_URL)
+  console.log("VCEL URL", process.env.VERCEL_URL)
+  console.log("V URL", import.meta.env.VITE_URL)
 
   const logInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
