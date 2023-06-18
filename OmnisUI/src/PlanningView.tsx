@@ -225,7 +225,8 @@ const getCompletedTasksFromDB = async (session: Session | undefined) => {
     return
   }
 
-  return databaseTasks?.completedTasks ?? []
+  let date = new Date();
+  return databaseTasks?.completedTasks?.filter(t => t.completed_time.getDate() == date.getDate()) ?? []
 }
 
 const [getCompletedTasks] = createResource(session, getCompletedTasksFromDB)
