@@ -77,16 +77,16 @@ setlocal fdn=99
 setlocal fen
 4
 normal! zo
+11
+normal! zo
 12
 normal! zo
-13
-normal! zo
-let s:l = 9 - ((8 * winheight(0) + 19) / 38)
+let s:l = 6 - ((5 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 9
-normal! 0
+keepjumps 6
+normal! 03|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
