@@ -108,8 +108,10 @@ export default function(props: {session: Session}) {
                     onChange={(e) => setMessage(e.currentTarget.value ?? "")}
                   />
 
-                  <div class="flex flex-col justify-center items-center">
-                    <IoReloadCircleSharp size={30} onclick={() => setMessages(startingMessages)} />
+                  <div class="flex flex-col justify-center items-center gap-4">
+
+                    <IoReloadCircleSharp size={30} onclick={() => {setMessages(startingMessages); newGPTMessage()}} />
+
                     <FaSolidPaperPlane onclick={() => {
                       let newMessage: ChatCompletionRequestMessage = {
                         role: "user",

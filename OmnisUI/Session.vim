@@ -14,7 +14,7 @@ else
   set shortmess=aoO
 endif
 badd +10 utils/gpt.ts
-badd +67 PlanningView.tsx
+badd +113 PlanningView.tsx
 badd +51 components/InfoPopup.tsx
 badd +262 components/TaskInterface.tsx
 badd +107 utils/taskStates.ts
@@ -33,7 +33,7 @@ badd +8 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/vite@4.1.1_@types+
 argglobal
 %argdel
 $argadd ~/coding/LargerIdeas/Omnis/OmnisUI
-edit LoginScreen.tsx
+edit PlanningView.tsx
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -50,8 +50,7 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
-exe 'vert 2resize ' . ((&columns * 166 + 93) / 187)
+wincmd =
 argglobal
 enew
 file neo-tree\ filesystem\ \[1]
@@ -66,7 +65,7 @@ setlocal fdn=99
 setlocal fen
 wincmd w
 argglobal
-balt ~/coding/LargerIdeas/Omnis/OmnisUI/.env.production
+balt LoginScreen.tsx
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -75,22 +74,39 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=99
 setlocal fen
-4
+29
 normal! zo
-15
+38
 normal! zo
-16
+43
 normal! zo
-let s:l = 11 - ((10 * winheight(0) + 19) / 38)
+55
+normal! zo
+78
+normal! zo
+80
+normal! zo
+82
+normal! zo
+83
+normal! zo
+84
+normal! zo
+96
+normal! zo
+111
+normal! zo
+114
+normal! zo
+let s:l = 113 - ((24 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 11
-normal! 0141|
+keepjumps 113
+normal! 0112|
 wincmd w
 2wincmd w
-exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
-exe 'vert 2resize ' . ((&columns * 166 + 93) / 187)
+wincmd =
 if exists(':tcd') == 2 | tcd ~/coding/LargerIdeas/Omnis/OmnisUI | endif
 tabnext 1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
