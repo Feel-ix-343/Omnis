@@ -18,7 +18,8 @@ export async function reflection(messages: ChatCompletionRequestMessage[]) {
 
   let newMessage = response.data.choices[0].message!
 
-  messages.push(newMessage)
+  let newMessages = messages.slice()
+  newMessages.push(newMessage)
 
-  return messages
+  return newMessages
 }

@@ -118,7 +118,7 @@ export default function(props: {session: Session}) {
                         content: message()
                       }
 
-                      setMessages([...messages(), newMessage])
+                      setMessages([...getGPT()!, newMessage])
 
                       setMessage("")
                     }} />

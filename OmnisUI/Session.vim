@@ -13,8 +13,8 @@ if &shortmess =~ 'A'
 else
   set shortmess=aoO
 endif
-badd +10 utils/gpt.ts
-badd +113 PlanningView.tsx
+badd +21 utils/gpt.ts
+badd +121 PlanningView.tsx
 badd +51 components/InfoPopup.tsx
 badd +262 components/TaskInterface.tsx
 badd +107 utils/taskStates.ts
@@ -65,7 +65,7 @@ setlocal fdn=99
 setlocal fen
 wincmd w
 argglobal
-balt LoginScreen.tsx
+balt utils/gpt.ts
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -76,9 +76,9 @@ setlocal fdn=99
 setlocal fen
 29
 normal! zo
-38
+39
 normal! zo
-43
+44
 normal! zo
 55
 normal! zo
@@ -90,20 +90,18 @@ normal! zo
 normal! zo
 83
 normal! zo
-84
-normal! zo
 96
 normal! zo
 111
 normal! zo
-114
+115
 normal! zo
-let s:l = 113 - ((24 * winheight(0) + 19) / 38)
+let s:l = 120 - ((26 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 113
-normal! 0112|
+keepjumps 120
+normal! 0
 wincmd w
 2wincmd w
 wincmd =
