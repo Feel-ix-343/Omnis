@@ -23,10 +23,10 @@ badd +231 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/solid-js@1.6.10/
 badd +1300 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/typescript@4.9.5/node_modules/typescript/lib/lib.es5.d.ts
 badd +1 ~/coding/LargerIdeas/Omnis/OmnisUI
 badd +4 ~/coding/LargerIdeas/Omnis/OmnisUI/.env
-badd +5 ~/coding/LargerIdeas/Omnis/OmnisUI/.env.production
+badd +6 ~/coding/LargerIdeas/Omnis/OmnisUI/.env.production
 badd +4 utils/database/supabaseClient.ts
 badd +1 ~/coding/LargerIdeas/Omnis/OmnisUI/.gitignore
-badd +8 LoginScreen.tsx
+badd +18 LoginScreen.tsx
 badd +7 utils/autoscheduling.ts
 badd +27 App.tsx
 badd +8 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/vite@4.1.1_@types+node@18.14.0/node_modules/vite/types/importMeta.d.ts
@@ -77,16 +77,16 @@ setlocal fdn=99
 setlocal fen
 4
 normal! zo
-11
+14
 normal! zo
-12
+15
 normal! zo
-let s:l = 6 - ((5 * winheight(0) + 19) / 38)
+let s:l = 18 - ((17 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 6
-normal! 03|
+keepjumps 18
+normal! 018|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)

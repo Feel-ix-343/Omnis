@@ -8,11 +8,14 @@ export default function LoginScreen() {
 
   console.log("V URL", import.meta.env.VITE_URL)
 
+  const redirectTo = import.meta.env.VITE_VERCEL ? import.meta.env.VITE_VERCEL_URL : import.meta.env.VITE_URL;
+
+
   const logInWithGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: import.meta.env.VERCEL ? import.meta.env.VERCEL_URL : import.meta.env.VITE_URL
+        redirectTo
       } // TODO: handle redirect for prod and dev
     })
   }
