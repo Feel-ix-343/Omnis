@@ -137,14 +137,14 @@ export default function TaskInterface(props: {
 
             exit={{
               opacity: [1, 0],
-              height: ["90%", "0%"]
+              maxHeight: ["90%", "0%"]
             }}
 
             class="w-full overflow-y-hidden fixed z-50 bg-white bottom-0 rounded-tr-3xl rounded-tl-3xl"
           >
 
             {/* Header */}
-            <div class="bg-background-secondary pt-8 pb-4 px-4">
+            <div class="bg-background-secondary h-[25%] pt-8 pb-4 px-4">
 
 
               <div class="flex flex-row items-center mb-2 gap-2">
@@ -175,141 +175,143 @@ export default function TaskInterface(props: {
 
             </div>
 
-            <div class="flex flex-row flex-wrap justify-start items-center text-secondary gap-2 mt-5 px-4">
-              <AiOutlineCalendar size={35} class="fill-secondary" />
+            <div class="overflow-scroll max-h-[75%] pb-20">
+              <div class="flex flex-row flex-wrap justify-start items-center text-secondary gap-2 mt-5 px-4">
+                <AiOutlineCalendar size={35} class="fill-secondary" />
 
-              <h3 class="text-secondary whitespace-nowrap">This task is due</h3>
+                <h3 class="text-secondary whitespace-nowrap">This task is due</h3>
 
-              <DatePicker 
-                id="dueDate" 
-                class="bg-background-secondary text-primary font-bold px-3 py-1 rounded-xl shadow-md flex items-center border-2 border-neutral-200 w-40" 
-                setDate={setDueDate}
-                value={dueDate()}
-              />
-
-            </div>
-
-            <div class="flex flex-row flex-wrap justify-start items-center text-secondary gap-2 mt-5 px-4">
-              <AiOutlineCalendar size={35} class="fill-secondary" />
-
-              <h3 class="text-secondary whitespace-nowrap">Start on</h3>
-
-              <DatePicker 
-                id="startDate" 
-                class="bg-background-secondary text-primary font-bold px-3 py-1 rounded-xl shadow-md flex items-center border-2 border-neutral-200 w-40" 
-                setDate={setStartDate}
-                value={startDate() ?? undefined} // TODO: This is shit
-              />
-
-            </div>
-
-            <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
-              <BsFlag size={35} class="fill-secondary" />
-
-              <div class="flex flex-row items-center flex-wrap gap-2 gap-y-3">
-                This task has 
-                <DropDown<Importance>
-                  choices={[
-                    {value: "High", display: "High"},
-                    {value: "Low", display: "Low"}
-                  ]} 
-                  choiceOutput={taskImportance()?.toString()} 
-                  setChoice={setTaskImportance}
-                >
-                  Select
-                </DropDown>
-                importance
-              </div>
-
-            </div>
-
-            <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
-              <BsHourglass size={35} class="fill-secondary" />
-
-              <div class="flex flex-row items-center flex-wrap gap-2 gap-y-3">
-
-                It should take
-
-                {/* TODO: MAke this better */ }
-                <DropDown<number> 
-                  choices={[
-                    {display: "30min", value: 30},
-                    {display: "1hr", value: 60},
-                    {display: "1.5hr", value: 90},
-                    {display: "2hr", value: 120},
-                  ]} 
-                  setChoice={(choice: number) => setTaskDuration(choice)} 
-                  choiceOutput={taskDuration() ? (taskDuration()! / 60 < 1 ? `${taskDuration()!}min` : `${taskDuration()! / 60}hr`) : null}
-                >
-                  Duration
-                </DropDown>
+                <DatePicker 
+                  id="dueDate" 
+                  class="bg-background-secondary text-primary font-bold px-3 py-1 rounded-xl shadow-md flex items-center border-2 border-neutral-200 w-40" 
+                  setDate={setDueDate}
+                  value={dueDate()}
+                />
 
               </div>
 
-            </div>
+              <div class="flex flex-row flex-wrap justify-start items-center text-secondary gap-2 mt-5 px-4">
+                <AiOutlineCalendar size={35} class="fill-secondary" />
 
-            {allGoals() ? 
-              <div class="flex flex-row justify-start items-center text-secondary gap-2 mt-9 px-4">
-                <FiTarget size={30} />
+                <h3 class="text-secondary whitespace-nowrap">Start on</h3>
+
+                <DatePicker 
+                  id="startDate" 
+                  class="bg-background-secondary text-primary font-bold px-3 py-1 rounded-xl shadow-md flex items-center border-2 border-neutral-200 w-40" 
+                  setDate={setStartDate}
+                  value={startDate() ?? undefined} // TODO: This is shit
+                />
+
+              </div>
+
+              <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
+                <BsFlag size={35} class="fill-secondary" />
+
+                <div class="flex flex-row items-center flex-wrap gap-2 gap-y-3">
+                  This task has 
+                  <DropDown<Importance>
+                    choices={[
+                      {value: "High", display: "High"},
+                      {value: "Low", display: "Low"}
+                    ]} 
+                    choiceOutput={taskImportance()?.toString()} 
+                    setChoice={setTaskImportance}
+                  >
+                    Select
+                  </DropDown>
+                  importance
+                </div>
+
+              </div>
+
+              <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
+                <BsHourglass size={35} class="fill-secondary" />
+
                 <div class="flex flex-row items-center flex-wrap gap-2 gap-y-3">
 
-                  This is for
+                  It should take
 
                   {/* TODO: MAke this better */ }
-                  <DropDown<string | null> 
-                    choices={[allGoals()!.map(g => {return {display: g.name, value: g.id}}), {display: "None", value: null}].flat()} 
-                    setChoice={(choice: string | null) => { choice === null ? setGoals(null) : setGoals([choice])}} 
-                    choiceOutput={goals() ? allGoals()!.find(g => g.id === goals()![0])!.name : "none"}
+                  <DropDown<number> 
+                    choices={[
+                      {display: "30min", value: 30},
+                      {display: "1hr", value: 60},
+                      {display: "1.5hr", value: 90},
+                      {display: "2hr", value: 120},
+                    ]} 
+                    setChoice={(choice: number) => setTaskDuration(choice)} 
+                    choiceOutput={taskDuration() ? (taskDuration()! / 60 < 1 ? `${taskDuration()!}min` : `${taskDuration()! / 60}hr`) : null}
                   >
-                    Goal
+                    Duration
                   </DropDown>
 
                 </div>
-              </div> :
-              null
-            }
 
-            <div class="flex flex-row justify-start items-center text-secondary font-bold gap-2 mt-9 px-4">
-              <AiOutlineUnorderedList size={20} class="fill-secondary ml-2" />
-              Steps
-            </div>
+              </div>
 
-            <For each={steps()}>
-              {(step, index) => 
-                <Step step={step} delete={() => setSteps(steps()?.filter(s => s.id !== step.id))} setStep={(step: NonNullable<UnscheduledTask["steps"]>[0]) => setSteps(steps()!.map((s) => s.id === step.id ? step : s))} />
+              {allGoals() ? 
+                <div class="flex flex-row justify-start items-center text-secondary gap-2 mt-9 px-4">
+                  <FiTarget size={30} />
+                  <div class="flex flex-row items-center flex-wrap gap-2 gap-y-3">
+
+                    This is for
+
+                    {/* TODO: MAke this better */ }
+                    <DropDown<string | null> 
+                      choices={[allGoals()!.map(g => {return {display: g.name, value: g.id}}), {display: "None", value: null}].flat()} 
+                      setChoice={(choice: string | null) => { choice === null ? setGoals(null) : setGoals([choice])}} 
+                      choiceOutput={goals() ? allGoals()!.find(g => g.id === goals()![0])!.name : "none"}
+                    >
+                      Goal
+                    </DropDown>
+
+                  </div>
+                </div> :
+                null
               }
-            </For>
 
-            <div class="flex flex-row items-center justify-start w-[90%] mx-auto gap-1 text-secondary">
-              <AiOutlinePlusCircle 
-                size={25} 
-                class="fill-secondary ml-1" 
-                onclick={() => {
-                  if (steps()) {
-                    setSteps([...steps()!, {id: crypto.randomUUID(), description: "", duration: 1, completed: false, edited: false}])
-                  } else {
-                    setSteps( [ {id: crypto.randomUUID(), description: "", duration: 1, completed: false, edited: false} ]) 
-                  }
-                }} />
-            </div>
+              <div class="flex flex-row justify-start items-center text-secondary font-bold gap-2 mt-9 px-4">
+                <AiOutlineUnorderedList size={20} class="fill-secondary ml-2" />
+                Steps
+              </div>
 
-            <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
-              <IoDocumentTextOutline size={35} class="fill-secondary" />
+              <For each={steps()}>
+                {(step, index) => 
+                  <Step step={step} delete={() => setSteps(steps()?.filter(s => s.id !== step.id))} setStep={(step: NonNullable<UnscheduledTask["steps"]>[0]) => setSteps(steps()!.map((s) => s.id === step.id ? step : s))} />
+                }
+              </For>
 
-              <textarea
+              <div class="flex flex-row items-center justify-start w-[90%] mx-auto gap-1 text-secondary">
+                <AiOutlinePlusCircle 
+                  size={25} 
+                  class="fill-secondary ml-1" 
+                  onclick={() => {
+                    if (steps()) {
+                      setSteps([...steps()!, {id: crypto.randomUUID(), description: "", duration: 1, completed: false, edited: false}])
+                    } else {
+                      setSteps( [ {id: crypto.randomUUID(), description: "", duration: 1, completed: false, edited: false} ]) 
+                    }
+                  }} />
+              </div>
 
-                style={{
-                  "box-shadow": "inset 0px 3px 4px 1px rgba(0, 0, 0, 0.15)",
-                }}
+              <div class="flex flex-row justify-start items-start text-secondary gap-2 mt-9 px-4">
+                <IoDocumentTextOutline size={35} class="fill-secondary" />
 
-                class="bg-background-secondary p-2 rounded-lg w-full"
-                placeholder="Why is this important?" 
+                <textarea
 
-                value={taskDescription() ?? ""} 
+                  style={{
+                    "box-shadow": "inset 0px 3px 4px 1px rgba(0, 0, 0, 0.15)",
+                  }}
 
-                onChange={(e) => setTaskDescription(e.currentTarget.value ?? "")}
-              />
+                  class="bg-background-secondary p-2 rounded-lg w-full"
+                  placeholder="Why is this important?" 
 
+                  value={taskDescription() ?? ""} 
+
+                  onChange={(e) => setTaskDescription(e.currentTarget.value ?? "")}
+                />
+
+              </div>
             </div>
           </Motion.div>
 
