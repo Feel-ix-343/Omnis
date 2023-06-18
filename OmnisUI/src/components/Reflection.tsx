@@ -2,7 +2,7 @@ import { Session } from "@supabase/supabase-js";
 import { ChatCompletionRequestMessage } from "openai";
 import { FaSolidBrain, FaSolidPaperPlane } from "solid-icons/fa";
 import { IoFlowerSharp, IoReloadCircleSharp } from "solid-icons/io";
-import { createEffect, createResource, createSignal, For } from "solid-js";
+import { createEffect, createMemo, createResource, createSignal, For, onMount } from "solid-js";
 import { newInfoPopup, newNotification } from "../App";
 import { scheduleTasks, UnscheduledTask } from "../utils/autoscheduling";
 import { getTasksFromDB } from "../utils/database/databaseFunctions";
@@ -13,6 +13,7 @@ import Notification from "./Notification";
 
 export default async function ReflectionPopup(session: Session | undefined) {
   if (!session) return
+
   const getAllTasksFromDB = async (session: Session | undefined) => {
     if (!session) return
 
@@ -24,10 +25,15 @@ export default async function ReflectionPopup(session: Session | undefined) {
       return
     }
 
+    console.log("Database", databaseTasks)
+
     return databaseTasks
   }
 
   async function getScheduledTasksForToday(tasks: UnscheduledTask[] | undefined) {
+
+    console.log("Tasks Hello", tasks)
+
     if (!tasks || !session) return
 
     const durationTasks = tasks.filter(task => task.duration !== null)
@@ -41,41 +47,52 @@ export default async function ReflectionPopup(session: Session | undefined) {
     }
 
     let today = new Date();
-    let todaysTasks = res.data?.filter(s => s.scheduled_datetime.getDate() == today.getDate())
+    console.log(today.toDateString())
+    let todaysTasks = res.data?.filter(s => {
+      console.log(s.scheduled_datetime.toDateString())
+      return s.scheduled_datetime.toDateString() === today.toDateString()
+    })
+    console.log("Todays Tasks", todaysTasks)
 
-    return todaysTasks ?? []
+
+    return todaysTasks
   }
 
-  const [getAllTasks, {mutate: mutateDB, refetch: refetchDB}] = createResource(session, getAllTasksFromDB)
-  const [autoscheduledTasks] = createResource(getAllTasks()?.unscheduledTasks, getScheduledTasksForToday)
+  const getMessages = async() => {
+    let allTasks = await getAllTasksFromDB(session)
+    let scheduled = allTasks ? await getScheduledTasksForToday(allTasks.unscheduledTasks ?? undefined) : null
+    const startingMessages: ChatCompletionRequestMessage[] = [
+      {
+        role: "system",
+        content: "You are a cognitive behavioral therapist. You first ask a question, then wait for the user to respond. You are guiding a client through a daily reflection"
+      },
+      {
+        role: "user",
+        content: `Here is what my day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(allTasks?.completedTasks)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)} Use this for my reflection`
+      }
+    ]
+    let allmessages = [...startingMessages, ...messages() ?? []]
+    let response = await reflection(allmessages)
 
+    let newMessages = response.slice(startingMessages.length)
+    setMessages(newMessages)
 
+    return newMessages
+  }
+
+  let [messages, setMessages] = createSignal<ChatCompletionRequestMessage[]>()
   let [message, setMessage] = createSignal<string>("");
 
-  const startingMessages: ChatCompletionRequestMessage[] = [
-    {
-      role: "system",
-      content: "You are a cognitive behavioral therapist. You first ask a question, then wait for the user to respond. You are guiding a client through a daily reflection"
-    },
-    {
-      role: "user",
-      content: `Here is what my day looks like. Scheduled: ${JSON.stringify(autoscheduledTasks())}; Completed Tasks: ${JSON.stringify(getAllTasks()?.completedTasks)}; Working Task (the one I am doing right now): ${JSON.stringify(getAllTasks()?.workingTask)} Use this for my reflection`
-    }
-  ]
 
-  let [messages, setMessages] = createSignal<ChatCompletionRequestMessage[]>(startingMessages)
-
-
-  const [getGPT, {refetch: newGPTMessage}] = createResource(messages, reflection)
-
-  createEffect(() => console.log("Messages", getGPT()))
+  const [getGPT, {refetch: newGPTMessage}] = createResource(getMessages)
+  createEffect(() => console.log(getGPT()))
 
   newInfoPopup({pages: [{
     title: "Reflection",
     description: <div class="">
 
       <div class="overflow-y-scroll max-h-[500px]">
-        <For each={getGPT()?.slice(2)}>
+        <For each={getGPT()}>
           {(message) => <>
             <div class="flex flex-row gap-3 justify-start items-start my-2">
 
@@ -105,7 +122,7 @@ export default async function ReflectionPopup(session: Session | undefined) {
 
         <div class="flex flex-col justify-center items-center gap-4">
 
-          <IoReloadCircleSharp size={30} onclick={() => {setMessages(startingMessages); newGPTMessage()}} />
+          <IoReloadCircleSharp size={30} onclick={() => {setMessages(); newGPTMessage()}} />
 
           <FaSolidPaperPlane onclick={() => {
             let newMessage: ChatCompletionRequestMessage = {
@@ -114,6 +131,7 @@ export default async function ReflectionPopup(session: Session | undefined) {
             }
 
             setMessages([...getGPT()!, newMessage])
+            newGPTMessage()
 
             setMessage("")
           }} />
