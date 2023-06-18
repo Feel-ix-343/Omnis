@@ -24,7 +24,6 @@ export const newInfoPopup = (props: InfoPopupProps) => setInfoPopup(<InfoPopup p
 
 const App: Component = () => {
 
-  console.log("Vite url", import.meta.env.VITE_SUPABASE_URL)
   const [getIndex, setIndex] = createSignal(parseInt(localStorage.getItem("index") ?? "1")); // Initialize on the calendar screen
 
   createEffect(() => localStorage.setItem("index", getIndex().toString()))
