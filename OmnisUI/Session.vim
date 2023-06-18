@@ -86,7 +86,7 @@ if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
 keepjumps 11
-normal! 064|
+normal! 035|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
