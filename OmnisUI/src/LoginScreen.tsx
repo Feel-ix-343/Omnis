@@ -3,12 +3,13 @@ import { supabase } from "./utils/database/supabaseClient"
 
 export default function LoginScreen() {
   console.log("VCEL URL", import.meta.env.VERCEL_URL)
-  console.log("VCEL", import.meta.env.VERCEL)
+  console.log("VCEL", import.meta.env.VITE_VERCEL)
   console.log("VCEL VITE URL", import.meta.env.VITE_VERCEL_URL)
 
   console.log("V URL", import.meta.env.VITE_URL)
 
   const redirectTo = import.meta.env.VITE_VERCEL ? import.meta.env.VITE_VERCEL_URL : import.meta.env.VITE_URL;
+  console.log("Redirect to", redirectTo)
 
 
   const logInWithGoogle = async () => {
