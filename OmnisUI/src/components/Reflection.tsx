@@ -5,7 +5,7 @@ import { IoFlowerSharp, IoReloadCircleSharp } from "solid-icons/io";
 import { createEffect, createMemo, createResource, createSignal, For, onMount } from "solid-js";
 import { newInfoPopup, newNotification } from "../App";
 import { scheduleTasks, UnscheduledTask } from "../utils/autoscheduling";
-import { getTasksFromDB } from "../utils/database/databaseFunctions";
+import { getGoalsFromDB, getTasksFromDB } from "../utils/database/databaseFunctions";
 import { reflection } from "../utils/gpt";
 import Notification from "./Notification";
 
@@ -58,6 +58,15 @@ export default async function ReflectionPopup(session: Session | undefined) {
     return todaysTasks
   }
 
+  const getGoals = async() => {
+    let {data, error} = await getGoalsFromDB(session)
+    if (error) {
+      newNotification(<Notification text={"Error getting goals"}  type={'error'} />)
+      return
+    }
+    return data
+  }
+
   const getMessages = async() => {
     let allTasks = await getAllTasksFromDB(session)
     let scheduled = allTasks ? await getScheduledTasksForToday(allTasks.unscheduledTasks ?? undefined) : null
@@ -65,15 +74,21 @@ export default async function ReflectionPopup(session: Session | undefined) {
     let today = new Date();
     let completed = allTasks?.completedTasks?.filter(t => t.completed_time.toDateString() === today.toDateString())
 
+    let goals = await getGoals()
+
     const startingMessages: ChatCompletionRequestMessage[] = [
       {
         role: "system",
-        content: "You are a cognitive behavioral therapist. You first ask a question, then wait for the user to respond. You are guiding a client through a daily reflection"
+        content: `You are a cognitive behavioral therapist. You first ask a question, then wait for the user to respond. You are guiding a client through a daily reflection. The user will give tasks and goals by id. Refer to the tasks and goals by their names. Here is what the user's day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(completed)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)}. Here are the user's goals, each goal is linked to a task by its id: ${JSON.stringify(goals)}. Use the scheduled, completed, working tasks and goals to guide the user through a daily reflection`
       },
-      {
-        role: "user",
-        content: `Here is what my day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(completed)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)} Use this for my reflection`
-      }
+      // {
+      //   role: "user",
+      //   content: `Here is what my day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(completed)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)} Use this for my reflection`
+      // },
+      // {
+      //   role: "user",
+      //   content: `Here are my long-term goals. Each goal has an id that is linked to a task by the id. ${JSON.stringify(goals)}`
+      // }
     ]
     console.log("Starting Message", startingMessages)
     let allmessages = [...startingMessages, ...messages() ?? []]
