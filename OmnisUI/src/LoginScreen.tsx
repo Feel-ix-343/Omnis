@@ -6,6 +6,7 @@ export default function LoginScreen() {
   console.log("VCEL URL", process.env.VERCEL_URL)
   console.log("VCEL", import.meta.env.VERCEL)
   console.log("VCEL VITE URL", import.meta.env.VITE_VERCEL_URL)
+
   console.log("V URL", import.meta.env.VITE_URL)
 
   const logInWithGoogle = async () => {
