@@ -6,7 +6,7 @@ export default function LoginScreen() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: import.meta.env.VITE_URL
+        redirectTo: import.meta.env.VERCEL ? import.meta.env.VERCEL_URL : import.meta.env.VITE_URL
       } // TODO: handle redirect for prod and dev
     })
   }
