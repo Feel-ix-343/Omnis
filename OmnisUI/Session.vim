@@ -24,9 +24,9 @@ badd +1300 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/typescript@4.9.
 badd +1 ~/coding/LargerIdeas/Omnis/OmnisUI
 badd +4 ~/coding/LargerIdeas/Omnis/OmnisUI/.env
 badd +4 ~/coding/LargerIdeas/Omnis/OmnisUI/.env.production
-badd +9 utils/database/supabaseClient.ts
+badd +3 utils/database/supabaseClient.ts
 badd +1 ~/coding/LargerIdeas/Omnis/OmnisUI/.gitignore
-badd +9 LoginScreen.tsx
+badd +1 LoginScreen.tsx
 badd +7 utils/autoscheduling.ts
 badd +27 App.tsx
 badd +8 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/vite@4.1.1_@types+node@18.14.0/node_modules/vite/types/importMeta.d.ts
@@ -81,12 +81,12 @@ normal! zo
 normal! zo
 6
 normal! zo
-let s:l = 9 - ((8 * winheight(0) + 19) / 38)
+let s:l = 10 - ((9 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 9
-normal! 073|
+keepjumps 10
+normal! 049|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
