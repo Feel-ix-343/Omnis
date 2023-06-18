@@ -61,6 +61,10 @@ export default async function ReflectionPopup(session: Session | undefined) {
   const getMessages = async() => {
     let allTasks = await getAllTasksFromDB(session)
     let scheduled = allTasks ? await getScheduledTasksForToday(allTasks.unscheduledTasks ?? undefined) : null
+
+    let today = new Date();
+    let completed = allTasks?.completedTasks?.filter(t => t.completed_time.toDateString() === today.toDateString())
+
     const startingMessages: ChatCompletionRequestMessage[] = [
       {
         role: "system",
@@ -68,9 +72,10 @@ export default async function ReflectionPopup(session: Session | undefined) {
       },
       {
         role: "user",
-        content: `Here is what my day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(allTasks?.completedTasks)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)} Use this for my reflection`
+        content: `Here is what my day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(completed)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)} Use this for my reflection`
       }
     ]
+    console.log("Starting Message", startingMessages)
     let allmessages = [...startingMessages, ...messages() ?? []]
     let response = await reflection(allmessages)
 
