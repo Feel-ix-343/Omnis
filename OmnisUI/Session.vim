@@ -26,7 +26,7 @@ badd +4 ~/coding/LargerIdeas/Omnis/OmnisUI/.env
 badd +4 ~/coding/LargerIdeas/Omnis/OmnisUI/.env.production
 badd +4 utils/database/supabaseClient.ts
 badd +1 ~/coding/LargerIdeas/Omnis/OmnisUI/.gitignore
-badd +6 LoginScreen.tsx
+badd +7 LoginScreen.tsx
 badd +7 utils/autoscheduling.ts
 badd +27 App.tsx
 badd +8 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/vite@4.1.1_@types+node@18.14.0/node_modules/vite/types/importMeta.d.ts
@@ -77,16 +77,16 @@ setlocal fdn=99
 setlocal fen
 4
 normal! zo
-9
-normal! zo
 10
 normal! zo
-let s:l = 6 - ((5 * winheight(0) + 19) / 38)
+11
+normal! zo
+let s:l = 7 - ((6 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 6
-normal! 048|
+keepjumps 7
+normal! 020|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
