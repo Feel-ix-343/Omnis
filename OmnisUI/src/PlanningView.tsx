@@ -25,6 +25,7 @@ import { title } from "process";
 import { IoFlowerSharp, IoPaperPlaneSharp, IoReload, IoReloadCircleSharp } from "solid-icons/io";
 import { reflection } from "./utils/gpt";
 import { ChatCompletionRequestMessage } from "openai";
+import ReflectionPopup from "./components/Reflection";
 
 export default function(props: {session: Session}) {
   onMount(() => setSession(props.session))
@@ -53,83 +54,7 @@ export default function(props: {session: Session}) {
         <IoFlowerSharp
           size={30} 
           onclick={() => {
-            let [message, setMessage] = createSignal<string>("");
-
-
-
-            const startingMessages: ChatCompletionRequestMessage[] = [
-              {
-                role: "system",
-                content: "You are a cognitive behavioral therapist. You first ask a question, then wait for the user to respond. You are guiding a client through a daily reflection"
-              },
-              {
-                role: "user",
-                content: `Here is what my day looks like. Scheduled: ${JSON.stringify(getAllTasks())}; Completed Tasks: ${JSON.stringify(getCompletedTasks())}; Working Task (the one I am doing right now): ${JSON.stringify(getWorkingTask)} Use this for my reflection`
-              }
-            ]
-
-            let [messages, setMessages] = createSignal<ChatCompletionRequestMessage[]>(startingMessages)
-
-            createEffect(() => console.log(messages()))
-
-            const [getGPT, {refetch: newGPTMessage}] = createResource(messages, reflection)
-
-
-            newInfoPopup({pages: [{
-              title: "Reflection",
-              description: <div class="">
-
-                <div class="overflow-y-scroll max-h-[500px]">
-                  <For each={getGPT()?.slice(2)}>
-                    {(message) => <>
-                      <div class="flex flex-row gap-3 justify-start items-start my-2">
-
-                        {message.role == "assistant" ? <IoFlowerSharp size={20} class="mt-0.5" /> : message.role == "user" ? <FaSolidBrain class="mt-0.5" /> : null}
-                        <p>{message.content}</p>
-                      </div>
-                    </>}
-                  </For>
-                </div>
-
-                {getGPT.loading ? "loading..." : null}
-
-                <div class="mt-4 flex flex-row justify-center items-center gap-5">
-                  <textarea
-
-                    style={{
-                      "box-shadow": "inset 0px 3px 4px 1px rgba(0, 0, 0, 0.15)",
-                    }}
-
-                    class="bg-background-secondary p-2 rounded-lg w-full"
-                    placeholder="Respond" 
-
-                    value={message()} 
-
-                    onChange={(e) => setMessage(e.currentTarget.value ?? "")}
-                  />
-
-                  <div class="flex flex-col justify-center items-center gap-4">
-
-                    <IoReloadCircleSharp size={30} onclick={() => {setMessages(startingMessages); newGPTMessage()}} />
-
-                    <FaSolidPaperPlane onclick={() => {
-                      let newMessage: ChatCompletionRequestMessage = {
-                        role: "user",
-                        content: message()
-                      }
-
-                      setMessages([...getGPT()!, newMessage])
-
-                      setMessage("")
-                    }} />
-                  </div>
-
-                </div>
-
-
-              </div>
-
-            }]})
+            ReflectionPopup(session())
           }} 
 
           class="fill-primary absolute right-16 top-12"
@@ -173,7 +98,7 @@ export default function(props: {session: Session}) {
         <AddTaskButton onClick={() => setCreatingTask(true)}>Add Task</AddTaskButton>
       </div>
 
-      <div class="rounded-tl-3xl rounded-tr-3xl bg-background-secondary mt-5 min-h-screen"> {/* TODO: Fix this height? */}
+      <div class="rounded-tl-3xl rounded-tr-3xl bg-background-secondary mt-5 min-h-screen pb-[15vh]"> {/* TODO: Fix this height? */}
         <div class="flex flex-row justify-start gap-2 items-center p-5">
           <FaRegularSquareCheck size={30} />
           <h1 class="text-2xl font-bold text-primary">Your tasks for today</h1>
@@ -350,7 +275,10 @@ function TaskDisplay(props: {task: ScheduledTask}) {
       onclick={() => setActiveTask(props.task.task.task)}
     >
       <div class="flex flex-row justify-start items-center gap-2 px-3 mt-2 mb-1">
-        <FaRegularFlag size={18} class="fill-red-400" />
+        {props.task.task.task.importance == "High" ? 
+          <FaRegularFlag size={18} class='fill-red-500' /> :
+          null
+        }
         <div class="flex flex-row items-center justify-center px-3 py-1 gap-2 bg-neutral-100 rounded-full text-secondary text-xs">
           <FaRegularCalendar size={18} class="fill-secondary" />
           {date()}
