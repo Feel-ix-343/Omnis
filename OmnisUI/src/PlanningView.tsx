@@ -76,7 +76,7 @@ export default function(props: {session: Session}) {
 
 
             newInfoPopup({pages: [{
-              title: "12pm Reflection",
+              title: "Reflection",
               description: <div class="">
 
                 <div class="overflow-y-scroll max-h-[500px]">
