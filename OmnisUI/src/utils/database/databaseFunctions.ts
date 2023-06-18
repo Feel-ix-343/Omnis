@@ -1,10 +1,20 @@
 import { PostgrestError, Session } from "@supabase/supabase-js"
+import { Goal } from "../../SettingsView"
+import { Importance, UnscheduledTask, Urgency } from "../autoscheduling"
 import { CompletedTask, WorkingTask } from "../taskStates"
 import { supabase } from "./supabaseClient"
 
 type DBUnscheduledTask = import ("./database.types").Database["public"]["Tables"]["tasks"]["Row"]
 type DBWorkingTask = import ("./database.types").Database["public"]["Tables"]["working_tasks"]["Row"]
 type DBCompletedTask = import ("./database.types").Database["public"]["Tables"]["completed_tasks"]["Row"]
+type DBGoal = import ("./database.types").Database["public"]["Tables"]["goals"]["Row"]
+
+function goalToDBGoal(goal: Goal, session: Session): DBGoal {
+  return {
+    ...goal,
+    user_id: session.user.id
+  }
+}
 
 function taskToDBTask(task: UnscheduledTask, session: Session): DBUnscheduledTask {
   console.log(task)
@@ -127,6 +137,18 @@ export async function getTasksFromDB(session: Session): Promise<{data: {unschedu
     }, error: null}
 }
 
+export async function getGoalsFromDB(session: Session) {
+  const {data, error} = await supabase.from('goals').select("*").eq("user_id", session.user.id)
+  if (error) return {data: null, error: error}
+  if (data.length === 0) return {data: null, error: null}
+
+  return {
+    data: data as Goal[],
+    error: null
+  }
+}
+
+
 
 export async function upsertTask(task: UnscheduledTask, session: Session) {
   console.log("Updating", task)
@@ -164,4 +186,15 @@ export async function deleteDBWorkingTasks(task: WorkingTask) {
 
 export async function deleteDBCompletedTasks(tasks: CompletedTask[]) {
   return await supabase.from("completed_tasks").delete().eq("id", tasks.map(t => t.task.task.id))
+}
+
+
+export async function upsertDBGoal(goal: Goal, session: Session) {
+  console.log("Updating", goalToDBGoal(goal, session))
+  return await supabase.from("goals").upsert(goalToDBGoal(goal, session))
+}
+
+export async function deleteDBGoal(goal: Goal, session: Session) {
+  console.log("Deleting", goal)
+  return await supabase.from("goals").delete().eq("id", goal.id)
 }

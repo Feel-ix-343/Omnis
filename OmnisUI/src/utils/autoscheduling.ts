@@ -6,7 +6,8 @@ import z from "zod";
 console.log("Prod?", import.meta.env.PROD)
 const omnis_algo_addr: string = import.meta.env.VITE_OMNIS_ALGO_ADDR;
 
-export const Importance = z.enum(["High", "Low"])
+const Importance = z.enum(["High", "Low"])
+export type Importance = z.infer<typeof Importance>
 
 const UnscheduledTaskValidator = z.object({
   id: z.string(),
@@ -22,7 +23,8 @@ const UnscheduledTaskValidator = z.object({
     completed: z.boolean(),
     edited: z.boolean(),
   })).nullable(),
-  start_date: z.coerce.date().nullable()
+  start_date: z.coerce.date().nullable(),
+  goals: z.array(z.string()).nullable()
 })
 
 export type UnscheduledTask = z.infer<typeof UnscheduledTaskValidator>
@@ -95,25 +97,7 @@ export async function scheduleTasks(session: Session, tasks: UnscheduledTask[], 
     error: z.string().nullable(),
     scheduled_tasks: z.array(
       z.object({
-        task: z.object({
-          task: z.object({
-            id: z.string(),
-            name: z.string(),
-            description: z.string().nullable(),
-            duration: z.number(),
-            importance: z.enum(["High", "Low"]),
-            due_date: z.coerce.date(),
-            start_date: z.coerce.date().nullable(),
-            steps: z.array(z.object({
-              id: z.string(),
-              duration: z.number(),
-              description: z.string(),
-              completed: z.boolean(),
-              edited: z.boolean(),
-            })).nullable(),
-          }),
-          urgency: z.enum(["High", "Low"])
-        }),
+        task: UnscheduledTaskWithUrgencyValidator,
         scheduled_datetime: z.coerce.date(),
       }).transform(val => new ScheduledTask(val.task, val.scheduled_datetime))
     )

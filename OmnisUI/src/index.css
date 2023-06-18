@@ -9,11 +9,15 @@ h1 {
 }
 
 h2 {
-  @apply text-xl font-bold text-primary;
+  @apply text-xl font-bold text-primary my-4;
 }
 
 h3 {
   @apply text-lg text-primary;
+}
+
+h4 {
+  @apply text-sm font-semibold text-primary;
 }
 
 html {

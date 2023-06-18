@@ -4,12 +4,18 @@ import { spring } from "motion";
 import { AiOutlineCalendar, AiOutlineCloseCircle, AiOutlinePlusCircle, AiOutlineUnorderedList } from "solid-icons/ai";
 import { IoDocumentTextOutline } from 'solid-icons/io'
 import { BsFlag, BsHourglass } from "solid-icons/bs";
-import { createEffect, createSignal, For, JSXElement, Show } from "solid-js";
+import { createEffect, createResource, createSignal, For, JSXElement, Show } from "solid-js";
 import DatePicker from "./DatePicker";
 import { v4 as randomUUID } from 'uuid';
 import { BiRegularCheckbox, BiRegularCheckboxChecked } from "solid-icons/bi";
 import { FaRegularTrashCan } from "solid-icons/fa";
-import { UnscheduledTask } from "../utils/autoscheduling";
+import { Importance, UnscheduledTask } from "../utils/autoscheduling";
+import { DropDown } from "./Dropdown";
+import { Goal } from "../SettingsView";
+import {FiTarget} from "solid-icons/fi"
+import { getGoalsFromDB } from "../utils/database/databaseFunctions";
+import { newNotification } from "../App";
+import Notification from "./Notification";
 
 export default function TaskInterface(props: {
   session: Session,
@@ -27,7 +33,8 @@ export default function TaskInterface(props: {
   const [taskImportance, setTaskImportance] = createSignal<Importance>() // TODO: Load this up
   const [taskDuration, setTaskDuration] = createSignal<number | null>() // TODO: Change to minutes
   const [taskDescription, setTaskDescription] = createSignal<string | null>()
-  const [startDate, setStartDate] = createSignal<Date>()
+  const [startDate, setStartDate] = createSignal<Date | null>()
+  const [goals, setGoals] = createSignal<string[] | null>()
 
 
 
@@ -43,6 +50,7 @@ export default function TaskInterface(props: {
     setSteps(props.task?.steps)
     setTaskImportance(props.task?.importance)
     setStartDate(props.task?.start_date)
+    setGoals(props.task?.goals)
   }
 
   const getTaskFromInputs = () => {
@@ -65,7 +73,8 @@ export default function TaskInterface(props: {
       importance: taskImportance()!,
       description: taskDescription() ?? "",
       steps: steps() ?? null,
-      start_date: startDate()!
+      start_date: startDate()!,
+      goals: goals() ?? null
     }
 
     return task
@@ -82,6 +91,16 @@ export default function TaskInterface(props: {
     }
   })
 
+  const getGoals = async () => {
+    const {data, error} = await getGoalsFromDB(props.session)
+    if (error) {
+      newNotification(<Notification type="error" text={"Error Getting Goals"} />)
+      return
+    }
+    return data
+  }
+  const [allGoals] = createResource(getGoals)
+
   return (
     <>
       <Presence>
@@ -95,7 +114,11 @@ export default function TaskInterface(props: {
               duration: .6,
             }}
 
-            class="w-full h-screen bg-black absolute top-0 z-40"
+            exit={{
+              opacity: [.2, 0],
+            }}
+
+            class="w-full fixed h-screen bg-black top-0 z-40"
           />
         </Show>
       </Presence>
@@ -175,7 +198,7 @@ export default function TaskInterface(props: {
                 id="startDate" 
                 class="bg-background-secondary text-primary font-bold px-3 py-1 rounded-xl shadow-md flex items-center border-2 border-neutral-200 w-40" 
                 setDate={setStartDate}
-                value={startDate()}
+                value={startDate() ?? undefined} // TODO: This is shit
               />
 
             </div>
@@ -224,6 +247,27 @@ export default function TaskInterface(props: {
               </div>
 
             </div>
+
+            {allGoals() ? 
+              <div class="flex flex-row justify-start items-center text-secondary gap-2 mt-9 px-4">
+                <FiTarget size={30} />
+                <div class="flex flex-row items-center flex-wrap gap-2 gap-y-3">
+
+                  This is for
+
+                  {/* TODO: MAke this better */ }
+                  <DropDown<string | null> 
+                    choices={[allGoals()!.map(g => {return {display: g.name, value: g.id}}), {display: "None", value: null}].flat()} 
+                    setChoice={(choice: string | null) => { choice === null ? setGoals(null) : setGoals([choice])}} 
+                    choiceOutput={goals() ? allGoals()!.find(g => g.id === goals()![0])!.name : "none"}
+                  >
+                    Goal
+                  </DropDown>
+
+                </div>
+              </div> :
+              null
+            }
 
             <div class="flex flex-row justify-start items-center text-secondary font-bold gap-2 mt-9 px-4">
               <AiOutlineUnorderedList size={20} class="fill-secondary ml-2" />
@@ -275,69 +319,6 @@ export default function TaskInterface(props: {
   )
 }
 
-function Button(props: {children: JSXElement, class?: string, focus?: {focuson: () => void, focusoff: () => void}}) {
-
-
-
-  return (
-    <button 
-      class={ "bg-background-secondary text-primary font-bold px-3 py-1 rounded-xl shadow-md flex items-center border-2 border-neutral-200 " + props.class } 
-      ontouchstart={props.focus?.focuson}
-    >{props.children}</button>
-  )
-}
-
-interface DropDownChoice<T> {
-  display: string,
-  value: T
-}
-
-
-function DropDown<T>(props: {children: JSXElement, choices: DropDownChoice<T>[], choiceOutput?: string | null, setChoice: (choiceValue: T) => void, class?: string}) {
-  const [show, setShow] = createSignal(false)
-
-  const [ref, setRef] = createSignal<HTMLButtonElement>()
-
-  createEffect(() => {
-    document.addEventListener("touchstart", (e) => {
-      if (ref()?.contains(e.target)) return // TODO: FIx
-      else setShow(false)
-    })
-  })
-
-  return (
-    <div ref={setRef} class={ "flex flex-col justify-center items-center " + props.class}>
-
-      <Button class={(show() ? "opacity-0" : "") + " w-20 flex items-center justify-center"} focus={{focuson: () => setShow(true), focusoff: () => setShow(false)}}>
-        {props.choiceOutput ?? props.children}
-      </Button>
-
-      <Presence>
-        <Show when={show()}>
-          <Motion.div
-
-            transition={{duration: .3, easing: spring()}}
-
-            animate={{
-              scale: [.7, 1],
-              scaleY: [0, 1],
-            }}
-
-            exit={{
-              opacity: [1, 0]
-            }}
-
-            class="w-20 absolute bg-background-secondary rounded-xl shadow-xl border-2 border-neutral-200 p-2 overflow-hidden flex flex-col justify-center items-center"
-          >
-            <For each={props.choices}>
-              {(choice, index) => <button onClick={() => {props.setChoice(props.choices[index()].value); setShow(false)}} class="font-bold text-primary">{choice.display}</button>}
-            </For>
-          </Motion.div>
-        </Show>
-      </Presence>
-    </div>
-  )
-}
 
 
 function Step(props: {step: NonNullable<UnscheduledTask["steps"]>[0], setStep: (step: NonNullable<UnscheduledTask["steps"]>[0]) => void, delete: () => void}) {
@@ -346,7 +327,7 @@ function Step(props: {step: NonNullable<UnscheduledTask["steps"]>[0], setStep: (
     <div class="flex flex-row items-center justify-start w-[90%] mx-auto gap-1 text-secondary">
       {props.step.completed ? 
         <BiRegularCheckboxChecked size={30} class="fill-secondary" onclick={toggleCompleted} />
-      : <BiRegularCheckbox size={30} class="fill-secondary" onclick={toggleCompleted} />
+        : <BiRegularCheckbox size={30} class="fill-secondary" onclick={toggleCompleted} />
       }
 
       <span 
