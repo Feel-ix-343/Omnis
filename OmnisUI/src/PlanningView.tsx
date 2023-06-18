@@ -80,7 +80,7 @@ export default function(props: {session: Session}) {
               description: <div class="">
 
                 <div class="overflow-y-scroll max-h-[500px]">
-                  <For each={getGPT()?.slice(2)}>
+                  <For each={getGPT()}>
                     {(message) => <>
                       <div class="flex flex-row gap-3 justify-start items-start my-2">
 
