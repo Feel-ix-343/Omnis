@@ -24,7 +24,7 @@ badd +1300 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/typescript@4.9.
 badd +1 ~/coding/LargerIdeas/Omnis/OmnisUI
 badd +4 ~/coding/LargerIdeas/Omnis/OmnisUI/.env
 badd +4 ~/coding/LargerIdeas/Omnis/OmnisUI/.env.production
-badd +6 utils/database/supabaseClient.ts
+badd +5 utils/database/supabaseClient.ts
 badd +1 ~/coding/LargerIdeas/Omnis/OmnisUI/.gitignore
 badd +9 LoginScreen.tsx
 badd +7 utils/autoscheduling.ts
@@ -33,7 +33,7 @@ badd +8 ~/coding/LargerIdeas/Omnis/OmnisUI/node_modules/.pnpm/vite@4.1.1_@types+
 argglobal
 %argdel
 $argadd ~/coding/LargerIdeas/Omnis/OmnisUI
-edit App.tsx
+edit utils/database/supabaseClient.ts
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
 set splitbelow splitright
@@ -66,7 +66,7 @@ setlocal fdn=99
 setlocal fen
 wincmd w
 argglobal
-balt utils/database/supabaseClient.ts
+balt App.tsx
 setlocal fdm=expr
 setlocal fde=nvim_treesitter#foldexpr()
 setlocal fmr={{{,}}}
@@ -75,14 +75,12 @@ setlocal fdl=99
 setlocal fml=1
 setlocal fdn=99
 setlocal fen
-25
-normal! zo
-let s:l = 27 - ((19 * winheight(0) + 19) / 38)
+let s:l = 7 - ((6 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 27
-normal! 027|
+keepjumps 7
+normal! 054|
 wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 20 + 93) / 187)
