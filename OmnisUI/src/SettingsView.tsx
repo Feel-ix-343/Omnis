@@ -354,7 +354,7 @@ function EditGoal(props: {show: boolean, goal: Goal | null, close: () => void, o
               <input 
                 type="text" 
                 class="w-full px-4 h-10 py-2 mx-auto font-bold flex justify-center items-center bg-background-secondary text-3xl placeholder-primary" 
-                placeholder="Add Task Name" 
+                placeholder="Add Objective Name" 
                 value={name() ?? ""}
                 onchange={(e) => setName(e.currentTarget.value ?? "")}
                 ref={setInputRef}
