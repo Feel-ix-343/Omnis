@@ -260,7 +260,7 @@ export default function TaskInterface(props: {
                     <DropDown<string | null> 
                       choices={[allGoals()!.map(g => {return {display: g.name, value: g.id}}), {display: "None", value: null}].flat()} 
                       setChoice={(choice: string | null) => { choice === null ? setGoals(null) : setGoals([choice])}} 
-                      choiceOutput={goals() ? allGoals()!.find(g => g.id === goals()![0])!.name : "none"}
+                      choiceOutput={goals() ? allGoals()!.find(g => g.id === goals()![0])?.name ?? "None" : "None"}
                     >
                       Goal
                     </DropDown>

@@ -5,6 +5,7 @@ import { spring } from "motion"
 import { AiOutlineCloseCircle, AiOutlineInfoCircle } from "solid-icons/ai"
 import { BsFlag, BsPlus, BsPlusCircle } from "solid-icons/bs"
 import { FaRegularFlag, FaSolidCircleInfo } from "solid-icons/fa"
+import { FiTarget } from "solid-icons/fi"
 import { IoDocumentTextOutline } from "solid-icons/io"
 import { createEffect, createResource, createSignal, For, onMount, Show } from "solid-js"
 import { newInfoPopup, newNotification } from "./App"
@@ -109,7 +110,7 @@ export default function SettingsView(props: {session: Session}) {
       </div>
 
       <div class="flex flex-row items-center">
-        <h2>Long Term Goals</h2>
+        <h2>Objectives</h2>
 
         <Motion.div 
           class="flex flex-row ml-auto gap-1 items-center justify-center bg-background-secondary rounded-full px-3 py-1 shadow-sm border-2 text-secondary"
@@ -117,14 +118,30 @@ export default function SettingsView(props: {session: Session}) {
             scale: 0.9
           }}
           onclick={() => {
-            newInfoPopup({pages: [
+            newInfoPopup({pages: [ // TODO: It would be cool if I had a markdown renderer that would break this text up page by page
               {
-                title: "Long Term Goal Setting",
+                title: "What are Objectives?",
                 description: <>
-                  In Omnis there are two types of goals. <br/><br/>First are the short term ones, otherwise known as tasks. Second are the long-term goals. These may
-                  take multiple months.<br/><br/>
+                  In Omnis, there are two types of goals: tasks and objectives. Tasks are the short term steps that contribute to objectives. Objectives are the long term goals that you would be extremely rewarded by achieving. 
+                </>
+              },
+              {
+                title: "Distraction",
+                description: <>
+                  We chase objectives to experience the reward that a strong sense achievement yields. However, though many tasks in these persuits are increadibly rewarding, they are not always. They can be stressful, tedious, and difficult. Often, we prefer to do another activity that is more stimulating. This is how distraction occurs: there is another activity, such as going on social media or youtube, that seems much more appealing than the task at hand. 
 
-                  You are encouraged to align the smaller tasks with the goals. This helps with determining the importance of the tasks and with making sure that you are progressing toward you larger goals.
+                </>
+              },
+              {
+                title: "Resisting Distraction",
+                description: <>
+                  However, the tasks have a purpose too. They are direct contribution to achieving objectives, a reward that is likley to be much greater than the appeal of the distraction. <br/><br/>In order to experience this reward, the appeal of distractions must be resisted and difficult tasks must be completed, so that experiencing the reward of achieving an objective is possible.
+                </>
+              },
+              {
+                title: "Objectives and Tasks in Omnis",
+                description: <>
+                  By creating objectives in Omnis, a new field appears when you view a task. This field allows you to relate a task to a major objective. This relation helps you to take your objectives into account when planning, and to resist distraction through building motivation to complete the task instead of getting distracted.
                 </>
               }
             ]})
@@ -321,7 +338,7 @@ function EditGoal(props: {show: boolean, goal: Goal | null, close: () => void, o
                 <AiOutlineCloseCircle onclick={props.close} size={50} class="fill-secondary left-6 top-12" />
 
                 {props.onDelete && (
-                  <button onclick={() => { props.onDelete!(getGoalFromInputs()!); props.close();}} class="ml-auto border-2 border-red-300 bg-red-200 rounded-lg px-3 py-1 font-bold text-xl shadow-md">Delete</button>
+                  <button onclick={() => { props.onDelete!(getGoalFromInputs()!); props.close();}} class="ml-auto border-2 border-red-300 bg-red-200 rounded-lg px-3 py-1 font-bold text-xl shadow-md">Resolve</button>
                 )}
 
                 {props.onUpdate && (

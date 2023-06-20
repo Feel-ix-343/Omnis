@@ -50,7 +50,7 @@ export default function(props: {pages: {title: string, description: JSXElement}[
 
             class="fixed rounded-3xl bottom-2 shadow-2xl p-10 bg-white z-50 left-2 right-2"
           >
-            <AiOutlineCloseCircle class="absolute top-10 right-10 fill-primary" size={30} onClick={() => setShow(false)} />
+            <AiOutlineCloseCircle class="absolute top-4 right-4 fill-primary" size={30} onClick={() => setShow(false)} />
             {index() > 0 && <CgChevronLeftO class="absolute bottom-3 left-3 fill-primary" size={30} onClick={() => setIndex(index() - 1)} />}
             {index() < props.pages.length - 1 && <CgChevronRightO class="absolute bottom-3 right-3 fill-primary" size={30} onClick={() => setIndex(index() + 1)} />}
             <h1>{currentPage().title}</h1>
