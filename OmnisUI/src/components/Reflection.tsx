@@ -3,6 +3,7 @@ import { ChatCompletionRequestMessage } from "openai";
 import { FaSolidBrain, FaSolidPaperPlane } from "solid-icons/fa";
 import { IoFlowerSharp, IoReloadCircleSharp } from "solid-icons/io";
 import { createEffect, createMemo, createResource, createSignal, For, onMount } from "solid-js";
+import { ChatMessage } from "../../../OmnisGPT/omnis-gpt/bindings/ChatMessage";
 import { newInfoPopup, newNotification } from "../App";
 import { scheduleTasks, UnscheduledTask } from "../utils/autoscheduling";
 import { getGoalsFromDB, getTasksFromDB } from "../utils/database/databaseFunctions";
@@ -76,7 +77,7 @@ export default async function ReflectionPopup(session: Session | undefined) {
 
     let goals = await getGoals()
 
-    const startingMessages: ChatCompletionRequestMessage[] = [
+    const startingMessages: ChatMessage[] = [
       {
         role: "system",
         content: `You are a cognitive behavioral therapist. You first ask a question, then wait for the user to respond. You are guiding a client through a daily reflection. The user will give tasks and goals by id. Refer to the tasks and goals by their names. Here is what the user's day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(completed)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)}. Here are the user's goals, each goal is linked to a task by its id: ${JSON.stringify(goals)}. Use the scheduled, completed, working tasks and goals to guide the user through a daily reflection`
@@ -92,15 +93,23 @@ export default async function ReflectionPopup(session: Session | undefined) {
     ]
     console.log("Starting Message", startingMessages)
     let allmessages = [...startingMessages, ...messages() ?? []]
-    let response = await reflection(allmessages)
+    let {data, error} = await reflection(allmessages)
 
-    let newMessages = response.slice(startingMessages.length)
+    if (error) {
+      newNotification(<Notification text={"Error getting messages"}  type={'error'} />)
+      return
+    } else if (!data) {
+      newNotification(<Notification text={"No Response from Chat"}  type={'error'} />)
+      return
+    }
+
+    let newMessages = data.slice(startingMessages.length)
     setMessages(newMessages)
 
     return newMessages
   }
 
-  let [messages, setMessages] = createSignal<ChatCompletionRequestMessage[]>()
+  let [messages, setMessages] = createSignal<ChatMessage[]>()
   let [message, setMessage] = createSignal<string>("");
 
 
@@ -145,7 +154,7 @@ export default async function ReflectionPopup(session: Session | undefined) {
           <IoReloadCircleSharp size={30} onclick={() => {setMessages(); newGPTMessage()}} />
 
           <FaSolidPaperPlane onclick={() => {
-            let newMessage: ChatCompletionRequestMessage = {
+            let newMessage: ChatMessage = {
               role: "user",
               content: message()
             }

@@ -6,20 +6,36 @@ const configuration = new Configuration({
 })
 const openai = new OpenAIApi(configuration)
 
+import { ReflectionRequest } from "../../../OmnisGPT/omnis-gpt/bindings/ReflectionRequest"
+import { ChatMessage } from "../../../OmnisGPT/omnis-gpt/bindings/ChatMessage"
+import { Role } from "../../../OmnisGPT/omnis-gpt/bindings/Role"
+import { ReflectionResponse } from "../../../OmnisGPT/omnis-gpt/bindings/ReflectionResponse"
 
-export async function reflection(messages: ChatCompletionRequestMessage[]) {
-  const response = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
-    messages,
-    temperature: 1
+export async function reflection(messages: ChatMessage[]) {
 
+  let request: ReflectionRequest = {
+    messages
+  }
+
+  let response = await fetch(import.meta.env.VITE_OMNIS_GPT_ADDR, {
+    body: JSON.stringify(request),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
   })
 
 
-  let newMessage = response.data.choices[0].message!
+  let json: ReflectionResponse = await response.json()
+  if (json.error) {
+    return {data: null, error: json.error}
+  }  else if (json.message === null) {
+    return {data: null, error: null}
+  }
 
   let newMessages = messages.slice()
-  newMessages.push(newMessage)
+  newMessages.push(json.message)
 
-  return newMessages
+  return {data: newMessages, error: null}
+
 }
