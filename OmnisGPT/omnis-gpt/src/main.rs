@@ -77,7 +77,7 @@ struct ReflectionResponse {
     error: Option<String>
 }
 
-#[post("/")]
+#[post("/reflection")]
 async fn reflection(request: web::Json<ReflectionRequest>) -> impl Responder {
     let request: ReflectionRequest = request.into_inner();
     println!("Request: {:#?}", request);
