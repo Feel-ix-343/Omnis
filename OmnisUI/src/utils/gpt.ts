@@ -17,7 +17,7 @@ export async function reflection(messages: ChatMessage[]) {
     messages
   }
 
-  let response = await fetch(import.meta.env.VITE_OMNIS_GPT_ADDR, {
+  let response = await fetch(import.meta.env.VITE_OMNIS_GPT_ADDR + "/reflection", {
     body: JSON.stringify(request),
     method: "POST",
     headers: {
