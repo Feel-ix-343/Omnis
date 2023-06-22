@@ -28,13 +28,11 @@ export default function Root() {
       </Head>
       <Body>
         <trpc.Provider client={client} queryClient={queryClient}>
-          <Suspense>
-            <ErrorBoundary>
-              <Routes>
-                <FileRoutes />
-              </Routes>
-            </ErrorBoundary>
-          </Suspense>
+          <ErrorBoundary>
+            <Routes>
+              <FileRoutes />
+            </Routes>
+          </ErrorBoundary>
         </trpc.Provider>
         <Scripts />
       </Body>
