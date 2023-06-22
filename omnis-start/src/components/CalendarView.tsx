@@ -30,7 +30,7 @@ export default function CalendarView(props: {session: Session}) {
 
   // Scroll to the active time line
   onMount(() => {
-    activeTimeRef?.scrollIntoView({behavior: "smooth", block: "center", inline: "center"})
+    activeTimeRef?.scrollIntoView({block: "center", inline: "center"})
   })
 
   // Sync unscheduled user tasks with database. This will not delete
