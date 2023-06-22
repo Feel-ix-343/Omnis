@@ -24,7 +24,7 @@ export const newNotification = (notif: NotificationProps) => setNotifications(no
 
 // export const
 
-export const  [infoPopup, newInfoPopup] = createSignal<InfoPopupProps | null>(null)
+export const  [infoPopupPages, newInfoPopup] = createSignal<InfoPopupProps["pages"] | null>(null)
 
 //export const routeData = () => {
 //  return createServerData$(() => {
@@ -59,14 +59,14 @@ export default function App() {
   })
 
 
-  createEffect(() => console.log("InfoChanged", infoPopup()))
+  createEffect(() => console.log("InfoChanged", infoPopupPages()))
   
 
   return (
     <div>
 
       {notifications().map(Notification)}
-      <InfoPopup pages={infoPopup()?.pages} close={() => newInfoPopup(null)} />
+      <InfoPopup pages={infoPopupPages()} close={() => newInfoPopup(null)} />
 
 
       {getSession() === null ?
