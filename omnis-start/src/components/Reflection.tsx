@@ -116,10 +116,10 @@ export default async function ReflectionPopup(session: Session | undefined) {
   if (!session) return
 
 
-  newInfoPopup({pages: [{
+  newInfoPopup([{
     title: "Reflection",
     description: <Content session={session} />
-  }]})
+  }])
 }
 
 

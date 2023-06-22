@@ -58,7 +58,7 @@ export default function PlanningView(props: {session: Session}) {
 
         <FaSolidCircleInfo size={30} 
           onclick={() => 
-            newInfoPopup({pages: [
+            newInfoPopup([
               {title: "What is Eisenhower Matrix?", description: 
                 <p>The Eisenhower Matrix organizes you tasks into four groups that show the order you should do them.<br /><br />
 
@@ -79,7 +79,7 @@ export default function PlanningView(props: {session: Session}) {
                   Then, your tasks will show up on your schedule, and you can press the play button on whichever one you want to complete first. We suggest following the order given, but you can chose which ever order feels the most comfortable, the matrix is just a suggestion. 
                 </p>
               }
-            ]})
+            ])
           } 
           class="fill-primary absolute right-6 top-12" 
         />

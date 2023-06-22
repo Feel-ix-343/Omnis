@@ -16,6 +16,8 @@ import { newNotification } from "./App"
 export default function CalendarView(props: {session: Session}) {
   // addInitialTasks() // For testing purposes
 
+  console.log("RELOADED?")
+
   // initailize tasks; clear them then reload
   onMount(() => {
     setUnscheduledTasks(undefined)
@@ -93,7 +95,7 @@ export default function CalendarView(props: {session: Session}) {
     )
 
     if (res.error) {
-      newNotification({ type: "error", text: "res.error" })
+      newNotification({ type: "error", text: res.error })
       return []
     } else {
       return res.data
@@ -182,6 +184,8 @@ const test = (a: number) => {
 
 // TODO: change to a solid js resource
 const updateTasksWithDatabase = async (session: Session) => {
+
+  console.log("Is it this?")
   
   const {data, error} = await getTasksFromDB(session)
   if (!data) return
@@ -200,7 +204,6 @@ const updateTasksWithDatabase = async (session: Session) => {
 }
 
 const updateDBWithTasks = async (tasks: UnscheduledTask[], session: Session) => {
-
   const {data, error} = await upsertTasks(tasks, session)
   console.log(data, error)
 }
@@ -379,6 +382,7 @@ function CalendarDate(props: {date: Date, click?: () => void, focus?: boolean}) 
 
 
 function CalendarBody(props: {scheduledTasks?: ScheduledTask[], workingTask: WorkingTask | undefined | null, completedTasks?: CompletedTask[]}) {
+
   const hours = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   const times = hours.map(i => i + " AM").concat(hours.map(i => i + " PM")).concat("12 PM")
 

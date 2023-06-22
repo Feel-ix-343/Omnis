@@ -7,7 +7,7 @@ export interface InfoPopupProps {
   pages?: {
     title: string,
     description: JSXElement
-  }[],
+  }[] | null,
   close: () => void
 }
 
