@@ -118,33 +118,33 @@ export default function SettingsView(props: {session: Session}) {
             scale: 0.9
           }}
           onclick={() => {
-            newInfoPopup({pages: [ // TODO: It would be cool if I had a markdown renderer that would break this text up page by page
+            newInfoPopup([ // TODO: It would be cool if I had a markdown renderer that would break this text up page by page
               {
                 title: "What are Objectives?",
-                description: <>
+                description: () =>  <>
                   In Omnis, there are two types of goals: tasks and objectives. Tasks are the short term steps that contribute to objectives. Objectives are the long term goals that you would be extremely rewarded by achieving. 
                 </>
               },
               {
                 title: "Distraction",
-                description: <>
+                description: () => <>
                   We chase objectives to experience the reward that a strong sense achievement yields. However, though many tasks in these persuits are increadibly rewarding, they are not always. They can be stressful, tedious, and difficult. Often, we prefer to do another activity that is more stimulating. This is how distraction occurs: there is another activity, such as going on social media or youtube, that seems much more appealing than the task at hand. 
 
                 </>
               },
               {
                 title: "Resisting Distraction",
-                description: <>
+                description:() =>  <>
                   However, the tasks have a purpose too. They are direct contribution to achieving objectives, a reward that is likley to be much greater than the appeal of the distraction. <br/><br/>In order to experience this reward, the appeal of distractions must be resisted and difficult tasks must be completed, so that experiencing the reward of achieving an objective is possible.
                 </>
               },
               {
                 title: "Objectives and Tasks in Omnis",
-                description: <>
+                description:() =>  <>
                   By creating objectives in Omnis, a new field appears when you view a task. This field allows you to relate a task to a major objective. This relation helps you to take your objectives into account when planning, and to resist distraction through building motivation to complete the task instead of getting distracted.
                 </>
               }
-            ]})
+            ])
           }}
         >
           <AiOutlineInfoCircle size={20} 
@@ -181,14 +181,14 @@ export default function SettingsView(props: {session: Session}) {
             scale: 0.9
           }}
           onclick={() => {
-            newInfoPopup({pages: [
+            newInfoPopup([
               {
                 title: "Start and End Times",
-                description: <>
+                description: () => <>
                   These are the times when your tasks can be scheduled.
                 </>
               }
-            ]})
+            ])
           }}
         >
           <AiOutlineInfoCircle size={20} 

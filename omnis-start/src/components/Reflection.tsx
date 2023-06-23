@@ -8,108 +8,11 @@ import { getGoalsFromDB, getTasksFromDB } from "../utils/database/databaseFuncti
 import { reflection } from "../utils/gpt";
 import Notification from "./Notification";
 
-import {Configuration} from "openai"
+import {ChatCompletionRequestMessage, Configuration} from "openai"
 import { newInfoPopup, newNotification } from "./App";
-
-const getAllTasksFromDB = async (session: Session | undefined) => {
-  if (!session) return
-
-  const {data: databaseTasks, error} = await getTasksFromDB(session)
-
-  if (error) {
-    console.log(error)
-    newNotification({ type: "error", text: "Error Getting tasks" }) // TODO: Add this functionality to the databasefuntions module
-    return
-  }
-
-  console.log("Database", databaseTasks)
-
-  return databaseTasks
-}
-
-async function getScheduledTasksForToday(tasks: UnscheduledTask[] | undefined, session: Session | undefined) {
-
-  console.log("Tasks Hello", tasks)
-
-  if (!tasks || !session) return
-
-  const durationTasks = tasks.filter(task => task.duration !== null)
-
-  const res = await scheduleTasks(session, durationTasks, []) // TODO: Why does this work
-
-  if (res.error) {
-    console.log(res.error)
-    newNotification({type:"error", text:res.error })
-    return
-  }
-
-  let today = new Date();
-  console.log(today.toDateString())
-  let todaysTasks = res.data?.filter(s => {
-    console.log(s.scheduled_datetime.toDateString())
-    return s.scheduled_datetime.toDateString() === today.toDateString()
-  })
-  console.log("Todays Tasks", todaysTasks)
-
-
-  return todaysTasks
-}
-
-const getGoals = async(session?: Session) => {
-  if (!session) return
-  let {data, error} = await getGoalsFromDB(session)
-  if (error) {
-    newNotification({ text:"Error getting goals",  type:'error'})
-    return
-  }
-  return data
-}
-
-const getMessages = async(session: Session | undefined) => {
-  let allTasks = await getAllTasksFromDB(session)
-  let scheduled = allTasks ? await getScheduledTasksForToday(allTasks.unscheduledTasks ?? undefined, session) : null
-
-  let today = new Date();
-  let completed = allTasks?.completedTasks?.filter(t => t.completed_time.toDateString() === today.toDateString())
-
-  let goals = await getGoals(session)
-
-  const startingMessages: ChatMessage[] = [
-    {
-      role: "system",
-      content: `You are a cognitive behavioral therapist. You first ask a question, then wait for the user to respond. You are guiding a client through a daily reflection. The user will give tasks and goals by id. Refer to the tasks and goals by their names. Here is what the user's day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(completed)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)}. Here are the user's goals, each goal is linked to a task by its id: ${JSON.stringify(goals)}. Use the scheduled, completed, working tasks and goals to guide the user through a daily reflection`
-    },
-    // {
-    //   role: "user",
-    //   content: `Here is what my day looks like. Scheduled: ${JSON.stringify(scheduled)}; Completed Tasks: ${JSON.stringify(completed)}; Working Task (the one I am doing right now): ${JSON.stringify(allTasks?.workingTask)} Use this for my reflection`
-    // },
-    // {
-    //   role: "user",
-    //   content: `Here are my long-term goals. Each goal has an id that is linked to a task by the id. ${JSON.stringify(goals)}`
-    // }
-  ]
-  console.log("Starting Message", startingMessages)
-  let allmessages = [...startingMessages, ...messages() ?? []]
-
-  let {data, error} = await reflection(allmessages)
-
-  if (error) {
-    newNotification({ text: "Error getting messages",  type: "error" })
-    return
-  } else if (!data) {
-    newNotification({ text: "No Response from Chat",  type: "error" })
-    return
-  }
-
-  let newMessages = data.slice(startingMessages.length)
-  setMessages(newMessages)
-
-  return newMessages
-}
-
-let [messages, setMessages] = createSignal<ChatMessage[]>()
-let [message, setMessage] = createSignal<string>("");
-
+import { createServerData$ } from "solid-start/server";
+import { RouteDataArgs, useRouteData } from "solid-start";
+import { client, queryClient, solidtRPC, trpc } from "~/utils/trpc";
 
 
 export default async function ReflectionPopup(session: Session | undefined) {
@@ -118,19 +21,59 @@ export default async function ReflectionPopup(session: Session | undefined) {
 
   newInfoPopup([{
     title: "Reflection",
-    description: <Content session={session} />
+    description: () => <Content session={session} />
   }])
 }
 
 
+
 function Content(props: {session?: Session}) {
 
-  const [getGPT, {refetch: newGPTMessage}] = createResource(async () => await getMessages(props.session))
+  const [messages, setMessages] = createSignal<ChatCompletionRequestMessage[]>([]) // All messages
+  createEffect(() => console.log("Messages", messages()))
+  const [message, setMessage] = createSignal<string>(""); // The message that the user is editing
+
+  // TODO: Why isin't this refetching on change?
+  const [completionRes, {refetch}] = createResource<ChatCompletionRequestMessage>(messages, async (messages: ChatCompletionRequestMessage[]) => {
+
+    console.log("Call messages", messages)
+    if (!props.session) return
+
+    // Move these calls to a data fetcher
+    const allTasks = await getAllTasksFromDB(props.session)
+    if (!allTasks) { return }
+
+    const scheduled = allTasks.unscheduledTasks ? await getScheduledTasksForToday(allTasks.unscheduledTasks, props.session) : null
+    let today = new Date();
+    let completed = allTasks.completedTasks ? allTasks.completedTasks.filter(t => t.completed_time.toDateString() === today.toDateString()) : null
+    let goals = await getGoals(props.session)
+
+    return await trpc.externalApis.reflection.query( {
+      scheduledTasks: scheduled,
+      workingTask: allTasks.workingTask,
+      completedTasks: completed?.length === 0 ? null : completed,
+      goals,
+      messages: messages
+    })
+
+  } ) 
+  // messages() !== undefined && scheduled() !== undefined && allTasks !== undefined && completed() !== undefined && goals() !== undefined
+
+
+  const allMessages: () => ChatCompletionRequestMessage[] | null = () => {
+    if (completionRes.loading) {
+      return messages()
+    } else if (completionRes()) {
+      return messages().concat([completionRes()!])
+    } else {
+      return messages()
+    }
+  }
 
   return <div class="">
 
     <div class="overflow-y-scroll max-h-[500px]">
-      <For each={getGPT()}>
+      <For each={allMessages()}>
         {(message) => <>
           <div class="flex flex-row gap-3 justify-start items-start my-2">
 
@@ -141,7 +84,7 @@ function Content(props: {session?: Session}) {
       </For>
     </div>
 
-    {getGPT.loading ? "loading..." : null}
+    {completionRes.loading ? "loading..." : null}
 
     <div class="mt-4 flex flex-row justify-center items-center gap-5">
       <textarea
@@ -160,16 +103,15 @@ function Content(props: {session?: Session}) {
 
       <div class="flex flex-col justify-center items-center gap-4">
 
-        <IoReloadCircleSharp size={30} onclick={() => {setMessages(); newGPTMessage()}} />
+        <IoReloadCircleSharp size={30} onclick={() => {setMessages([]); refetch()}} />
 
         <FaSolidPaperPlane onclick={() => {
-          let newMessage: ChatMessage = {
+          let newMessage: ChatCompletionRequestMessage = {
             role: "user",
             content: message()
           }
 
-          setMessages([...getGPT()!, newMessage])
-          newGPTMessage()
+          setMessages([...allMessages() ?? [], newMessage])
 
           setMessage("")
         }} />
@@ -180,4 +122,53 @@ function Content(props: {session?: Session}) {
 
   </div>
 
+}
+
+const getAllTasksFromDB = async (session: Session) => {
+  const {data: databaseTasks, error} = await getTasksFromDB(session)
+
+  if (error) {
+    console.log(error)
+    newNotification({ type: "error", text: "Error Getting tasks" }) // TODO: Add this functionality to the databasefuntions module
+    return null
+  }
+
+  console.log("Database", databaseTasks)
+
+  return databaseTasks
+}
+
+async function getScheduledTasksForToday(tasks: UnscheduledTask[], session: Session) {
+
+  const durationTasks = tasks.filter(task => task.duration !== null)
+
+  const res = await scheduleTasks(session, durationTasks, []) // TODO: Why does this work
+
+  if (res.error) {
+    console.log(res.error)
+    newNotification({type:"error", text:res.error })
+    return null
+  }
+
+  let today = new Date();
+  console.log(today.toDateString())
+  let todaysTasks = res.data?.filter(s => {
+    console.log(s.scheduled_datetime.toDateString())
+    return s.scheduled_datetime.toDateString() === today.toDateString()
+  }) ?? null
+  console.log("Todays Tasks", todaysTasks)
+
+  if (todaysTasks?.length === 0) return null
+
+
+  return todaysTasks
+}
+
+const getGoals = async(session: Session) => {
+  let {data, error} = await getGoalsFromDB(session)
+  if (error) {
+    newNotification({ text:"Error getting goals",  type:'error'})
+    return null
+  }
+  return data
 }

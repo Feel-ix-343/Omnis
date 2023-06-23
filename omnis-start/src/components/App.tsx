@@ -1,6 +1,6 @@
 import { Show, type VoidComponent } from "solid-js";
 import { A, createRouteData, useRouteData } from "solid-start";
-import { trpc } from "~/utils/trpc";
+import { solidtRPC } from "~/utils/trpc";
 
 import { Session } from '@supabase/supabase-js';
 import { Component, createEffect, createSignal, JSXElement, onMount } from 'solid-js';

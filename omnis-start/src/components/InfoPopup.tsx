@@ -6,7 +6,7 @@ import { CgChevronLeftO, CgChevronRightO, CgChevronUpO } from 'solid-icons/cg'
 export interface InfoPopupProps {
   pages?: {
     title: string,
-    description: JSXElement
+    description: () => JSXElement
   }[] | null,
   close: () => void
 }
@@ -55,7 +55,7 @@ export default function(props: InfoPopupProps) {
             {index() > 0 && <CgChevronLeftO class="absolute bottom-3 left-3 fill-primary" size={30} onClick={() => setIndex(index() - 1)} />}
             {index() < props.pages!.length - 1 && <CgChevronRightO class="absolute bottom-3 right-3 fill-primary" size={30} onClick={() => setIndex(index() + 1)} />}
             <h1>{currentPage()!.title}</h1>
-            {currentPage()!.description}
+            {currentPage()!.description()}
           </Motion.div>
         </Show>
       </Presence>

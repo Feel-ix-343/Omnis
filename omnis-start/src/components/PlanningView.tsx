@@ -59,7 +59,7 @@ export default function PlanningView(props: {session: Session}) {
         <FaSolidCircleInfo size={30} 
           onclick={() => 
             newInfoPopup([
-              {title: "What is Eisenhower Matrix?", description: 
+              {title: "What is Eisenhower Matrix?", description: () =>  
                 <p>The Eisenhower Matrix organizes you tasks into four groups that show the order you should do them.<br /><br />
 
                   <strong>1.</strong> High Importance, High Urgency (red)<br />
@@ -70,7 +70,7 @@ export default function PlanningView(props: {session: Session}) {
                   When you complete your tasks in this order, you will be able to focus on the most important tasks, and not get distracted by the less important tasks!
                 </p>
               },
-              {title: "Using Eisenhower Matrix", description:
+              {title: "Using Eisenhower Matrix", description: () =>
                 <p>Omnis makes it very easy to use the Eisenhower Matrix to schedule your day!<br /><br />
                   As you add each of your tasks to your schedule, you will think about the importance of the task, and enter in task's due date to find the urgency. <strong>Always ask yourself, how important is this task to my goals, and how urgent is it?</strong> Then enter this information in. 
 
