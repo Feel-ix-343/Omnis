@@ -48,13 +48,15 @@ function Content(props: {session?: Session}) {
     let completed = allTasks.completedTasks ? allTasks.completedTasks.filter(t => t.completed_time.toDateString() === today.toDateString()) : null
     let goals = await getGoals(props.session)
 
-    return await trpc.externalApis.reflection.query( {
+    const r = await trpc.externalApis.reflection.query( {
       scheduledTasks: scheduled,
       workingTask: allTasks.workingTask,
       completedTasks: completed?.length === 0 ? null : completed,
       goals,
       messages: messages
     })
+
+    return r
 
   } ) 
   // messages() !== undefined && scheduled() !== undefined && allTasks !== undefined && completed() !== undefined && goals() !== undefined
