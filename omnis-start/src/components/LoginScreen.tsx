@@ -7,7 +7,8 @@ export default function LoginScreen() {
 
   console.log("V URL", import.meta.env.VITE_URL)
 
-  const redirectTo = import.meta.env.PROD ? "https://" + import.meta.env.VITE_VERCEL_URL : import.meta.env.VITE_URL
+  const env = import.meta.env.VITE_VERCEL_ENV
+  const redirectTo = ( env === 'production' || import.meta.env.DEV ) ? import.meta.env.VITE_URL : "https://" + import.meta.env.VITE_VERCEL_URL
   console.log("Redirect to", redirectTo)
 
 
