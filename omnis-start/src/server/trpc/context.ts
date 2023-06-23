@@ -34,10 +34,12 @@ export const createContextInner = async (
   // headers: 
   // apiKey: SUPABSE_KEY
   // Authorization: Bearer JWT
+  // remove connection header
   const res = await fetch(supabaseURL + "/auth/v1/user", {
     headers: {
       "apiKey": supabaseKey,
-      "Authorization": "Bearer " + jwt
+      "Authorization": "Bearer " + jwt,
+      "Connection": "keep-alive"
     }
   })
 

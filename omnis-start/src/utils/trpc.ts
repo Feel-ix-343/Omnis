@@ -11,7 +11,12 @@ const getBaseUrl = () => {
 export const solidtRPC = createTRPCSolid<IAppRouter>();
 
 export const trpc = createTRPCProxyClient<IAppRouter>({
-  links: [loggerLink(), httpBatchLink({ url: "/api/trpc" })],
+  links: [loggerLink(), 
+    httpBatchLink({ url: "/api/trpc", headers: {
+      Connection: "close",
+      testHeader: "felix"
+    } })
+  ],
 });
 
 export const client = solidtRPC.createClient({
