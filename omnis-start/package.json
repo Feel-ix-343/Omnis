@@ -22,13 +22,18 @@
     "vite": "^4.1.2"
   },
   "dependencies": {
+    "@motionone/solid": "^10.16.2",
     "@solidjs/meta": "^0.28.2",
     "@solidjs/router": "^0.8.2",
+    "@supabase/auth-helpers-nextjs": "^0.7.2",
+    "@supabase/supabase-js": "^2.26.0",
     "@tanstack/solid-query": "5.0.0-alpha.20",
     "@trpc/client": "^10.12.0",
     "@trpc/server": "^10.12.0",
     "flatpickr": "^4.6.13",
+    "motion": "^10.16.2",
     "openai": "^3.3.0",
+    "solid-icons": "^1.0.8",
     "solid-js": "^1.7.3",
     "solid-start": "^0.2.26",
     "solid-start-trpc": "^0.0.16",
