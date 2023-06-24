@@ -40,7 +40,6 @@ export const createContextInner = async (
     headers: {
       "apiKey": supabaseKey,
       "Authorization": "Bearer " + jwt,
-      "Connection": "keep-alive"
     }
   })
 
