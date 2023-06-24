@@ -59,7 +59,7 @@ const isAuthed = t.middleware(async (opts) => {
   })
   const {data, error} = await supabase.auth.getUser(jwt)
 
-  if (!error) {
+  if (error) {
     throw new TRPCError({code: "UNAUTHORIZED", message: "Auth error: " + error})
   }
 
