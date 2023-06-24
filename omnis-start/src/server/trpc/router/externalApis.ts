@@ -1,4 +1,4 @@
-import { procedure, protectedProcedure, router } from "../utils";
+import { procedure, router } from "../utils";
 import { z } from "zod";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 import { CompletedTask, ScheduledTask, WorkingTask } from "~/utils/taskStates";
@@ -19,15 +19,17 @@ const ZGoal: z.ZodType<Goal> = z.any();
 
 
 export default router({
-  reflection: protectedProcedure.input(z.object({
+  reflection: procedure.input(z.object({
     messages: z.array(OpenAIChatMessage).nullable(),
     scheduledTasks: z.array(ZScheduledTask).nullable(),
     workingTask: ZWorkingTask.nullable(),
     completedTasks: z.array(ZCompletedTask).nullable(),
     goals: z.array(ZGoal).nullable(),
-  })).query(async ({input}) => {
+  })).query(async (opts) => {
 
-    const {messages, scheduledTasks: scheduled, workingTask, completedTasks: completed, goals} = input
+    console.log(opts.ctx.user.user.user_metadata.full_name)
+
+    const {messages, scheduledTasks: scheduled, workingTask, completedTasks: completed, goals} = opts.input
 
     const initialMessage: ChatCompletionRequestMessage = {
       role: "system",
@@ -35,8 +37,6 @@ export default router({
     }
 
     const allMessages = [initialMessage, ...messages ?? []]
-
-    console.log("Querying", input.messages)
 
     const completionResponse = await openai.createChatCompletion({
       messages: allMessages,

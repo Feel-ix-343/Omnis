@@ -1,7 +1,8 @@
-import { User } from "@supabase/supabase-js";
+import { createClient, User } from "@supabase/supabase-js";
 import { inferAsyncReturnType, TRPCError } from "@trpc/server";
 import type { createSolidAPIHandlerContext } from "solid-start-trpc";
 import fetch from "node-fetch"
+import { Database } from "~/utils/database/database.types";
 
 export const createContextInner = async (
   opts: createSolidAPIHandlerContext
@@ -31,24 +32,25 @@ export const createContextInner = async (
   const supabaseURL = process.env.SERVER_SUPABASE_URL!
   const supabaseKey = process.env.SERVER_SUPABASE_KEY!
 
-  // test fetch
-  // headers: 
-  // apiKey: SUPABSE_KEY
-  // Authorization: Bearer JWT
-  // remove connection header
-  const res = await fetch(supabaseURL + "/auth/v1/user", {
-    headers: {
-      "apiKey": supabaseKey,
-      "Authorization": "Bearer " + jwt,
+  const supabase = createClient<Database>(supabaseURL, supabaseKey, {
+    auth: {
+      persistSession: false
     }
   })
+  await supabase.auth.setSession({
+    access_token: jwt,
+    refresh_token: refresh,
+  })
+  const {data, error} = await supabase.auth.getUser(jwt)
 
-  const user: User = await res.json() as User
-  console.log(user)
+  if (error) {
+    throw new TRPCError({code: "UNAUTHORIZED", message: "Auth error: " + error})
+  }
 
   return {
     ...opts,
-    user
+    user: data,
+    supabase
   };
 };
 
