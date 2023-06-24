@@ -45,7 +45,7 @@ export default function PlanningView(props: {session: Session}) {
             "text-shadow": "0px 0px 10px rgba(0, 0, 0, 0.25)"
           }}
         >{months[new Date().getMonth()] + " " + new Date().getDate()}</h1>
-        <h3 class="text-secondary font-bold">Hi {props.session.user.email}, let's plan your day</h3>
+        <h3 class="text-secondary font-bold">Hi {props.session.user.user_metadata.full_name.split(" ")[0]}, let's plan your day</h3>
 
         <IoFlowerSharp
           size={30} 

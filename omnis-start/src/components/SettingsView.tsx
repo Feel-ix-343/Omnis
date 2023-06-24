@@ -105,7 +105,7 @@ export default function SettingsView(props: {session: Session}) {
       <EditGoal show={show()} goal={goalToEdit()} close={close} onDelete={onDelete()} onCreate={onCreate()} onUpdate={onUpdate()} />
 
       <div class="fixed bg-background-secondary rounded-br-3xl rounded-bl-3xl shadow-lg p-10 max-h-40 top-0 right-0 left-0">
-        <h1 class="text-xl">Hello {props.session.user.email}</h1>
+        <h1 class="text-xl">Hello {props.session.user.user_metadata.full_name}</h1>
         <h3>Here are your settings</h3>
       </div>
 
