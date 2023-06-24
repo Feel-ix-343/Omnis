@@ -1,6 +1,7 @@
 import { User } from "@supabase/supabase-js";
 import { inferAsyncReturnType, TRPCError } from "@trpc/server";
 import type { createSolidAPIHandlerContext } from "solid-start-trpc";
+import fetch from "node-fetch"
 
 export const createContextInner = async (
   opts: createSolidAPIHandlerContext
@@ -43,7 +44,7 @@ export const createContextInner = async (
     }
   })
 
-  const user: User = await res.json()
+  const user: User = await res.json() as User
   console.log(user)
 
   return {
