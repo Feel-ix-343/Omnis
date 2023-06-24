@@ -45,11 +45,23 @@ const isAuthed = t.middleware(async (opts) => {
     headers: {
       "apiKey": supabaseKey,
       "Authorization": "Bearer " + jwt,
+      Connection: "close"
     }
   })
 
   const user: User = await res.json() as User
   console.log(user)
+
+  const supabase = createClient<Database>(supabaseURL, supabaseKey)
+  await supabase.auth.setSession({
+    access_token: jwt,
+    refresh_token: refresh,
+  })
+  const {data, error} = await supabase.auth.getUser(jwt)
+
+  if (!error) {
+    throw new TRPCError({code: "UNAUTHORIZED", message: "Auth error: " + error})
+  }
 
   if (user.aud !== "authenticated") {
     throw new TRPCError({code: "UNAUTHORIZED", message: "Auth error"})
