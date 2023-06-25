@@ -19,7 +19,7 @@ export const trpc = createTRPCProxyClient<IAppRouter>({
   ],
 });
 
-export const client = solidtRPC.createClient({
+export const trpcSolid = solidtRPC.createClient({
   links: [
     httpBatchLink({
       url: `${getBaseUrl()}/api/trpc`,
