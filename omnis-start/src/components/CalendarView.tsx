@@ -7,11 +7,11 @@ import { Session } from "@supabase/supabase-js"
 import { Motion } from "@motionone/solid"
 import { spring } from "motion"
 import EditTask from "./EditTask"
-import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } from "~/utils/taskStates"
-import { deleteDBCompletedTasks, deleteDBWorkingTasks, getTasksFromDB, upsertCompletedTasks, upsertTasks, upsertWorkingTask } from "~/utils/database/databaseFunctions"
 import { scheduleTasks, UnscheduledTask } from "~/utils/autoscheduling"
 import Notification from "./Notification"
 import { newNotification } from "./App"
+import { Completable, CompletedTask, Scheduleable, ScheduledTask, WorkingTask } from "~/model/taskStates"
+import { deleteDBCompletedTasks, deleteDBWorkingTasks, getTasksFromDB, upsertCompletedTasks, upsertTasks, upsertWorkingTask } from "~/model/database/databaseFunctions"
 
 export default function CalendarView(props: {session: Session}) {
   // addInitialTasks() // For testing purposes

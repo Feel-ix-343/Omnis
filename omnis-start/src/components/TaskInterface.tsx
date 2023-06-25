@@ -11,9 +11,9 @@ import { FaRegularTrashCan } from "solid-icons/fa";
 import { Importance, UnscheduledTask } from "../utils/autoscheduling";
 import { DropDown } from "./Dropdown";
 import {FiTarget} from "solid-icons/fi"
-import { getGoalsFromDB } from "../utils/database/databaseFunctions";
 import Notification from "./Notification";
 import { newNotification } from "./App";
+import { getGoalsFromDB } from "~/model/database/databaseFunctions";
 
 export default function TaskInterface(props: {
   session: Session,

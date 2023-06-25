@@ -1,7 +1,7 @@
 import { Session } from "@supabase/supabase-js";
-import { supabase } from "./database/supabaseClient";
-import { ScheduledTask } from "./taskStates";
 import z from "zod";
+import { supabase } from "~/model/database/supabaseClient";
+import { ScheduledTask } from "~/model/taskStates";
 
 console.log("Prod?", import.meta.env.PROD)
 const omnis_algo_addr: string = import.meta.env.VITE_OMNIS_ALGO_ADDR;

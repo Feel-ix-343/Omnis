@@ -2,7 +2,6 @@
 
 import { Session } from "@supabase/supabase-js";
 import { UnscheduledTask } from "~/utils/autoscheduling";
-import { deleteDBTask, upsertTask } from "~/utils/database/databaseFunctions";
 import { newNotification } from "./App";
 import Notification from "./Notification";
 import TaskInterface from "./TaskInterface";

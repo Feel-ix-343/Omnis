@@ -1,4 +1,4 @@
-import { supabase } from "~/utils/database/supabaseClient"
+import { supabase } from "~/model/database/supabaseClient"
 
 
 export default function LoginScreen() {

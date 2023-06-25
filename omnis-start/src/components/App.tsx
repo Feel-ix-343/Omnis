@@ -1,12 +1,10 @@
 import { Show, type VoidComponent } from "solid-js";
 import { A, createRouteData, useRouteData } from "solid-start";
-import { solidtRPC } from "~/utils/trpc";
 
 import { Session } from '@supabase/supabase-js';
 import { Component, createEffect, createSignal, JSXElement, onMount } from 'solid-js';
 import InfoPopup, { InfoPopupProps } from "~/components/InfoPopup";
 import Nav from "~/components/Nav";
-import { supabase } from "~/utils/database/supabaseClient";
 import LoginScreen from "~/components/LoginScreen";
 import SettingsView from "~/components/SettingsView";
 import CalendarView from "~/components/CalendarView";
@@ -14,6 +12,7 @@ import PlanningView from "~/components/PlanningView";
 import server$, { createServerData$ } from "solid-start/server";
 import { createStore } from "solid-js/store";
 import Notification, { NotificationProps } from "./Notification";
+import { supabase } from "~/model/database/supabaseClient";
 
 const [notifications, setNotifications] = createSignal<NotificationProps[]>([])
 /** creates notifications of type `Notification` JSX element`

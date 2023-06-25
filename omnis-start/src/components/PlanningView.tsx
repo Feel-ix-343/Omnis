@@ -15,12 +15,12 @@ import EditTask from "./EditTask";
 import { title } from "process";
 import { IoFlowerSharp, IoPaperPlaneSharp, IoReload, IoReloadCircleSharp } from "solid-icons/io";
 import Header from "./Header";
-import { getTasksFromDB } from "~/utils/database/databaseFunctions";
 import Notification from "./Notification";
 import { scheduleTasks, UnscheduledTask } from "~/utils/autoscheduling";
-import { ScheduledTask } from "~/utils/taskStates";
 import { newInfoPopup, newNotification } from "./App";
 import ReflectionPopup from "./Reflection";
+import { getTasksFromDB } from "~/model/database/databaseFunctions";
+import { ScheduledTask } from "~/model/taskStates";
 
 export default function PlanningView(props: {session: Session}) {
   onMount(() => setSession(props.session))
