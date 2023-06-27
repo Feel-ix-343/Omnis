@@ -5,9 +5,9 @@ CREATE Table tasks (
   name text not null,
   description text,
   duration interval,
-  due_date DATE,
+  due_date date,
   user_id uuid references auth.users not null,
-  importance levels not null,
+  importance levels,
   user_urgency levels,
   extra interval,
   additional_duration interval
@@ -30,7 +30,8 @@ create table task_objectives (
 
 /* Many steps to one task */
 create table steps (
-  task_id int references public.tasks primary key,
+  id int primary key,
+  task_id int references public.tasks,
   name text not null,
   description text,
   planedDuration interval,
@@ -44,7 +45,7 @@ create table planned_tasks (
   task_id int references public.tasks,
   daily_agenda_index int not null,
   scheduled_date date not null,
-  primary key(task_id, scheduled_date, daily_agenda_index)
+  primary key(scheduled_date, daily_agenda_index)
 );
 
 /* The currently working task. This one has everything relevant to time tracking */
@@ -65,9 +66,10 @@ create table work_blocks (
   task_id int references public.tasks not null,
   work_start timestamptz not null,
   work_end timestamptz not null,
-  actual_additional_duration interval not null,
+  actual_additional_duration interval,
   planned_extra interval,
-  planned_additional_duration interval
+  planned_additional_duration interval,
+  ended_by_completion boolean not null
 );
 comment on column work_blocks.planned_extra is 'Not sure how this will be used, but I would not want the data to be lost';
 comment on column work_blocks.planned_additional_duration is 'Not sure how this will be used, but I would not want the data to be lost';
