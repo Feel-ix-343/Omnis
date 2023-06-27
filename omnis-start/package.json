@@ -4,13 +4,16 @@
     "dev": "solid-start dev --port 3000",
     "start": "solid-start start --port 3000",
     "build": "solid-start build",
-    "lint": "eslint --fix \"**/*.{ts,tsx,js,jsx}\""
+    "lint": "eslint --fix \"**/*.{ts,tsx,js,jsx}\"",
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "type": "module",
   "devDependencies": {
     "@types/node": "^18.14.0",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "@typescript-eslint/parser": "^5.52.0",
+    "@vitest/coverage-v8": "^0.32.2",
     "autoprefixer": "^10.4.13",
     "eslint": "^8.34.0",
     "eslint-plugin-solid": "^0.9.4",
@@ -19,7 +22,8 @@
     "solid-start-vercel": "^0.2.26",
     "tailwindcss": "^3.2.7",
     "typescript": "^4.9.5",
-    "vite": "^4.1.2"
+    "vite": "^4.1.2",
+    "vitest": "^0.32.2"
   },
   "dependencies": {
     "@motionone/solid": "^10.16.2",
