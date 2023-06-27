@@ -8,7 +8,6 @@ CREATE Table tasks (
   due_date DATE,
   user_id uuid references auth.users not null,
   importance levels not null,
-  algo_urgency levels,
   user_urgency levels,
   extra interval,
   additional_duration interval
