@@ -2,7 +2,7 @@ import { JSXElement } from "solid-js"
 import { supabase } from "./supabaseClient"
 
 
-class Task { // This gets passed to the basic list view at the start of planning
+export class Task { // This gets passed to the basic list view at the start of planning
   constructor(
     public data: DBTask
   ) {}
@@ -18,4 +18,4 @@ const tasksQuery = async (id: string) => {
   return data
 }
 
-type DBTask = NonNullable<Awaited<ReturnType<typeof tasksQuery>>>[0]
+export type DBTask = NonNullable<Awaited<ReturnType<typeof tasksQuery>>>[0]

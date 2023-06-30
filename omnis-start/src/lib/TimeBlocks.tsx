@@ -48,7 +48,7 @@ class StepBlock extends Block {
   }
 }
 
-class WorkBlock extends Block {
+export class WorkBlock extends Block {
 
   constructor(
     public blockStart: Date,

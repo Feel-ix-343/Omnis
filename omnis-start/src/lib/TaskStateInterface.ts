@@ -3,8 +3,8 @@ import { JSXElement } from "solid-js"
 import { DataResponse, MaybeLazy } from "~/utils/types"
 import { DBTask } from "./Task"
 
-type TaskStateName = "planned" | "working" | "completed" // This code breaks OCP but its fine
-interface TaskState { // This is what gets passed to the daily goal view. It is all task information and state transition information without a calendar display. It is everything that at least the daily goal view would want to do and at most the calendar view. 
+export type TaskStateName = "planned" | "working" | "completed" // This code breaks OCP but its fine
+export interface TaskState { // This is what gets passed to the daily goal view. It is all task information and state transition information without a calendar display. It is everything that at least the daily goal view would want to do and at most the calendar view. 
 
   data: DBTask, // This gives name, description, ...
 
@@ -26,9 +26,9 @@ interface TaskState { // This is what gets passed to the daily goal view. It is 
   // onStart?: StateTransition
   // onCompleted?: StateTransition
 
-  statusText?: StateStatus
-  statusIcon: JSXElement, // Replace with some more classy type thing. 
-  state: TaskStateName
+  statusText?: MaybeLazy<StateStatus>
+  statusIcon: MaybeLazy<JSXElement>, // Replace with some more classy type thing. >
+  state: MaybeLazy<TaskStateName>
 }
 
 export type StateStatus = MaybeLazy<{name: string, description?: string}>
