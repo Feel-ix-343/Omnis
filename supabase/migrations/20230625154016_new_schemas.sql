@@ -1,4 +1,4 @@
-create type levels as enum('high', 'low', 'none');
+create type levels as enum('high', 'low');
 
 CREATE Table tasks (
   id int primary key,
