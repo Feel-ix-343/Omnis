@@ -7,7 +7,10 @@ export default defineConfig(() => {
     plugins: [solid({ ssr: false, adapter: vercel({ edge: false }) })],
     define: {
       "import.meta.vitest": "undefined" // don't include tests
-    }
+    },
+    test: {
+      includeSource: ['src/**/*.{js,ts,tsx,jsx}'], // ...
+    },
   };
 });
-  
+
