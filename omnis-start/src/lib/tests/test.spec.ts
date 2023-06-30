@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { supabase } from "./database/supabaseClient";
+import { supabase } from "../supabaseClient";
 
 
 const seedUserID = '8122fefc-8817-4db7-bb91-5bc7f2116f7d'
