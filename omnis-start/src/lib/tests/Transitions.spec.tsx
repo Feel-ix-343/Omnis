@@ -7,7 +7,7 @@ import { WorkingTask } from "../WorkingState";
 import { basicTask1 } from "./utils";
 
 describe("Planned Task Transitions", () => {
-  const plannedTask = new PlannedTask(basicTask1, 0, new Date())
+  const plannedTask = new PlannedTask({tasks: basicTask1, daily_agenda_index: 0, scheduled_date: new Date().toString(), task_id: basicTask1.id})
   const transitions = TaskStateMachine[plannedTask.state]
 
   it("has start-task transition", () => {
@@ -23,7 +23,7 @@ describe("Planned Task Transitions", () => {
       workingTask = w
 
       expect(workingTask).not.toBeUndefined()
-      expect(workingTask.startTime.toLocaleTimeString()).eq(new Date().toLocaleTimeString())
+      expect(workingTask.startTime().toLocaleTimeString()).eq(new Date().toLocaleTimeString())
     }
 
 
@@ -55,7 +55,7 @@ describe("Planned Task Transitions", () => {
 describe("Working Task Transitions", () => {
   const now = new Date()
   now.setHours(now.getHours() - 1)
-  const workingTask = new WorkingTask(basicTask1, now)
+  const workingTask = new WorkingTask({tasks: basicTask1, start: now.toString(), task_id: basicTask1.id})
   const transitions = TaskStateMachine[workingTask.state]
 
   it("can execute all transitions", () => {
@@ -84,7 +84,7 @@ describe("Working Task Transitions", () => {
 describe("Completed Task Transitions", () => {
   const now = new Date()
   now.setHours(now.getHours() - 1)
-  const completedTask = new CompletedTask(basicTask1)
+  const completedTask = new CompletedTask({tasks: basicTask1, task_id: basicTask1.id, realized_estimation_score: null, realized_importance_score: null, realized_pride_score: null, realized_urgency_score: null, reflection: null})
   const transitions = TaskStateMachine[completedTask.state]
 
   it("can execute all transitions", () => {
@@ -103,6 +103,7 @@ describe("Completed Task Transitions", () => {
 
       t.executeTransition(completedTask, set)
     })
+
   })
 })
 
