@@ -4,10 +4,10 @@ import { WorkingTask } from "../WorkingState";
 import { basicTask2 } from "./utils";
 
 describe("Tests working tasks", () => {
-  const workingTask = new WorkingTask(basicTask2, new Date())
+  const workingTask = new WorkingTask({tasks: basicTask2, start: new Date().toString(), task_id: basicTask2.id})
 
   it("Initializes", () => {
-    expect(workingTask.name).eq(basicTask2.name)
+    expect(workingTask.data.name).eq(basicTask2.name)
   })
 
 
@@ -15,7 +15,7 @@ describe("Tests working tasks", () => {
 
   it("Interface Tells Action Date", () => {
     const today = new Date().toDateString()
-    expect(state.actionDate().toDateString()).eq(today)
+    expect(state.actionDate!().toDateString()).eq(today)
   })
 
   it("Interface Gives status", () => {

@@ -103,7 +103,6 @@ describe("Completed Task Transitions", () => {
 
       t.executeTransition(completedTask, set)
     })
-
   })
 })
 
