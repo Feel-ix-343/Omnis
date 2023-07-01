@@ -1,5 +1,5 @@
 import { AiFillPauseCircle, AiFillPlayCircle } from "solid-icons/ai"
-import { IoCheckmarkCircleOutline } from "solid-icons/io"
+import { IoCheckmarkCircleOutline, IoCheckmarkDone } from "solid-icons/io"
 import { JSXElement } from "solid-js"
 import { CompletedTask } from "./CompletedState"
 import { PlannedTask } from "./PlannedState"
@@ -74,5 +74,19 @@ export const TaskStateMachine = {
           return "Pause Task"
       },
     } satisfies StateTransition<WorkingTask, PlannedTask>
+  ],
+  "completed": [
+    {
+      executeTransition(from, onTransition) {
+        onTransition(new PlannedTask(from.data, 0, new Date()))
+        return null
+      },
+      displayName(from) {
+          return "Uncomplete task"
+      },
+      icon(from) {
+        return <IoCheckmarkDone />;
+      },
+    } satisfies StateTransition<CompletedTask, PlannedTask>
   ]
 } as const

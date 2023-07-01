@@ -24,7 +24,7 @@ export class CompletedTask extends Task implements TaskState {
   };
 
   statusIcon = () => <IoCheckmarkCircleOutline />;
-  state: TaskStateName = "completed" as const satisfies TaskStateName;
+  state = "completed" as const;
 
 
   // totalDuration() {}
