@@ -1,24 +1,23 @@
 import { PostgrestError } from "@supabase/supabase-js";
 import { AiFillPlayCircle } from "solid-icons/ai";
 import { JSXElement } from "solid-js";
-import { DataResponse, Lazy } from "~/utils/types";
+import { ArrayElement, DataResponse, Lazy } from "~/utils/types";
 import { Step } from "./Step";
 import { DBTask, Task } from "./Task";
 import { StateStatus, TaskState, TaskStateName } from "./TaskStateInterface";
+import { supabase } from "./supabaseClient";
+
+export async function fetchDBWorkingTasks(userID: string) {
+  return await supabase.from("working_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
+}
+
+type DBWorkingTask = ArrayElement<NonNullable<Awaited<ReturnType<typeof fetchDBWorkingTasks>>["data"]>>
 
 export class WorkingTask extends Task implements TaskState {// , SchedulableTaskState {
-  readonly name: string = this.data.name
   readonly played: boolean = true;
   readonly completed: boolean = false;
 
-  constructor(
-    public data: DBTask,
-    public startTime: Date,
-    public workingStep?: Step,
-    public workingStepStart?: Date
-  ) {
-    super(data)
-  }
+  constructor( public workingData: DBWorkingTask,) { super(workingData.tasks!) }
 
   // /** Duration of the task in miliseconds */
   totalDuration(): number {
@@ -57,11 +56,12 @@ export class WorkingTask extends Task implements TaskState {// , SchedulableTask
       error: null
     }
   }
-  actionDate: Lazy<Date> = () => this.startTime
+  actionDate: Lazy<Date> = () => new Date(this.workingData.start)
+  startTime = () => new Date(this.workingData.start)
   statusIcon = () => <AiFillPlayCircle size={25} />;
-  statusText = () =>  ({name: `Working since ${this.startTime.toLocaleTimeString()}`});
+  statusText = () =>  ({name: `Working since ${this.startTime().toLocaleTimeString()}`});
   popupDisplay(): JSXElement {
-      return <p>Working since {this.startTime.toTimeString()}</p>
+      return <p>Working since {this.startTime().toTimeString()}</p>
   }
 
 

@@ -1,18 +1,23 @@
 import { IoCheckmarkCircleOutline } from "solid-icons/io";
 import { JSXElement } from "solid-js";
+import { ArrayElement } from "~/utils/types";
+import { supabase } from "./supabaseClient";
 import { DBTask, Task } from "./Task";
 import { TaskState, TaskStateName } from "./TaskStateInterface";
 
+
+
+export async function fetchDBCompletedTasks(userID: string) {
+  return await supabase.from("completed_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
+}
+type DBCompletedTask = ArrayElement<NonNullable<Awaited<ReturnType<typeof fetchDBCompletedTasks>>["data"]>>
+
+
 export class CompletedTask extends Task implements TaskState {
   constructor(
-    public data: DBTask,
-    public reflection?: string,
-    public realizedImportance?: number,
-    public realizedUrgency?: number,
-    public realizedEstimationScore?: number,
-    public realizedPrideScore?: number,
+    public completedData: DBCompletedTask,
   ) {
-    super(data)
+    super(completedData.tasks!)
   }
 
   duration: () => number = () => {

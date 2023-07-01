@@ -2,19 +2,21 @@ import { PostgrestError } from "@supabase/supabase-js"
 import { AiFillPauseCircle } from "solid-icons/ai"
 import { JSX, JSXElement } from "solid-js"
 import { z } from "zod"
-import { DataResponse } from "~/utils/types"
+import { ArrayElement, DataResponse } from "~/utils/types"
+import { supabase } from "./supabaseClient"
 import { DBTask, Task } from "./Task"
 import { TaskState, TaskStateName } from "./TaskStateInterface"
+import { StateTransition } from "./TaskStateMachine"
+
+export async function fetchDBPlannedTasks(userID: string) {
+  return await supabase.from("planned_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
+}
+
+type DBPlannedTask = ArrayElement< NonNullable< Awaited<ReturnType<typeof fetchDBPlannedTasks>>["data"]>>
 
 export class PlannedTask extends Task implements TaskState {
   public state =  "planned" as const satisfies TaskStateName 
-  constructor (
-    public data: DBTask,
-    public agendaIndex: number,
-    public scheudledDate: Date, // I just want this to be used as a date though. 
-  ) {
-    super(data)
-  }
+  constructor ( public plannedData: DBPlannedTask,) { super(plannedData.tasks!) } // It should not ever be null }
 
   completed: boolean = false
   played: boolean = false
@@ -35,7 +37,7 @@ export class PlannedTask extends Task implements TaskState {
 
   statusIcon = () => <AiFillPauseCircle size={25} />
   actionDate = () => {
-    return this.scheudledDate
+    return new Date(this.plannedData.scheduled_date)
   }
 }
 const intervalToMinutes = (interval: unknown) => {
