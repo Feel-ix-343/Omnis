@@ -19,7 +19,7 @@ export const TaskStateMachine = {
     {
       executeTransition(from, onTransition) {
         // No user info required
-        const workingTask = new WorkingTask(from.data, new Date())
+        const workingTask = new WorkingTask({tasks: from.data, start: new Date().toString(), task_id: from.data.id})
 
         // Update the database
         // ...
@@ -38,14 +38,15 @@ export const TaskStateMachine = {
   "working": [
     {
       executeTransition(from, onTransition) {
-        const workingBlock = new WorkBlock(from.startTime, new Date(), from, true) // Create new work block
+        const workingBlock = new WorkBlock(from.startTime(), new Date(), from, true) // Create new work block
         // Update to database somehow?
 
         if (false) { // check user settings to see if they want to reflect on tasks when they completed them. If true return a popup. 
 
         }
 
-        const completed = new CompletedTask(from.data)
+        const completed = new CompletedTask({tasks: from.data, task_id: from.data.id, reflection: null, realized_urgency_score: null, realized_pride_score: null,
+        realized_importance_score: null, realized_estimation_score: null})
         onTransition(completed)
 
 
@@ -61,9 +62,9 @@ export const TaskStateMachine = {
     {
       executeTransition(from, onTransition) {
           // New block
-        const workingBlock = new WorkBlock(from.startTime, new Date(), from, false)
+        const workingBlock = new WorkBlock(from.startTime(), new Date(), from, false)
 
-        const planned = new PlannedTask(from.data, 0, from.startTime) // Make a new popup for determining the agenda index
+        const planned = new PlannedTask({tasks: from.data, daily_agenda_index: 0, scheduled_date: from.startTime().toString(), task_id: from.data.id}) // Make a new popup for determining the agenda index
         onTransition(planned)
         return null
       },
@@ -78,7 +79,7 @@ export const TaskStateMachine = {
   "completed": [
     {
       executeTransition(from, onTransition) {
-        onTransition(new PlannedTask(from.data, 0, new Date()))
+        onTransition(new PlannedTask({tasks: from.data, daily_agenda_index: 0, scheduled_date: new Date().toString(), task_id: from.data.id}))
         return null
       },
       displayName(from) {
