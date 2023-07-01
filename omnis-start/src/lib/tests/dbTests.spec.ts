@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { PlannedTask } from "../PlannedState";
 import { supabase } from "../supabaseClient";
 import { basicTask1 } from "./utils";
@@ -28,4 +28,5 @@ describe("Supabase Client DB Tests", () => {
     expect(objectives?.objectives).toStrictEqual([ { name: 'Mindfullness' }, { name: 'College Application' } ])
 
   })
+
 })
