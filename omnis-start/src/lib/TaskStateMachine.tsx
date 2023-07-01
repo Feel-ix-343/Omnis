@@ -9,8 +9,8 @@ import { WorkingTask } from "./WorkingState"
 
 export interface StateTransition<T extends TaskState, K extends TaskState> {
   executeTransition: (from: T, onTransition: (newTask: K) => void) => JSXElement | null
-  icon: (from: T, to: K) => JSXElement,
-  displayName: (from: T, to: K) => string
+  icon: (from: T) => JSXElement,
+  displayName: (from: T) => string
 }
 
 /** Transition between states! */
@@ -20,7 +20,6 @@ export const TaskStateMachine = {
       executeTransition(from, onTransition) {
         // No user info required
         const workingTask = new WorkingTask(from.data, new Date())
-        console.log("Planned to working", from, workingTask)
 
         // Update the database
         // ...
@@ -28,10 +27,10 @@ export const TaskStateMachine = {
         onTransition(workingTask)
         return null // No popup required
       },
-      displayName(from, to) {
+      displayName(from) {
         return "Start Task"
       },
-      icon(from, to) {
+      icon(from) {
         return <AiFillPlayCircle size={25} />
       },
     } satisfies StateTransition<PlannedTask, WorkingTask>
@@ -49,14 +48,13 @@ export const TaskStateMachine = {
         const completed = new CompletedTask(from.data)
         onTransition(completed)
 
-        console.log("Working to Completed", from, workingBlock, completed)
 
         return null
       },
-      displayName(from, to) {
+      displayName(from) {
         return "Complete Task"
       },
-      icon(from, to) {
+      icon(from) {
         return <IoCheckmarkCircleOutline size={25} />
       },
     } satisfies StateTransition<WorkingTask, CompletedTask>,
@@ -66,13 +64,13 @@ export const TaskStateMachine = {
         const workingBlock = new WorkBlock(from.startTime, new Date(), from, false)
 
         const planned = new PlannedTask(from.data, 0, from.startTime) // Make a new popup for determining the agenda index
-        console.log("Working to Planned", from, workingBlock, planned)
+        onTransition(planned)
         return null
       },
-      icon(from, to) {
+      icon(from) {
           return <AiFillPauseCircle size={25} />
       },
-      displayName(from, to) {
+      displayName(from) {
           return "Pause Task"
       },
     } satisfies StateTransition<WorkingTask, PlannedTask>

@@ -1,11 +1,11 @@
 import { JSXElement } from "solid-js";
-import { MaybeLazy } from "~/utils/types";
+import { Lazy } from "~/utils/types";
 import { TaskState } from "./TaskStateInterface";
 
 export interface SchedulableEvent { // For the calendar view
-  startTime: MaybeLazy<Date>;
-  endTime: MaybeLazy<Date>;
-  name: MaybeLazy<string>;
+  startTime: Lazy<Date>;
+  endTime: Lazy<Date>;
+  name: Lazy<string>;
   onOpen?: () => JSXElement
   setStart?: (date: Date) => void;
   setEnd?: (date: Date) => void
@@ -13,8 +13,8 @@ export interface SchedulableEvent { // For the calendar view
 }
 
 export interface SchedulableTaskState extends TaskState { // Everything relevant to the calendar view about task states
-  startTime: MaybeLazy<Date>;
-  endTime: MaybeLazy<Date>;
+  startTime: Lazy<Date>;
+  endTime: Lazy<Date>;
   setStart?: (date: Date) => void;
   setEnd?: (date: Date) => void
 

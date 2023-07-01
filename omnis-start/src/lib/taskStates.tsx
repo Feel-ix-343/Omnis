@@ -1,6 +1,6 @@
 import { PostgrestError, Session } from "@supabase/supabase-js";
 import { JSX, JSXElement } from "solid-js";
-import { DataResponse, MaybeLazy } from "~/utils/types";
+import { DataResponse, Lazy } from "~/utils/types";
 import { Database } from "../../../supabase/database.types";
 import { supabase } from "./supabaseClient";
 import {z } from 'zod'

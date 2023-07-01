@@ -27,3 +27,18 @@ export const basicTask2: DBTask = {
   id: 123,
   user_id: "8122fefc-8817-4db7-bb91-5bc7f2116f7d"
 }
+
+
+export const basicTask3: DBTask = {
+  name: "Felix's test task 3",
+  description: "This is just a test task that should be used in all specs",
+  duration: null,
+  importance: "high",
+  user_urgency: null,
+  additional_duration: null,
+  algo_urgency: null,
+  due_date: null,
+  extra: null,
+  id: 123,
+  user_id: "8122fefc-8817-4db7-bb91-5bc7f2116f7d"
+}

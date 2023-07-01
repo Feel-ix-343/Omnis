@@ -23,8 +23,8 @@ export class CompletedTask extends Task implements TaskState {
       return <p class="bg-green-50">{this.data.name} is done</p>
   };
 
-  statusIcon: JSXElement = <IoCheckmarkCircleOutline />;
-  state: TaskStateName = "completed";
+  statusIcon = () => <IoCheckmarkCircleOutline />;
+  state: TaskStateName = "completed" as const satisfies TaskStateName;
 
 
   // totalDuration() {}

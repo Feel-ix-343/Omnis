@@ -10,6 +10,12 @@ export default defineConfig(() => {
     },
     test: {
       includeSource: ['src/**/*.{js,ts,tsx,jsx}'], // ...
+      environment: "jsdom",
+      deps: {
+        inline: [
+          /solid-testing-library/
+        ]
+      }
     },
   };
 });

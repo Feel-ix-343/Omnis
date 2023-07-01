@@ -1,6 +1,6 @@
 import { PostgrestError } from "@supabase/supabase-js"
 import { JSXElement } from "solid-js"
-import { DataResponse, MaybeLazy } from "~/utils/types"
+import { DataResponse, Lazy } from "~/utils/types"
 import { DBTask } from "./Task"
 
 export type TaskStateName = "planned" | "working" | "completed" // This code breaks OCP but its fine
@@ -16,7 +16,7 @@ export interface TaskState { // This is what gets passed to the daily goal view.
   setDuration?: (d: number) => DataResponse<TaskState, PostgrestError>
 
   // Most task states have specific action dates. Planned are auto scheduled, working is just working, completed is stored in the past
-  actionDate?: MaybeLazy<Date>
+  actionDate?: Lazy<Date>
 
   // State Transitions. Also, when necessary, say when moving a task to completed, the user needs to enter in a reflection on the task. Transition-to-state event -> specific-to-new state ui popup -> transition to new state or no transition.
 
@@ -26,10 +26,10 @@ export interface TaskState { // This is what gets passed to the daily goal view.
   // onStart?: StateTransition
   // onCompleted?: StateTransition
 
-  statusText?: MaybeLazy<StateStatus>
-  statusIcon: MaybeLazy<JSXElement>, // Replace with some more classy type thing. >
-  state: MaybeLazy<TaskStateName>
+  statusText?: Lazy<StateStatus>
+  statusIcon: Lazy<JSXElement>, // Replace with some more classy type thing. >
+  state: TaskStateName
 }
 
-export type StateStatus = MaybeLazy<{name: string, description?: string}>
+export type StateStatus = {name: string, description?: string}
 

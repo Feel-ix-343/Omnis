@@ -7,7 +7,7 @@ import { DBTask, Task } from "./Task"
 import { TaskState, TaskStateName } from "./TaskStateInterface"
 
 export class PlannedTask extends Task implements TaskState {
-  public state: TaskStateName = "planned"
+  public state =  "planned" as const satisfies TaskStateName 
   constructor (
     public data: DBTask,
     public agendaIndex: number,
@@ -28,12 +28,12 @@ export class PlannedTask extends Task implements TaskState {
 
   setDuration: (d: number) => DataResponse<TaskState, PostgrestError> = async (d: number) => {
     return {
-      data: this,
+      data: null,
       error: null
     }
   } // Do this
 
-  statusIcon: JSXElement = <AiFillPauseCircle size={25} />
+  statusIcon = () => <AiFillPauseCircle size={25} />
   actionDate = () => {
     return this.scheudledDate
   }

@@ -10,6 +10,7 @@
   },
   "type": "module",
   "devDependencies": {
+    "@solidjs/testing-library": "^0.8.2",
     "@types/node": "^18.14.0",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "@typescript-eslint/parser": "^5.52.0",
@@ -19,6 +20,7 @@
     "autoprefixer": "^10.4.13",
     "eslint": "^8.34.0",
     "eslint-plugin-solid": "^0.9.4",
+    "happy-dom": "^9.20.3",
     "jsdom": "^22.1.0",
     "postcss": "^8.4.21",
     "solid-start-node": "^0.2.26",

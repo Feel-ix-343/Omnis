@@ -1,7 +1,7 @@
 import { PostgrestError } from "@supabase/supabase-js";
 import { AiFillPlayCircle } from "solid-icons/ai";
 import { JSXElement } from "solid-js";
-import { DataResponse, MaybeLazy } from "~/utils/types";
+import { DataResponse, Lazy } from "~/utils/types";
 import { Step } from "./Step";
 import { DBTask, Task } from "./Task";
 import { StateStatus, TaskState, TaskStateName } from "./TaskStateInterface";
@@ -47,7 +47,7 @@ export class WorkingTask extends Task implements TaskState {// , SchedulableTask
   // }
 
   // setEnd?: ((date: Date) => void) | undefined; // todo: dodoooo it
-  state: TaskStateName = "working";
+  state = "working" as const satisfies TaskStateName
   duration: () => number = () => {
     return 5
   }
@@ -57,9 +57,9 @@ export class WorkingTask extends Task implements TaskState {// , SchedulableTask
       error: null
     }
   }
-  actionDate: MaybeLazy<Date> = () => this.startTime
-  statusIcon: JSXElement = <AiFillPlayCircle size={25} />;
-  statusText?: StateStatus | undefined = () =>  ({name: `Working since ${this.startTime.toTimeString()}`});
+  actionDate: Lazy<Date> = () => this.startTime
+  statusIcon = () => <AiFillPlayCircle size={25} />;
+  statusText = () =>  ({name: `Working since ${this.startTime.toLocaleTimeString()}`});
   popupDisplay(): JSXElement {
       return <p>Working since {this.startTime.toTimeString()}</p>
   }
