@@ -42,7 +42,7 @@ comment on table steps is 'these are very freeform and completion is by the refe
 
 /* Child of task; state of task */
 create table planned_tasks (
-  task_id int references public.tasks,
+  task_id int references public.tasks not null,
   daily_agenda_index int not null,
   scheduled_date date not null,
   primary key(scheduled_date, daily_agenda_index)
@@ -92,7 +92,7 @@ comment on column step_blocks.closed_by_completion is 'This is helpful for the w
 
 
 create table completed_tasks (
-  task_id int references public.tasks,
+  task_id int references public.tasks primary key not null,
   reflection text,
   realized_importance_score int check (realized_importance_score >= 0 and realized_importance_score <= 10),
   realized_urgency_score int check (realized_urgency_score >= 0 and realized_urgency_score <= 10),
