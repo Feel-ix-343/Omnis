@@ -1,93 +1,104 @@
 import { AiFillPauseCircle, AiFillPlayCircle } from "solid-icons/ai"
 import { IoCheckmarkCircleOutline, IoCheckmarkDone } from "solid-icons/io"
-import { JSXElement } from "solid-js"
+import { JSX, JSXElement } from "solid-js"
 import { CompletedTask } from "./CompletedState"
 import { PlannedTask } from "./PlannedState"
 import { TaskState } from "./TaskStateInterface"
 import { WorkBlock } from "./TimeBlocks"
 import { WorkingTask } from "./WorkingState"
 
-export interface StateTransition<T extends TaskState, K extends TaskState> {
-  executeTransition: (from: T, onTransition: (newTask: K) => void) => JSXElement | null
-  icon: (from: T) => JSXElement,
-  displayName: (from: T) => string
+export interface StateTransition {
+  executeTransition: (onTransition: (newTask: TaskState) => void) => JSXElement | null
+  icon: () => JSXElement,
+  displayName: () => string
 }
 
-/** Transition between states! */
+
 export const TaskStateMachine = {
-  "planned": [
-    {
-      executeTransition(from, onTransition) {
+  "planned":  [
+    class PlannedToWorking implements StateTransition {
+      constructor(public from: PlannedTask) {}
+      executeTransition = (onTransition: (newTask: TaskState) => void): JSXElement => {
+
         // No user info required
-        const workingTask = new WorkingTask({tasks: from.data, start: new Date().toString(), task_id: from.data.id})
+        const workingTask = new WorkingTask({tasks: this.from.data, start: new Date().toString(), task_id: this.from.data.id})
 
         // Update the database
         // ...
 
         onTransition(workingTask)
         return null // No popup required
-      },
-      displayName(from) {
+      }
+      displayName() {
         return "Start Task"
-      },
-      icon(from) {
+      }
+      icon() {
         return <AiFillPlayCircle size={25} />
-      },
-    } satisfies StateTransition<PlannedTask, WorkingTask>
+      }
+    },
+
   ],
   "working": [
-    {
-      executeTransition(from, onTransition) {
-        const workingBlock = new WorkBlock(from.startTime(), new Date(), from, true) // Create new work block
+    class WorkingToCompleted implements StateTransition {
+      constructor (public from: WorkingTask) {}
+      executeTransition = (onTransition: (newTask: TaskState) => void): JSXElement => {
+        const workingBlock = new WorkBlock(this.from.startTime(), new Date(), this.from, true) // Create new work block
         // Update to database somehow?
-
         if (false) { // check user settings to see if they want to reflect on tasks when they completed them. If true return a popup. 
 
         }
-
-        const completed = new CompletedTask({tasks: from.data, task_id: from.data.id, reflection: null, realized_urgency_score: null, realized_pride_score: null,
-        realized_importance_score: null, realized_estimation_score: null})
+        const completed = new CompletedTask({
+          tasks: this.from.data,
+          task_id: this.from.data.id, 
+          reflection: null,
+          realized_urgency_score: null,
+          realized_pride_score: null,
+          realized_importance_score: null,
+          realized_estimation_score: null
+        })
         onTransition(completed)
-
-
         return null
-      },
-      displayName(from) {
+      }
+      displayName() {
         return "Complete Task"
-      },
-      icon(from) {
+      }
+      icon() {
         return <IoCheckmarkCircleOutline size={25} />
-      },
-    } satisfies StateTransition<WorkingTask, CompletedTask>,
-    {
-      executeTransition(from, onTransition) {
-          // New block
-        const workingBlock = new WorkBlock(from.startTime(), new Date(), from, false)
+      }
+    },
+    class WorkingToPlanned implements StateTransition {
 
-        const planned = new PlannedTask({tasks: from.data, daily_agenda_index: 0, scheduled_date: from.startTime().toString(), task_id: from.data.id}) // Make a new popup for determining the agenda index
+      constructor (public from: WorkingTask) {}
+
+      executeTransition = (onTransition: (newTask: TaskState) => void): JSXElement => {
+        // New block
+        const workingBlock = new WorkBlock(this.from.startTime(), new Date(), this.from, false)
+
+        const planned = new PlannedTask({tasks: this.from.data, daily_agenda_index: 0, scheduled_date: this.from.startTime().toString(), task_id: this.from.data.id}) // Make a new popup for determining the agenda index
         onTransition(planned)
         return null
-      },
-      icon(from) {
-          return <AiFillPauseCircle size={25} />
-      },
-      displayName(from) {
-          return "Pause Task"
-      },
-    } satisfies StateTransition<WorkingTask, PlannedTask>
+      }
+      icon() {
+        return <AiFillPauseCircle size={25} />
+      }
+      displayName() {
+        return "Pause Task"
+      }
+    }
   ],
   "completed": [
-    {
-      executeTransition(from, onTransition) {
-        onTransition(new PlannedTask({tasks: from.data, daily_agenda_index: 0, scheduled_date: new Date().toString(), task_id: from.data.id}))
+    class CompletedToPlanned implements StateTransition {
+      constructor (public from: WorkingTask) {}
+      executeTransition = (onTransition: (newTask: TaskState) => void): JSXElement => {
+        onTransition(new PlannedTask({tasks: this.from.data, daily_agenda_index: 0, scheduled_date: new Date().toString(), task_id: this.from.data.id}))
         return null
-      },
-      displayName(from) {
-          return "Uncomplete task"
-      },
-      icon(from) {
+      }
+      displayName() {
+        return "Uncomplete task"
+      }
+      icon() {
         return <IoCheckmarkDone />;
-      },
-    } satisfies StateTransition<CompletedTask, PlannedTask>
+      }
+    }
   ]
 } as const
