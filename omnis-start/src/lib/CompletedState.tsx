@@ -7,10 +7,10 @@ import { TaskState, TaskStateName } from "./TaskStateInterface";
 
 
 
-export async function fetchDBCompletedTasks(userID: string) {
+export async function getDBCompletedTasks(userID: string) {
   return await supabase.from("completed_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
 }
-type DBCompletedTask = ArrayElement<NonNullable<Awaited<ReturnType<typeof fetchDBCompletedTasks>>["data"]>>
+type DBCompletedTask = ArrayElement<NonNullable<Awaited<ReturnType<typeof getDBCompletedTasks>>["data"]>>
 
 
 export class CompletedTask extends Task implements TaskState {

@@ -7,11 +7,11 @@ import { DBTask, Task } from "./Task";
 import { StateStatus, TaskState, TaskStateName } from "./TaskStateInterface";
 import { supabase } from "./supabaseClient";
 
-export async function fetchDBWorkingTasks(userID: string) {
+export async function getDBWorkingTasks(userID: string) {
   return await supabase.from("working_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
 }
 
-type DBWorkingTask = ArrayElement<NonNullable<Awaited<ReturnType<typeof fetchDBWorkingTasks>>["data"]>>
+type DBWorkingTask = ArrayElement<NonNullable<Awaited<ReturnType<typeof getDBWorkingTasks>>["data"]>>
 
 export class WorkingTask extends Task implements TaskState {// , SchedulableTaskState {
   readonly played: boolean = true;

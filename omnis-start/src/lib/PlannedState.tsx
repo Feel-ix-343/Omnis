@@ -8,11 +8,11 @@ import { DBTask, Task } from "./Task"
 import { TaskState, TaskStateName } from "./TaskStateInterface"
 import { StateTransition } from "./TaskStateMachine"
 
-export async function fetchDBPlannedTasks(userID: string) {
+export async function getDBPlannedTasks(userID: string) {
   return await supabase.from("planned_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
 }
 
-type DBPlannedTask = ArrayElement< NonNullable< Awaited<ReturnType<typeof fetchDBPlannedTasks>>["data"]>>
+type DBPlannedTask = ArrayElement< NonNullable< Awaited<ReturnType<typeof getDBPlannedTasks>>["data"]>>
 
 export class PlannedTask extends Task implements TaskState {
   public state =  "planned" as const satisfies TaskStateName 
