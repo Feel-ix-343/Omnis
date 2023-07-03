@@ -4,6 +4,7 @@ import { ArrayElement } from "~/utils/types";
 import { supabase } from "./supabaseClient";
 import { DBTask, Task } from "./Task";
 import { TaskState, TaskStateName } from "./TaskStateInterface";
+import { TaskStateMachine } from "./TaskStateMachine";
 
 
 
@@ -18,6 +19,10 @@ export class CompletedTask extends Task implements TaskState {
     public completedData: DBCompletedTask,
   ) {
     super(completedData.tasks!)
+  }
+
+  transitions = () => {
+    return TaskStateMachine[this.state].map(T => new T(this))
   }
 
   duration: () => number = () => {

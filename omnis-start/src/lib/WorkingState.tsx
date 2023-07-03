@@ -6,6 +6,7 @@ import { Step } from "./Step";
 import { DBTask, Task } from "./Task";
 import { StateStatus, TaskState, TaskStateName } from "./TaskStateInterface";
 import { supabase } from "./supabaseClient";
+import { TaskStateMachine } from "./TaskStateMachine";
 
 export async function getDBWorkingTasks(userID: string) {
   return await supabase.from("working_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
@@ -16,6 +17,14 @@ type DBWorkingTask = ArrayElement<NonNullable<Awaited<ReturnType<typeof getDBWor
 export class WorkingTask extends Task implements TaskState {// , SchedulableTaskState {
   readonly played: boolean = true;
   readonly completed: boolean = false;
+
+  transitions = () => {
+    return TaskStateMachine[this.state].map(T => new T(this))
+  }
+
+  test = () => {
+    this.transitions()[0].executeTransition((a) => ({b: a.data}))
+  }
 
   constructor( public workingData: DBWorkingTask,) { super(workingData.tasks!) }
 

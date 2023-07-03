@@ -9,7 +9,7 @@ import { WorkingTask } from "./WorkingState"
 
 export interface StateTransition {
   executeTransition: (onTransition: (newTask: TaskState) => void) => JSXElement | null
-  icon: () => JSXElement,
+  icon: () => JSXElement
   displayName: () => string
 }
 
@@ -35,7 +35,7 @@ export const TaskStateMachine = {
       icon() {
         return <AiFillPlayCircle size={25} />
       }
-    },
+    }
 
   ],
   "working": [
@@ -88,7 +88,7 @@ export const TaskStateMachine = {
   ],
   "completed": [
     class CompletedToPlanned implements StateTransition {
-      constructor (public from: WorkingTask) {}
+      constructor (public from: CompletedTask) {}
       executeTransition = (onTransition: (newTask: TaskState) => void): JSXElement => {
         onTransition(new PlannedTask({tasks: this.from.data, daily_agenda_index: 0, scheduled_date: new Date().toString(), task_id: this.from.data.id}))
         return null

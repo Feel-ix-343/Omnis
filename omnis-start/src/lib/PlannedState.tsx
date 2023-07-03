@@ -6,7 +6,7 @@ import { ArrayElement, DataResponse } from "~/utils/types"
 import { supabase } from "./supabaseClient"
 import { DBTask, Task } from "./Task"
 import { TaskState, TaskStateName } from "./TaskStateInterface"
-import { StateTransition } from "./TaskStateMachine"
+import { StateTransition, TaskStateMachine } from "./TaskStateMachine"
 
 export async function getDBPlannedTasks(userID: string) {
   return await supabase.from("planned_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
@@ -17,6 +17,10 @@ type DBPlannedTask = ArrayElement< NonNullable< Awaited<ReturnType<typeof getDBP
 export class PlannedTask extends Task implements TaskState {
   public state =  "planned" as const satisfies TaskStateName 
   constructor ( public plannedData: DBPlannedTask,) { super(plannedData.tasks!) } // It should not ever be null }
+
+  transitions = () => {
+    return TaskStateMachine[this.state].map(T => new T(this))
+  }
 
   completed: boolean = false
   played: boolean = false

@@ -2,6 +2,7 @@ import { PostgrestError } from "@supabase/supabase-js"
 import { JSXElement } from "solid-js"
 import { DataResponse, Lazy } from "~/utils/types"
 import { DBTask } from "./Task"
+import { StateTransition } from "./TaskStateMachine"
 
 export type TaskStateName = "planned" | "working" | "completed" // This code breaks OCP but its fine
 export interface TaskState { // This is what gets passed to the daily goal view. It is all task information and state transition information without a calendar display. It is everything that at least the daily goal view would want to do and at most the calendar view. 
@@ -28,7 +29,8 @@ export interface TaskState { // This is what gets passed to the daily goal view.
 
   statusText?: Lazy<StateStatus>
   statusIcon: Lazy<JSXElement>, // Replace with some more classy type thing. >
-  state: TaskStateName
+  state: TaskStateName,
+  transitions: () => StateTransition[]
 }
 
 export type StateStatus = {name: string, description?: string}
