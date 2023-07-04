@@ -1,8 +1,6 @@
-
-import { describe, expect, it } from "vitest";
-import { CompletedTask } from "~/lib/Tasks/States/CompletedState";
-import { WorkingTask } from "~/lib/Tasks/States/WorkingState";
-import { basicTask2 } from "./utils";
+import { describe, expect, it } from "vitest"
+import { CompletedTask } from "../Tasks/States/CompletedState"
+import { basicTask2 } from "./utils"
 
 describe("Tests completed tasks", () => {
   const completedTask = new CompletedTask({

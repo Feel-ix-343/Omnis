@@ -1,5 +1,5 @@
 import { JSXElement } from "solid-js"
-import { supabase } from "../supabaseClient"
+import { supabase } from "~/lib/supabaseClient"
 
 
 export class Task { // This gets passed to the basic list view at the start of planning

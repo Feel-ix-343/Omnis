@@ -2,10 +2,10 @@ import { PostgrestError } from "@supabase/supabase-js";
 import { IoCheckmarkCircleOutline } from "solid-icons/io";
 import { JSXElement } from "solid-js";
 import { ArrayElement, DataResponse } from "~/utils/types";
-import { supabase } from "../../supabaseClient";
 import { DBTask, Task } from "../Task";
 import { TaskState, TaskStateName } from "./TaskStateInterface";
 import { TaskStateMachine } from "../TaskStateMachine";
+import { supabase } from "~/lib/supabaseClient";
 
 export async function getCompletedTasks(userID: string): DataResponse<CompletedTask[], PostgrestError> {
   const {data, error} = await getDBCompletedTasks(userID)

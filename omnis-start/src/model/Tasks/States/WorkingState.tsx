@@ -5,8 +5,8 @@ import { ArrayElement, DataResponse, Lazy } from "~/utils/types";
 import { Step } from "../Step";
 import { DBTask, Task } from "../Task";
 import { StateStatus, TaskState, TaskStateName } from "./TaskStateInterface";
-import { supabase } from "../../supabaseClient";
 import { TaskStateMachine } from "../TaskStateMachine";
+import { supabase } from "~/lib/supabaseClient";
 
 export async function getWorkingTasks(userID: string): DataResponse<WorkingTask[], PostgrestError> {
   const {data, error} = await getDBWorkingTasks(userID)

@@ -1,12 +1,11 @@
-import { PostgrestError } from "@supabase/supabase-js";
-import { DataResponse } from "~/utils/types";
-import { CompletedTask, getCompletedTasks} from "~/lib/Tasks/States/CompletedState";
-import { getPlannedTasks } from "~/lib/Tasks/States/PlannedState";
-import { supabase } from "./supabaseClient";
-import { Task } from "./Tasks/Task";
-import { TaskState } from "~/lib/Tasks/States/TaskStateInterface";
-import { StateTransition, TaskStateMachine } from "./Tasks/TaskStateMachine";
-import { getWorkingTasks } from "~/lib/Tasks/States/WorkingState";
+import { PostgrestError } from "@supabase/supabase-js"
+import { supabase } from "~/lib/supabaseClient"
+import { DataResponse } from "~/utils/types"
+import { getCompletedTasks } from "./Tasks/States/CompletedState"
+import { getPlannedTasks } from "./Tasks/States/PlannedState"
+import { TaskState } from "./Tasks/States/TaskStateInterface"
+import { getWorkingTasks } from "./Tasks/States/WorkingState"
+import { Task } from "./Tasks/Task"
 
 export async function getAllTasks(userID: string): DataResponse<Task[], PostgrestError> {
 

@@ -1,11 +1,11 @@
 import { AiFillPauseCircle, AiFillPlayCircle } from "solid-icons/ai"
 import { IoCheckmarkCircleOutline, IoCheckmarkDone } from "solid-icons/io"
 import { JSX, JSXElement } from "solid-js"
-import { CompletedTask } from "~/lib/Tasks/States/CompletedState"
-import { PlannedTask } from "~/lib/Tasks/States/PlannedState"
-import { TaskState } from "~/lib/Tasks/States/TaskStateInterface"
+import { CompletedTask } from "~/model/Tasks/States/CompletedState"
+import { PlannedTask } from "~/model/Tasks/States/PlannedState"
+import { TaskState } from "~/model/Tasks/States/TaskStateInterface"
 import { WorkBlock } from "./Blocks/TimeBlocks"
-import { WorkingTask } from "~/lib/Tasks/States/WorkingState"
+import { WorkingTask } from "~/model/Tasks/States/WorkingState"
 
 export interface StateTransition {
   executeTransition: (onTransition: (newTask: TaskState) => void) => JSXElement | null

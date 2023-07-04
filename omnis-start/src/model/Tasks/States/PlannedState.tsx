@@ -3,10 +3,10 @@ import { AiFillPauseCircle } from "solid-icons/ai"
 import { JSX, JSXElement } from "solid-js"
 import { z } from "zod"
 import { ArrayElement, DataResponse } from "~/utils/types"
-import { supabase } from "../../supabaseClient"
 import { DBTask, Task } from "../Task"
 import { TaskState, TaskStateName } from "./TaskStateInterface"
 import { StateTransition, TaskStateMachine } from "../TaskStateMachine"
+import { supabase } from "~/lib/supabaseClient"
 
 export async function getPlannedTasks(userID: string): DataResponse<PlannedTask[], PostgrestError> {
   const {data, error} = await getDBPlannedTasks(userID)

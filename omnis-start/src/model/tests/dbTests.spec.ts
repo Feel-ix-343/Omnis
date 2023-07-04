@@ -1,7 +1,5 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { PlannedTask } from "~/lib/Tasks/States/PlannedState";
-import { supabase } from "../supabaseClient";
-import { basicTask1 } from "./utils";
+import { supabase } from "~/lib/supabaseClient";
 
 
 const seedUserID = '8122fefc-8817-4db7-bb91-5bc7f2116f7d'

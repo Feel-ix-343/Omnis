@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getTasksWithState } from "../getState";
-import { TaskState } from "~/lib/Tasks/States/TaskStateInterface";
+import { TaskState } from "~/model/Tasks/States/TaskStateInterface";
 
 describe("Get state", () => {
   it("works to get all tasks from DB", async () => {

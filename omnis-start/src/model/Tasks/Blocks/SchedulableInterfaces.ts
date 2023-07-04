@@ -1,6 +1,6 @@
 import { JSXElement } from "solid-js";
 import { Lazy } from "~/utils/types";
-import { TaskState } from "~/lib/Tasks/States/TaskStateInterface";
+import { TaskState } from "~/model/Tasks/States/TaskStateInterface";
 
 export interface SchedulableEvent { // For the calendar view
   startTime: Lazy<Date>;

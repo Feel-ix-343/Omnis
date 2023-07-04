@@ -1,8 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { PlannedTask } from "~/lib/Tasks/States/PlannedState";
-import { DBTask } from "../Tasks/Task";
-import { TaskState } from "~/lib/Tasks/States/TaskStateInterface";
-import { basicTask1 } from "./utils";
+import { describe, expect, it } from "vitest"
+import { PlannedTask } from "../Tasks/States/PlannedState"
+import { basicTask1 } from "./utils"
 
 
 describe("Test planned task", () => {
