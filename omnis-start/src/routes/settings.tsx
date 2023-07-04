@@ -8,11 +8,10 @@ import { FaRegularFlag, FaSolidCircleInfo } from "solid-icons/fa"
 import { FiTarget } from "solid-icons/fi"
 import { IoDocumentTextOutline } from "solid-icons/io"
 import { createEffect, createResource, createSignal, For, onMount, Show } from "solid-js"
-import { deleteDBGoal, getGoalsFromDB, upsertDBGoal } from "~/utils/database/databaseFunctions"
-import { supabase } from "~/utils/database/supabaseClient"
-import { newInfoPopup, newNotification } from "./App"
-import { DropDown } from "./Dropdown"
-import Notification from "./Notification"
+import {supabase} from "~/lib/supabaseClient";
+import {newInfoPopup, newNotification} from "~/routes/index";
+import {deleteDBGoal, getGoalsFromDB, upsertDBGoal} from "~/lib/databaseFunctions";
+import {DropDown} from "~/components/Dropdown";
 
 export default function SettingsView(props: {session: Session}) {
 

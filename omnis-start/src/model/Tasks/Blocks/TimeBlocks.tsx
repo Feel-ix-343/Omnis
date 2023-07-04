@@ -1,12 +1,12 @@
 import { AiFillPauseCircle, AiFillPlayCircle } from "solid-icons/ai";
 import { IoCheckmarkCircleOutline } from "solid-icons/io";
-import { CompletedTask } from "./CompletedState";
-import { PlannedTask } from "./PlannedState";
+import { CompletedTask } from "~/lib/Tasks/States/CompletedState";
+import { PlannedTask } from "~/lib/Tasks/States/PlannedState";
 import { SchedulableEvent } from "./SchedulableInterfaces";
-import { Step } from "./Step";
-import { Task } from "./Task";
-import { StateTransition } from "./TaskStateMachine";
-import { WorkingTask } from "./WorkingState";
+import { Step } from "../Step";
+import { Task } from "../Task";
+import { StateTransition } from "../TaskStateMachine";
+import { WorkingTask } from "~/lib/Tasks/States/WorkingState";
 
 abstract class Block implements SchedulableEvent {
   constructor(

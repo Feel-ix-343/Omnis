@@ -1,9 +1,9 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { CompletedTask } from "../CompletedState";
-import { PlannedTask } from "../PlannedState";
-import { TaskState } from "../TaskStateInterface";
-import { TaskStateMachine, StateTransition } from "../TaskStateMachine";
-import { WorkingTask } from "../WorkingState";
+import { CompletedTask } from "~/lib/Tasks/States/CompletedState";
+import { PlannedTask } from "~/lib/Tasks/States/PlannedState";
+import { TaskState } from "~/lib/Tasks/States/TaskStateInterface";
+import { TaskStateMachine, StateTransition } from "../Tasks/TaskStateMachine";
+import { WorkingTask } from "~/lib/Tasks/States/WorkingState";
 import { basicTask1 } from "./utils";
 
 describe("Planned Task Transitions", () => {

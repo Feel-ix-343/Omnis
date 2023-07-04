@@ -1,5 +1,5 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { PlannedTask } from "../PlannedState";
+import { PlannedTask } from "~/lib/Tasks/States/PlannedState";
 import { supabase } from "../supabaseClient";
 import { basicTask1 } from "./utils";
 

@@ -1,7 +1,7 @@
 
 import { describe, expect, it } from "vitest";
-import { CompletedTask } from "../CompletedState";
-import { WorkingTask } from "../WorkingState";
+import { CompletedTask } from "~/lib/Tasks/States/CompletedState";
+import { WorkingTask } from "~/lib/Tasks/States/WorkingState";
 import { basicTask2 } from "./utils";
 
 describe("Tests completed tasks", () => {

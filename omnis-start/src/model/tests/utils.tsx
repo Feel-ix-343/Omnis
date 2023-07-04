@@ -1,4 +1,4 @@
-import { DBTask } from "../Task";
+import { DBTask } from "../Tasks/Task";
 
 export const basicTask1: DBTask = {
   name: "Felix's test task",

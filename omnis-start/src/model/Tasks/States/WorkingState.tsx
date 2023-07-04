@@ -2,11 +2,11 @@ import { PostgrestError } from "@supabase/supabase-js";
 import { AiFillPlayCircle } from "solid-icons/ai";
 import { JSXElement } from "solid-js";
 import { ArrayElement, DataResponse, Lazy } from "~/utils/types";
-import { Step } from "./Step";
-import { DBTask, Task } from "./Task";
+import { Step } from "../Step";
+import { DBTask, Task } from "../Task";
 import { StateStatus, TaskState, TaskStateName } from "./TaskStateInterface";
-import { supabase } from "./supabaseClient";
-import { TaskStateMachine } from "./TaskStateMachine";
+import { supabase } from "../../supabaseClient";
+import { TaskStateMachine } from "../TaskStateMachine";
 
 export async function getWorkingTasks(userID: string): DataResponse<WorkingTask[], PostgrestError> {
   const {data, error} = await getDBWorkingTasks(userID)

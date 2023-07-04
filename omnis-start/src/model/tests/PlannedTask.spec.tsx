@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { PlannedTask } from "../PlannedState";
-import { DBTask } from "../Task";
-import { TaskState } from "../TaskStateInterface";
+import { PlannedTask } from "~/lib/Tasks/States/PlannedState";
+import { DBTask } from "../Tasks/Task";
+import { TaskState } from "~/lib/Tasks/States/TaskStateInterface";
 import { basicTask1 } from "./utils";
 
 

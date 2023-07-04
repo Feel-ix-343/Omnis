@@ -1,7 +1,6 @@
-import { createEffect, createSignal } from "solid-js";
 import { describe, expect, it } from "vitest";
 import { getTasksWithState } from "../getState";
-import { TaskState } from "../TaskStateInterface";
+import { TaskState } from "~/lib/Tasks/States/TaskStateInterface";
 
 describe("Get state", () => {
   it("works to get all tasks from DB", async () => {

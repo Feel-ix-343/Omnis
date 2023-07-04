@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { TaskState } from "../TaskStateInterface";
-import { WorkingTask } from "../WorkingState";
+import { TaskState } from "~/lib/Tasks/States/TaskStateInterface";
+import { WorkingTask } from "~/lib/Tasks/States/WorkingState";
 import { basicTask2 } from "./utils";
 
 describe("Tests working tasks", () => {

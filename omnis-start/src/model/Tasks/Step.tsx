@@ -1,4 +1,4 @@
-import { Database } from "../../../supabase/database.types";
+import { Database } from "../../../../supabase/database.types";
 
 export class Step {
   constructor (
