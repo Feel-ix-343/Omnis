@@ -1,14 +1,19 @@
+import { PostgrestError } from "@supabase/supabase-js";
 import { IoCheckmarkCircleOutline } from "solid-icons/io";
 import { JSXElement } from "solid-js";
-import { ArrayElement } from "~/utils/types";
+import { ArrayElement, DataResponse } from "~/utils/types";
 import { supabase } from "./supabaseClient";
 import { DBTask, Task } from "./Task";
 import { TaskState, TaskStateName } from "./TaskStateInterface";
 import { TaskStateMachine } from "./TaskStateMachine";
 
+export async function getCompletedTasks(userID: string): DataResponse<CompletedTask[], PostgrestError> {
+  const {data, error} = await getDBCompletedTasks(userID)
+  return {data: data?.map(d => new CompletedTask(d)) ?? null, error}
+}
 
 
-export async function getDBCompletedTasks(userID: string) {
+async function getDBCompletedTasks(userID: string) {
   return await supabase.from("completed_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
 }
 type DBCompletedTask = ArrayElement<NonNullable<Awaited<ReturnType<typeof getDBCompletedTasks>>["data"]>>

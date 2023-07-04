@@ -8,7 +8,12 @@ import { StateStatus, TaskState, TaskStateName } from "./TaskStateInterface";
 import { supabase } from "./supabaseClient";
 import { TaskStateMachine } from "./TaskStateMachine";
 
-export async function getDBWorkingTasks(userID: string) {
+export async function getWorkingTasks(userID: string): DataResponse<WorkingTask[], PostgrestError> {
+  const {data, error} = await getDBWorkingTasks(userID)
+  return {data: data?.map(d => new WorkingTask(d)) ?? null, error}
+}
+
+async function getDBWorkingTasks(userID: string) {
   return await supabase.from("working_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
 }
 

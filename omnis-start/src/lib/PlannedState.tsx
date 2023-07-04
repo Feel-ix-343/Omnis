@@ -8,7 +8,12 @@ import { DBTask, Task } from "./Task"
 import { TaskState, TaskStateName } from "./TaskStateInterface"
 import { StateTransition, TaskStateMachine } from "./TaskStateMachine"
 
-export async function getDBPlannedTasks(userID: string) {
+export async function getPlannedTasks(userID: string): DataResponse<PlannedTask[], PostgrestError> {
+  const {data, error} = await getDBPlannedTasks(userID)
+  return {data: data?.map(d => new PlannedTask(d)) ?? null, error}
+}
+
+async function getDBPlannedTasks(userID: string) {
   return await supabase.from("planned_tasks").select("*, tasks(*)").eq("tasks.user_id", userID)
 }
 
