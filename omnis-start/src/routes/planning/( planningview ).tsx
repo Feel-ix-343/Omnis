@@ -112,7 +112,7 @@ export default function PlanningView() {
           </div>
 
 
-          {filteredTasks() !== null ? 
+          {filteredTasks() ? 
             <>
 
               <PriorityLabel importance="High" urgency="High" />
