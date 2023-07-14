@@ -306,12 +306,12 @@ function TaskDisplay(props: {task: Task}) {
         <p class="text-secondary max-h-12 overflow-y-clip px-2 text-xs overflow-x-clip">{props.task.data.description}</p>
       </Show>
 
-      <Show when={false}>
+     <Show when={props.task.getDuration() !== null}>
         <div class="flex flex-row justify-start items-center gap-2 px-3 mt-2 mb-1">
-          {/* <div class="flex flex-row items-center justify-center px-3 py-1 gap-1 bg-neutral-100 rounded-full text-secondary text-xs"> */}
-          {/*   <AiOutlineHourglass size={18} class="fill-secondary" /> */}
-          {/*   {props.task.task.task.duration !== null ? (props.task.task.task.duration / 60 < 1 ? props.task.task.task.duration + "min" : props.task.task.task.duration / 60 + "h") : null} */}
-          {/* </div> */}
+          <div class="flex flex-row items-center justify-center px-3 py-1 gap-1 bg-neutral-100 rounded-full text-secondary text-xs">
+            <AiOutlineHourglass size={18} class="fill-secondary" />
+            { props.task.getDuration()! / 60 < 1 ? props.task.getDuration()! + "min" : props.task.getDuration()! / 60 + "h"}
+          </div>
         </div>
       </Show>
     </Motion.div>
