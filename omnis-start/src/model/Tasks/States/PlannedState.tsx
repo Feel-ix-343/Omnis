@@ -31,12 +31,6 @@ export class PlannedTask extends Task implements TaskState {
   played: boolean = false
 
 
-  duration: () => number = () => {
-    const pgduration = intervalToMinutes(this.data.duration)
-    if (!pgduration) return 15 // Default task length
-    return pgduration
-  }
-
   setDuration: (d: number) => DataResponse<TaskState, PostgrestError> = async (d: number) => {
     return {
       data: null,
@@ -48,22 +42,6 @@ export class PlannedTask extends Task implements TaskState {
   actionDate = () => {
     return new Date(this.plannedData.scheduled_date)
   }
-}
-const intervalToMinutes = (interval: unknown) => {
-  const zodInterval = z.object({
-    hours: z.number().nullish(),
-    minutes: z.number().nullish(),
-    seconds: z.number().nullish()
-  }).nullable()
-  const pgduration = zodInterval.parse(interval)
-  if (!pgduration) return null
-
-  let minutes: number = 0;
-  if (pgduration.hours) minutes += pgduration.hours * 60
-  if (pgduration.minutes) minutes += pgduration.minutes;
-  if (pgduration.seconds) minutes += pgduration.seconds / 60
-
-  return minutes
 }
 
 const minutesToInterval = (minutes: number)  => {

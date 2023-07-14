@@ -30,7 +30,7 @@ export class CompletedTask extends Task implements TaskState {
     return TaskStateMachine[this.state].map(T => new T(this))
   }
 
-  duration: () => number = () => {
+  getDuration: () => number = () => {
     return 5
   };
 

@@ -13,7 +13,7 @@ export interface TaskState { // This is what gets passed to the daily goal view.
   popupDisplay: (onUpdate: (state: TaskState) => void) => JSXElement 
 
   /** Duration of the task in minutes */
-  duration: () => number
+  getDuration: () => number
   setDuration?: (d: number) => DataResponse<TaskState, PostgrestError>
 
   // Most task states have specific action dates. Planned are auto scheduled, working is just working, completed is stored in the past

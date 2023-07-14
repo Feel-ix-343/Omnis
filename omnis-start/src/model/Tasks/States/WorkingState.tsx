@@ -61,7 +61,7 @@ export class WorkingTask extends Task implements TaskState {// , SchedulableTask
 
   // setEnd?: ((date: Date) => void) | undefined; // todo: dodoooo it
   state = "working" as const satisfies TaskStateName
-  duration: () => number = () => {
+  getDuration: () => number = () => {
     return 5
   }
   setDuration: (d: number) => DataResponse<TaskState, PostgrestError> = async (d) => {
