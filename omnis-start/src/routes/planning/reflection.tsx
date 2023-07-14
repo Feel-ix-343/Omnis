@@ -1,18 +1,11 @@
 import { Session } from "@supabase/supabase-js";
+import { ChatCompletionRequestMessage } from "openai";
 import { FaSolidBrain, FaSolidPaperPlane } from "solid-icons/fa";
 import { IoFlowerSharp, IoReloadCircleSharp } from "solid-icons/io";
-import { createEffect, createMemo, createResource, createSignal, For, onMount } from "solid-js";
-import { ChatMessage } from "../../../OmnisGPT/omnis-gpt/bindings/ChatMessage";
-import { scheduleTasks, UnscheduledTask } from "../utils/autoscheduling";
-import { getGoalsFromDB, getTasksFromDB } from "../utils/database/databaseFunctions";
-import { reflection } from "../utils/gpt";
-import Notification from "./Notification";
-
-import {ChatCompletionRequestMessage, Configuration} from "openai"
-import { newInfoPopup, newNotification } from "./App";
-import { createServerData$ } from "solid-start/server";
-import { RouteDataArgs, useRouteData } from "solid-start";
-import { client, queryClient, solidtRPC, trpc } from "~/utils/trpc";
+import { createSignal, createEffect, createResource, For } from "solid-js";
+import { UnscheduledTask, scheduleTasks } from "~/lib/autoscheduling";
+import { trpc } from "~/server/trpc";
+import { newInfoPopup, newNotification } from "../planning";
 
 
 export default async function ReflectionPopup(session: Session | undefined) {

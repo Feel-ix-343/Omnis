@@ -8,12 +8,15 @@ import { FaRegularFlag, FaSolidCircleInfo } from "solid-icons/fa"
 import { FiTarget } from "solid-icons/fi"
 import { IoDocumentTextOutline } from "solid-icons/io"
 import { createEffect, createResource, createSignal, For, onMount, Show } from "solid-js"
-import {supabase} from "~/lib/supabaseClient";
-import {newInfoPopup, newNotification} from "~/routes/index";
-import {deleteDBGoal, getGoalsFromDB, upsertDBGoal} from "~/lib/databaseFunctions";
-import {DropDown} from "~/components/Dropdown";
+import { useRouteData } from "solid-start"
+import { DropDown } from "~/components/Dropdown"
+import { supabase } from "~/lib/supabaseClient"
+import { newInfoPopup, newNotification } from "../planning"
 
-export default function SettingsView(props: {session: Session}) {
+export default function SettingsView() {
+
+  // const session = useRouteData<typeof routeData>()
+  // type t = ReturnType<typeof session>
 
   const logout = async () => {
     await supabase.auth.signOut()
@@ -24,87 +27,87 @@ export default function SettingsView(props: {session: Session}) {
   const [startHour, setStartHour] = createSignal<number>()
   const [endHour, setEndHour] = createSignal<number>()
 
-  const loadStartEndHour = async () => {
-    const { data, error } = await supabase
-      .from('user_settings')
-      .select('start_time, end_time')
-      .eq('user_id', props.session.user.id)
-      .maybeSingle()
+  // const loadStartEndHour = async () => {
+  //   const { data, error } = await supabase
+  //     .from('user_settings')
+  //     .select('start_time, end_time')
+  //     .eq('user_id', session().user.id)
+  //     .maybeSingle()
+  //
+  //   if (error) {
+  //     newNotification({ type: "error", text: "Could not load settings" })
+  //   }
+  //
+  //   setStartHour(data?.start_time ?? 9)
+  //   setEndHour(data?.end_time ?? 17)
+  // }
+  //
+  // onMount(() => {
+  //   loadStartEndHour()
+  // })
 
-    if (error) {
-      newNotification({ type: "error", text: "Could not load settings" })
-    }
 
-    setStartHour(data?.start_time ?? 9)
-    setEndHour(data?.end_time ?? 17)
-  }
+  // createEffect(async () => {
+  //   console.log("startHour", startHour())
+  //   console.log("endHour", endHour())
+  //
+  //   if (startHour() === undefined || endHour() === undefined) {
+  //     return
+  //   }
+  //
+  //   // TODO: Use zod validation here
+  //   const { data, error } = await supabase.from('user_settings').upsert({
+  //     user_id: session().user.id,
+  //     start_time: startHour()!,
+  //     end_time: endHour()!
+  //   })
+  //
+  //   if (error) {
+  //     newNotification({ type: "error", text: "Could not save settings" })
+  //   }
+  // })
 
-  onMount(() => {
-    loadStartEndHour()
-  })
-
-
-  createEffect(async () => {
-    console.log("startHour", startHour())
-    console.log("endHour", endHour())
-
-    if (startHour() === undefined || endHour() === undefined) {
-      return
-    }
-
-    // TODO: Use zod validation here
-    const { data, error } = await supabase.from('user_settings').upsert({
-      user_id: props.session.user.id,
-      start_time: startHour()!,
-      end_time: endHour()!
-    })
-
-    if (error) {
-      newNotification({ type: "error", text: "Could not save settings" })
-    }
-  })
-
-  const [goalToEdit, setGoalToEdit] = createSignal<Goal | null>(null)
-  const onUpdate = () => {
-    if (goalToEdit() !== null) {
-      return (g: Goal) => {
-        upsertDBGoal(g, props.session).then(() => refetch())
-      }
-    }
-  }
-  const onDelete = () => {
-    if (goalToEdit() !== null) {
-      return (g: Goal) => {
-        deleteDBGoal(g, props.session).then(() => refetch())
-      }
-    }
-  }
-  const onCreate = () => {
-    if (goalToEdit() === null) {
-      return (g: Goal) => {
-        upsertDBGoal(g, props.session).then(() => refetch())
-      }
-    }
-  }
+  // const [goalToEdit, setGoalToEdit] = createSignal<Goal | null>(null)
+  // const onUpdate = () => {
+  //   if (goalToEdit() !== null) {
+  //     return (g: Goal) => {
+  //       upsertDBGoal(g, session()).then(() => refetch())
+  //     }
+  //   }
+  // }
+  // const onDelete = () => {
+  //   if (goalToEdit() !== null) {
+  //     return (g: Goal) => {
+  //       deleteDBGoal(g, session()).then(() => refetch())
+  //     }
+  //   }
+  // }
+  // const onCreate = () => {
+  //   if (goalToEdit() === null) {
+  //     return (g: Goal) => {
+  //       upsertDBGoal(g, session()).then(() => refetch())
+  //     }
+  //   }
+  // }
   const [show, setShow] = createSignal(false)
   const close = () => { setShow(false) }
-  const getGoals = async () => {
-    let {data: goals, error} = await getGoalsFromDB(props.session)
-    if (error) {
-      newNotification({ type: "error", text: "Error Getting Goals" })
-      return null
-    }
-    return goals
-  }
-  const [goals, {mutate, refetch}] = createResource(getGoals)
+  // const getGoals = async () => {
+  //   let {data: goals, error} = await getGoalsFromDB(session())
+  //   if (error) {
+  //     newNotification({ type: "error", text: "Error Getting Goals" })
+  //     return null
+  //   }
+  //   return goals
+  // }
+  // const [goals, {mutate, refetch}] = createResource(getGoals)
 
   return (
     <div class="pt-36 px-7 pb-[15vh]">
 
-      <EditGoal show={show()} goal={goalToEdit()} close={close} onDelete={onDelete()} onCreate={onCreate()} onUpdate={onUpdate()} />
+      {/*<EditGoal show={show()} goal={goalToEdit()} close={close} onDelete={onDelete()} onCreate={onCreate()} onUpdate={onUpdate()} />*/}
 
       <div class="fixed bg-background-secondary rounded-br-3xl rounded-bl-3xl shadow-lg p-10 max-h-40 top-0 right-0 left-0">
-        <h1 class="text-xl">Hello {props.session.user.user_metadata.full_name}</h1>
+        {/*<h1 class="text-xl">Hello {session().user.user_metadata.full_name}</h1>*/}
         <h3>Here are your settings</h3>
       </div>
 
@@ -153,23 +156,23 @@ export default function SettingsView(props: {session: Session}) {
         </Motion.div>
       </div>
 
-      <div class="rounded-lg bg-background-secondary p-2 text-primary mt-2 border-2">
-
-        {goals.loading ? <>Loading...</> : null}
-        <For each={goals()}>
-          {g => <Goal goal={g} onclick={t => { setShow(true); setGoalToEdit(t) }} /> }
-        </For>
-
-        <Motion.div
-          press={{ scale: [.9] }}
-          class="flex justify-center items-center gap-2 text-secondary w-32 mx-auto bg-background-primary rounded-full shadow-sm py-1 border-[1px] border-zinc-120"
-          classList={{"mt-2": goals() !== null}}
-          onclick={() => { setShow(true); setGoalToEdit(null) }}
-        >
-          <BsPlusCircle class="fill-secondary" /> New Goal
-        </Motion.div>
-
-      </div>
+      {/*<div class="rounded-lg bg-background-secondary p-2 text-primary mt-2 border-2">*/}
+{/**/}
+        {/*{goals.loading ? <>Loading...</> : null}*/}
+        {/*<For each={goals()}>*/}
+      {/*{g => <Goal goal={g} onclick={t => { setShow(true); setGoalToEdit(t) }} /> }*/}
+        {/*</For>*/}
+{/**/}
+        {/*<Motion.div*/}
+          {/*ress={{ scale: [.9] }}*/}
+          {/*lass="flex justify-center items-center gap-2 text-secondary w-32 mx-auto bg-background-primary rounded-full shadow-sm py-1 border-[1px] border-zinc-120"*/}
+          {/*lassList={{"mt-2": goals() !== null}}*/}
+      {/*nclick={() => { setShow(true); setGoalToEdit(null) }}*/}
+        {/*>*/}
+          {/*<BsPlusCircle class="fill-secondary" /> New Goal*/}
+        {/*</Motion.div>*/}
+{/**/}
+      {/*</div>*/}
 
       <div class="flex flex-row items-center">
         <h2>Scheduling Settings</h2>

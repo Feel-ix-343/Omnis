@@ -1,5 +1,4 @@
-import { supabase } from "~/utils/database/supabaseClient"
-
+import { supabase } from "~/lib/supabaseClient"
 
 export default function LoginScreen() {
   console.log("VCEL", import.meta.env.VITE_VERCEL)
