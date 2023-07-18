@@ -23,7 +23,7 @@ create table objectives (
 
 /* Many to many */
 create table task_objectives (
-  task_id int references public.tasks,
+  task_id int references public.tasks on delete cascade,
   objective_id int references public.objectives,
   primary key(task_id, objective_id)
 );
@@ -31,7 +31,7 @@ create table task_objectives (
 /* Many steps to one task */
 create table steps (
   id int primary key,
-  task_id int references public.tasks,
+  task_id int references public.tasks on delete cascade,
   name text not null,
   description text,
   planedDuration interval,
@@ -42,7 +42,7 @@ comment on table steps is 'these are very freeform and completion is by the refe
 
 /* Child of task; state of task */
 create table planned_tasks (
-  task_id int references public.tasks not null,
+  task_id int references public.tasks on delete cascade not null,
   daily_agenda_index int not null,
   scheduled_date date not null,
   primary key(scheduled_date, daily_agenda_index)
@@ -50,11 +50,11 @@ create table planned_tasks (
 
 /* The currently working task. This one has everything relevant to time tracking */
 create table working_tasks (
-  task_id int references public.tasks primary key,
+  task_id int references public.tasks on delete cascade primary key,
   start timestamptz not null
 );
 create table working_tasks_working_step ( /* one to one; can this be a feild? */
-  working_step_id int references public.steps primary key,
+  working_step_id int references public.steps on delete cascade primary key,
   working_step_start_time timestamptz
 );
 
@@ -63,7 +63,7 @@ create table working_tasks_working_step ( /* one to one; can this be a feild? */
 /* This is generated when a working task is stopped or completed */
 create table work_blocks (
   id int primary key,
-  task_id int references public.tasks not null,
+  task_id int references public.tasks on delete cascade not null,
   work_start timestamptz not null,
   work_end timestamptz not null,
   actual_additional_duration interval,
@@ -78,7 +78,7 @@ comment on column work_blocks.planned_additional_duration is 'Not sure how this 
 
 create table step_blocks ( /* Not specific to working task, but relevant to it hence position */
   id int primary key,
-  step_id int references public.steps,
+  step_id int references public.steps on delete cascade,
   block_start timestamptz not null,
   block_end timestamptz not null,
   work_block int references public.work_blocks(id) not null,
@@ -92,7 +92,7 @@ comment on column step_blocks.closed_by_completion is 'This is helpful for the w
 
 
 create table completed_tasks (
-  task_id int references public.tasks primary key not null,
+  task_id int references public.tasks on delete cascade primary key  not null,
   reflection text,
   realized_importance_score int check (realized_importance_score >= 0 and realized_importance_score <= 10),
   realized_urgency_score int check (realized_urgency_score >= 0 and realized_urgency_score <= 10),
