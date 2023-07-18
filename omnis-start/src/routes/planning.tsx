@@ -1,5 +1,4 @@
-import {A, Navigate, Outlet, useParams, useRouteData} from "@solidjs/router";
-import { redirect } from "solid-start/server";
+import {A, Outlet} from "@solidjs/router";
 
 import useSession from "~/lib/session";
 
@@ -13,6 +12,7 @@ export const newNotification = (notif: NotificationProps) => setNotifications(no
 // export const
 
 export const  [infoPopupPages, newInfoPopup] = createSignal<InfoPopupProps["pages"] | null>(null)
+export const [popup, setPopup] = createSignal<() => JSXElement>();
 
 
 export function routeData() {
@@ -65,24 +65,27 @@ export default function App() {
   })
 
   return (
-    <div>
+    <DBContextProvider>
+      <div>
 
-      {notifications().map(Notification)}
-      <InfoPopup pages={infoPopupPages()} close={() => newInfoPopup(null)} />
+        {notifications().map(Notification)}
+        <Popup clear={() => setPopup()} content={popup()} />
+        <InfoPopup pages={infoPopupPages()} close={() => newInfoPopup(null)} />
 
-      <Outlet />
+        <Outlet />
 
-      <Nav />
+        <Nav />
 
-    </div>
+      </div>
+    </DBContextProvider>
   )
 
 };
 
 
 import { Motion, Presence } from "@motionone/solid";
-import { AiOutlineCheckCircle, AiOutlineClose, AiOutlineCloseCircle, AiOutlineInfoCircle } from "solid-icons/ai";
-import {createEffect, createResource, JSXElement, onMount, Resource, Show } from "solid-js";
+import { AiOutlineCheckCircle, AiOutlineCloseCircle, AiOutlineInfoCircle } from "solid-icons/ai";
+import {JSXElement, Show } from "solid-js";
 import InfoPopup, { InfoPopupProps } from "~/components/InfoPopup";
 import { supabase } from "~/lib/supabaseClient";
 
@@ -131,10 +134,13 @@ export function Notification(props: NotificationProps) {
 
 
 import { FaRegularClock, FaRegularSquareCheck } from 'solid-icons/fa'
-import { BsGear, BsGearWide } from 'solid-icons/bs'
+import { BsGear } from 'solid-icons/bs'
 import { createSignal } from "solid-js"
 import { createRouteData, useLocation } from "solid-start";
 import { getAllTasks } from "~/model/getState";
+import { DBContextProvider } from "~/lib/DBState";
+import { createStore } from "solid-js/store";
+import { Task } from "vitest";
 function Nav (){
 
   const classes = (path: string) => { return `mx-auto ${location.pathname === path || location.pathname === path + "/" ? "fill-primary" : "fill-white"}` }
@@ -152,4 +158,58 @@ function Nav (){
       <A href="/planning/settings" class="z-50 text-white"><BsGear class={classes("/planning/settings")} size={40} /></A>
     </div>
   )
+}
+
+function Popup(props: {content?: () => JSXElement, clear: () => void}) {
+
+  return <>
+    <Presence>
+      <Show when={props.content}>
+        <Motion.div
+          animate={{
+            opacity: [0, .2],
+          }}
+
+          transition={{
+            duration: .6,
+          }}
+
+          exit={{
+            opacity: [.2, 0],
+          }}
+
+          class="w-full fixed h-screen bg-black top-0 z-40"
+
+          onclick={props.clear}
+        />
+      </Show>
+    </Presence>
+
+    <Presence>
+      <Show when={props.content}>
+        <Motion.div
+          animate={{
+            opacity: [0, 1],
+            height: ["0%", "89%"]
+          }}
+
+          transition={{
+            duration: .6,
+          }}
+
+          exit={{
+            opacity: [1, 0],
+            maxHeight: ["90%", "0%"]
+          }}
+
+          class="w-full overflow-y-hidden fixed z-50 bg-white bottom-0 rounded-tr-3xl rounded-tl-3xl"
+        >
+          {props.content ? props.content() : null}
+        </Motion.div>
+
+      </Show>
+    </Presence>
+  </>
+
+
 }
