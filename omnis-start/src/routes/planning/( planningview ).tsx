@@ -1,22 +1,20 @@
-import { Session } from "@supabase/supabase-js";
 
 import { Motion } from "@motionone/solid"
 
-import { animate, spring } from "motion";
-import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidBrain, FaSolidCircleInfo, FaSolidPaperPlane, FaSolidPlus, FaSolidSquareCheck } from "solid-icons/fa";
-import { createEffect, createMemo, createResource, createSignal, For, JSXElement, onMount, Show, Suspense } from "solid-js";
+import { spring } from "motion";
+import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidCircleInfo, FaSolidPlus } from "solid-icons/fa";
+import { createEffect, createMemo, createSignal, For, JSXElement, Show, Suspense, useContext } from "solid-js";
 
-import { createStore } from "solid-js/store";
 import Header from "~/components/Header";
-import EditTask from "~/components/EditTask";
-import CreateTask from "~/components/CreateTask";
 import { IoFlowerSharp } from "solid-icons/io";
-import ReflectionPopup from "./reflection";
 import { newInfoPopup, routeData } from "../planning";
 import { AiOutlineClockCircle, AiOutlineHourglass, AiOutlineUnorderedList } from "solid-icons/ai";
-import { BsStar } from "solid-icons/bs";
-import { useRouteData } from "solid-start";
+import { BsStar, BsTrash } from "solid-icons/bs";
+import { createRouteAction, useRouteData } from "solid-start";
 import { Task } from "~/model/Tasks/Task";
+import { DBContext } from "~/lib/DBState";
+import { Form } from "solid-start/data/Form";
+import { supabase } from "~/lib/supabaseClient";
 
 
 export default function PlanningView() {
@@ -296,7 +294,7 @@ function TaskDisplay(props: {task: Task}) {
       }}
 
       class="rounded-2xl grid justify-start items-center shadow-lg bg-white max-w-[200px] py-3 h-fit min-h-[50px] px-2"
-      // onclick={() => setActiveTask(props.task.task.task)}
+      onclick={props.task.popupDisplay}
     >
       <Show when={props.task.data.importance === "high" || props.task.getDueDate() !== null}>
         <div class="flex flex-row justify-start items-center gap-2 px-3 mb-1">
