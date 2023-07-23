@@ -14,6 +14,20 @@ export const newNotification = (notif: NotificationProps) => setNotifications(no
 export const  [infoPopupPages, newInfoPopup] = createSignal<InfoPopupProps["pages"] | null>(null)
 export const [popup, setPopup] = createSignal<() => JSXElement>();
 
+function createDeepSignal<T>(value: T): Signal<T> {
+  const [store, setStore] = createStore({
+    value,
+  });
+  return [
+    () => store.value,
+    (v: T) => {
+      const unwrapped = unwrap(store.value);
+      typeof v === "function" && (v = v(unwrapped));
+      setStore("value", reconcile(v, {merge: true}));
+      return store.value;
+    },
+  ] as Signal<T>;
+}
 
 export function routeData() {
 
@@ -21,7 +35,8 @@ export function routeData() {
     return await useSession()
   })
 
-  const allTasks = createRouteData(async () => {
+  const [allTasks, {mutate, refetch}] = createResource(async () => {
+
 
     //const user_id = (await useSession()).user.id
     const user_id = "8122fefc-8817-4db7-bb91-5bc7f2116f7d"
@@ -32,8 +47,13 @@ export function routeData() {
       return
     }
 
+    //wait 1 seconds
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
     return tasks
-  })
+  }, {
+      storage: createDeepSignal
+    })
 
   // const userSettings = createRouteData(async () => {
   //   const session = await session()
@@ -42,7 +62,9 @@ export function routeData() {
 
   return {
     session,
-    allTasks
+    allTasks,
+    setOptimisticTasks: mutate,
+    refetchTasks: refetch
   }
 }
 
@@ -65,7 +87,6 @@ export default function App() {
   })
 
   return (
-    <DBContextProvider>
       <div>
 
         {notifications().map(Notification)}
@@ -77,7 +98,6 @@ export default function App() {
         <Nav />
 
       </div>
-    </DBContextProvider>
   )
 
 };
@@ -85,7 +105,7 @@ export default function App() {
 
 import { Motion, Presence } from "@motionone/solid";
 import { AiOutlineCheckCircle, AiOutlineCloseCircle, AiOutlineInfoCircle } from "solid-icons/ai";
-import {JSXElement, Show } from "solid-js";
+import {createResource, JSXElement, Show, Signal } from "solid-js";
 import InfoPopup, { InfoPopupProps } from "~/components/InfoPopup";
 import { supabase } from "~/lib/supabaseClient";
 
@@ -138,9 +158,9 @@ import { BsGear } from 'solid-icons/bs'
 import { createSignal } from "solid-js"
 import { createRouteData, useLocation } from "solid-start";
 import { getAllTasks } from "~/model/getState";
-import { DBContextProvider } from "~/lib/DBState";
-import { createStore } from "solid-js/store";
+import { createStore, reconcile, unwrap } from "solid-js/store";
 import { Task } from "vitest";
+import { storify } from "~/lib/utils";
 function Nav (){
 
   const classes = (path: string) => { return `mx-auto ${location.pathname === path || location.pathname === path + "/" ? "fill-primary" : "fill-white"}` }

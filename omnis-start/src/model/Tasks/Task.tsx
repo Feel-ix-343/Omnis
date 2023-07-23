@@ -2,15 +2,15 @@ import { AiOutlineCloseCircle, AiOutlineCalendar, AiOutlineUnorderedList, AiOutl
 import { BsFlag, BsHourglass } from "solid-icons/bs"
 import { FiTarget } from "solid-icons/fi"
 import { IoDocumentTextOutline } from "solid-icons/io"
-import { createSignal, For, JSXElement } from "solid-js"
+import { createEffect, createSignal, For, JSXElement } from "solid-js"
 import { createStore } from "solid-js/store"
-import { createRouteAction } from "solid-start"
+import { createRouteAction, useRouteData } from "solid-start"
 import { z } from "zod"
 import DatePicker from "~/components/DatePicker"
 import { DropDown } from "~/components/Dropdown"
 import { UnscheduledTask } from "~/lib/autoscheduling"
 import { supabase } from "~/lib/supabaseClient"
-import { newNotification, setPopup } from "~/routes/planning"
+import { newNotification, routeData, setPopup } from "~/routes/planning"
 import { Step } from "./Step"
 
 
@@ -23,22 +23,33 @@ export class Task { // This gets passed to the basic list view at the start of p
   popupDisplay = (): void => {
 
     const popupComponent = (): JSXElement => {
+      const {allTasks, setOptimisticTasks, refetchTasks} = useRouteData<typeof routeData>()
       const [deleting, deleteTask] = createRouteAction(async () => {
-        const {data, error} = await this.delete()
-        if (error) {
-          newNotification({type: "error", text: "Error Deleting Task: " + error.message})
-          return
-        }
         setPopup()
+        setOptimisticTasks(allTasks()?.filter(t => t.data.id !== this.data.id))
+        // const {data, error} = await this.delete()
+        // if (error) {
+        //   newNotification({type: "error", text: "Error Deleting Task: " + error.message})
+        //   return
+        // } // TODO: OH NO DB IS DOWN!!
+        //wait 2 seconds
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        refetchTasks()
+        newNotification({type: "error", text: "Error Deleting Task; Undoing"})
       })
 
-      const [_, update] = createRouteAction(async () => { // This is kinda part form part signal for the input data
-        const {error} = await supabase.from("tasks").update(taskData).eq("id", this.data.id)
+      const [updating, update] = createRouteAction(async (data: typeof this.data) => { // This is kinda part form part signal for the input data
+        console.log("Updating Task Data", data)
+        setPopup()
+        setOptimisticTasks(allTasks()?.map(t => t.data.id === this.data.id ? new Task(data) : t))
+        const {error} = await supabase.from("tasks").update(data).eq("id", this.data.id)
         if (error) { 
           newNotification({type: "error", text: "Error Updating Task: " + error.message})
           return
         }
-        setPopup()
+        //wait 2 seconds
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        refetchTasks()
       })
 
       const [importance, setImportance] = createSignal<Importance>()
@@ -56,7 +67,7 @@ export class Task { // This gets passed to the basic list view at the start of p
 
             <button onclick={() => deleteTask()} class="ml-auto border-2 border-red-300 bg-red-200 rounded-lg px-3 py-1 font-bold text-xl shadow-md">Delete</button>
 
-            <button onclick={() => update()} class="bg-white rounded-lg px-3 py-1 font-bold text-xl shadow-md">Update</button>
+            <button onclick={() => update(taskData)} class="bg-white rounded-lg px-3 py-1 font-bold text-xl shadow-md">Update</button>
 
             {/* <button onclick={() => {props.close(); props.onCreate!(getTaskFromInputs())}} class="ml-auto bg-white rounded-lg px-3 py-1 font-bold text-xl shadow-md">Create</button> */}
 

@@ -1,5 +1,6 @@
 
-import { Motion } from "@motionone/solid"
+import { Motion, Presence } from "@motionone/solid"
+import {reconcile} from "solid-js/store"
 
 import { spring } from "motion";
 import { FaRegularCalendar, FaRegularFlag, FaRegularSquareCheck, FaSolidCircleInfo, FaSolidPlus } from "solid-icons/fa";
@@ -12,9 +13,9 @@ import { AiOutlineClockCircle, AiOutlineHourglass, AiOutlineUnorderedList } from
 import { BsStar, BsTrash } from "solid-icons/bs";
 import { createRouteAction, useRouteData } from "solid-start";
 import { Task } from "~/model/Tasks/Task";
-import { DBContext } from "~/lib/DBState";
 import { Form } from "solid-start/data/Form";
 import { supabase } from "~/lib/supabaseClient";
+import {Rerun, Key} from "@solid-primitives/keyed"
 
 
 export default function PlanningView() {
@@ -22,7 +23,8 @@ export default function PlanningView() {
 {/*nMount(refetchDB)*/}
   const months = ["January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December"]
 
-  const {session, allTasks: filteredTasks} = useRouteData<typeof routeData>()
+  const {session, allTasks} = useRouteData<typeof routeData>()
+  const filteredTasks = () => allTasks.latest ? allTasks.latest : allTasks()
 
 
   const [dateString, setDateString] = createSignal<string>(new Date().toDateString())
@@ -94,7 +96,6 @@ export default function PlanningView() {
         />
       </Header>
 
-      <Suspense fallback={<Loading />}>
         <div ref={setRef} class="grid grid-cols-2 gap-2 mt-5 px-3">
           <PlanningIndicators filteredTasks={filteredTasks()!} />
         </div>
@@ -110,6 +111,7 @@ export default function PlanningView() {
           </div>
 
 
+          <Suspense fallback={<Loading />}>
           {filteredTasks() ? 
             <>
 
@@ -128,15 +130,16 @@ export default function PlanningView() {
             </>
 
             : null}
+            </Suspense>
 
         </div>
 
-      </Suspense>
     </div>
   )
 }
 
 function Loading() {
+  console.log("Suspense")
   return <div class="text-center">
     Loading...
   </div>
@@ -263,9 +266,9 @@ function PriorityLabel(props: {importance: Level, urgency: Level}) {
 function Tasks(props: {tasks: Task[]}) {
   return (
     <div class="flex flex-row justify-start gap-3 mt-5 px-5 py-5 overflow-x-scroll">
-      <For each={props.tasks}>
-        {(task) => <TaskDisplay task={task} />}
-      </For>
+      <Key each={props.tasks} by={t => JSON.stringify(t.data)}>
+        {(task) => <TaskDisplay task={task()} />}
+      </Key>
     </div>
   )
 }
