@@ -117,7 +117,7 @@ export default function PlanningView() {
               <Tasks tasks={filteredTasks()!.filter(t => t.data.importance === "high" && t.getUrgency() === "high")} />
 
               <PriorityLabel importance="High" urgency="Low" />
-              <Tasks tasks={filteredTasks()!.filter(t => t.data.importance === "high" && t.getUrgency() === "low")} />
+              <Tasks tasks={filteredTasks()!.filter(t => t.data.importance === "high" && (t.getUrgency() === "low" || t.getUrgency() === null))} />
 
               <PriorityLabel importance="Low" urgency="High" />
               <Tasks tasks={filteredTasks()!.filter(t => (t.data.importance === "low" || t.data.importance === null) && (t.getUrgency() === "high") )} />
