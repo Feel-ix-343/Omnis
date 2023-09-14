@@ -9,7 +9,6 @@ export default function({children}: {children: React.ReactNode}) {
     Another count: {count}
     <button onClick={() => setCount(count + 1)}>Add</button>
     <button onClick={async () => {
-      console.log('reval')
       await revalidate()
     }}>Reval</button>
     Children: {children}

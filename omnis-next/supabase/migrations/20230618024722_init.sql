@@ -11,8 +11,7 @@ create table if not exists todos (
 alter table todos
   enable row level security;
 
-create policy "Authenticated users can select todos" on todos
-  for select to authenticated using (true);
-
-create policy "Authenticated users can insert their own todos" on todos
-  for insert to authenticated with check (auth.uid() = user_id);
+CREATE POLICY "Enable all for users based on user_id" ON "public"."todos"
+AS PERMISSIVE FOR ALL
+TO public
+USING (auth.uid() = user_id)

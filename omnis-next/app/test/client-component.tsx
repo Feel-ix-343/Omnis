@@ -1,4 +1,5 @@
 'use client'
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 export default function() {
@@ -6,6 +7,6 @@ export default function() {
 
   return <>
     Count: {count}
-    <button onClick={() => setCount(count + 1)}>Add</button>
+    <Button onClick={() => setCount(count + 1)}>Add</Button>
   </>
 }
