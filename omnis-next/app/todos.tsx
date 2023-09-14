@@ -19,8 +19,8 @@ export default async function() {
   const supabase = createServerComponentClient<Database>({cookies})
   const {data: {user}} = await supabase.auth.getUser()
 
-  // wait 3 seconds
-  await (new Promise(r => setTimeout(r, 3000)))
+  // // wait 3 seconds
+  // await (new Promise(r => setTimeout(r, 3000)))
 
   if (!user) return
 
