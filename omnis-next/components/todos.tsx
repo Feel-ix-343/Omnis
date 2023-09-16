@@ -11,6 +11,7 @@ import { useToast } from "./ui/use-toast";
 import revalidate from "@/app/revalidate";
 import useTodos, { Todo } from "@/hooks/useTodos";
 import TodosSkeleton from "./todos-skeleton";
+import { Draggable, Droppable } from "react-beautiful-dnd";
 
 export default function(props: {user: User}) {
 
@@ -52,18 +53,54 @@ export default function(props: {user: User}) {
     <div className="flex flex-col gap-4 w-4/12">
       <h3 className="h-10">Todos</h3>
       <CreateTask createTask={createTodo} />
-      {nonPrioritized?.map(t => t && 
-        <Card draggable onClick={() => mutate(async () => {
-          await supabase.from('todos').upsert({id: t.id, importance: 0, urgency: 0})
-        }, {optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: 0, urgency: 0} satisfies Todo : to) ?? [], populateCache: false})} className="hover:shadow-lg hover:scale-[102%] transition-all hover:cursor-pointer" key={t.id}>
-          <CardHeader><CardTitle className="font-sans text-sm">{t.title}</CardTitle></CardHeader>
-        </Card>
-      )}
+      <Droppable droppableId="allTodos">
+        {(provided, snapshot) => (
+          <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col gap-4">
+            {nonPrioritized?.map((t, index) => t && 
+              <Draggable key={t.id} draggableId={JSON.stringify(t)} index={index}>
+                {(provided, snapshot) => 
+                  <Card 
+                    ref={provided.innerRef} 
+                    {...provided.dragHandleProps} 
+                    {...provided.draggableProps} 
+                    draggable 
+
+                    onClick={() => mutate(
+                      async () => {
+                        await supabase.from('todos').upsert({id: t.id, importance: 0, urgency: 0})
+                      }, 
+                      {
+                        optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: 0, urgency: 0} satisfies Todo : to) ?? [], 
+                        populateCache: false
+                      }
+                    )} 
+
+                    className="hover:shadow-lg hover:scale-[102%] transition-all hover:cursor-pointer" 
+                    key={t.id}
+                  >
+                    <CardHeader><CardTitle className="font-sans text-sm">{t.title}</CardTitle></CardHeader>
+                  </Card>
+                }
+              </Draggable>
+            )}
+            {provided.placeholder}
+          </div>
+        )
+
+        }
+      </Droppable>
       {prioritized?.map(t => t && 
-        <Card draggable onClick={() => mutate(async () => {
-          await supabase.from('todos').upsert({id: t.id, importance: 0, urgency: 0})
-        }, {optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: 0, urgency: 0} satisfies Todo : to) ?? [], populateCache: false})} className="hover:shadow-lg hover:scale-[102%] transition-all hover:cursor-pointer bg-secondary" key={t.id}>
-          <CardHeader><CardTitle className="font-sans text-sm">{t.title}</CardTitle></CardHeader>
+        <Card 
+          draggable 
+          onClick={() => mutate(async () => {
+            await supabase.from('todos').upsert({id: t.id, importance: null, urgency: null})
+          }, {
+              optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: null, urgency: null} satisfies Todo : to) ?? [], populateCache: false
+            })}
+          className="hover:shadow-lg hover:scale-[102%] transition-all hover:cursor-pointer bg-secondary" key={t.id}>
+          <CardHeader>
+            <CardTitle className="font-sans text-sm">{t.title}</CardTitle>
+          </CardHeader>
         </Card>
       )}
     </div>
