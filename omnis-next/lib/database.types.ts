@@ -38,22 +38,28 @@ export interface Database {
         Row: {
           created_at: string
           id: string
+          importance: number | null
           is_complete: boolean | null
           title: string | null
+          urgency: number | null
           user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          importance?: number | null
           is_complete?: boolean | null
           title?: string | null
+          urgency?: number | null
           user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          importance?: number | null
           is_complete?: boolean | null
           title?: string | null
+          urgency?: number | null
           user_id?: string | null
         }
         Relationships: [

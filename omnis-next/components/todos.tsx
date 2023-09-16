@@ -7,53 +7,62 @@ import { Button } from "@/components/ui/button";
 import { User, createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/lib/database.types";
 import { useRouter } from "next/navigation";
-import { Todo } from "@/app/todos";
 import { useToast } from "./ui/use-toast";
 import revalidate from "@/app/revalidate";
+import useTodos, { Todo } from "@/hooks/useTodos";
+import TodosSkeleton from "./todos-skeleton";
 
-export default function(props: {todos: Todo[] | null, user: User}) {
+export default function(props: {user: User}) {
 
-  const [optimisticMessages, changeOptimistic] = useOptimistic<Todo[] | null, {todo: Todo, delete?: boolean}>(
-    props.todos,
-    (todos: Todo[] | null, action) => !action.delete ? [...todos ?? [], action.todo] : todos?.filter(t => t!.id !== action.todo!.id) ?? []
-  )
+  const {data: todos, isLoading, mutate} = useTodos()
+  console.log("todos", todos)
+
+  const nonPrioritized = todos?.filter(t => t.importance === null && t.urgency === null)
+  const prioritized = todos?.filter(t => t.importance !== null || t.urgency !== null)
+  console.log(todos)
 
   const supabase = createClientComponentClient<Database>()
 
   const createTodo = async (title: string) => {
     const todo: Todo = {title, is_complete: false, user_id: props.user.id, created_at: (new Date()).toUTCString(), id: crypto.randomUUID()}
-    changeOptimistic({todo})
-
-    await supabase.from("todos").insert(todo)
-    router.refresh()
+    mutate(async () => await supabase.from("todos").insert(todo), {optimisticData: [...todos ?? [], todo], populateCache: false, revalidate: true})
   }
 
-  const router = useRouter()
   const {toast} = useToast()
   
   const deleteTodo = async (todo: NonNullable<Todo>) => {
-    changeOptimistic({todo, delete: true})
+    const deleteDB = async () => {
+      const {error} = await supabase.from('todos').delete().eq("id", todo.id)
+      if (error) console.log(error)
 
-    const {error} = await supabase.from('todos').delete().eq("id", todo.id)
-    if (error) console.log(error)
+      if (error) {
+        toast({
+          title: "Database Error",
+          description: `Error deleting ${todo.title}: ${error.message}`,
+          variant: 'destructive'
+        })
+      } 
+    }
 
-    if (error) {
-      toast({
-        title: "Database Error",
-        description: `Error deleting ${todo.title}: ${error.message}`,
-        variant: 'destructive'
-      })
-    } 
-
-    router.refresh()
+    mutate(deleteDB, {optimisticData: c => c ? c.filter(t => t.id !== todo.id) : null, populateCache: false})
   }
 
+  if (isLoading && (todos === null || todos === undefined)) return <TodosSkeleton />
   return <>
     <div className="flex flex-col gap-4 w-4/12">
       <h3 className="h-10">Todos</h3>
       <CreateTask createTask={createTodo} />
-      {optimisticMessages?.map(t => t && 
-        <Card draggable onClick={() => deleteTodo(t)} className="hover:shadow-lg hover:scale-[102%] transition-all hover:cursor-pointer" key={t.id}>
+      {nonPrioritized?.map(t => t && 
+        <Card draggable onClick={() => mutate(async () => {
+          await supabase.from('todos').upsert({id: t.id, importance: 0, urgency: 0})
+        }, {optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: 0, urgency: 0} satisfies Todo : to) ?? [], populateCache: false})} className="hover:shadow-lg hover:scale-[102%] transition-all hover:cursor-pointer" key={t.id}>
+          <CardHeader><CardTitle className="font-sans text-sm">{t.title}</CardTitle></CardHeader>
+        </Card>
+      )}
+      {prioritized?.map(t => t && 
+        <Card draggable onClick={() => mutate(async () => {
+          await supabase.from('todos').upsert({id: t.id, importance: 0, urgency: 0})
+        }, {optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: 0, urgency: 0} satisfies Todo : to) ?? [], populateCache: false})} className="hover:shadow-lg hover:scale-[102%] transition-all hover:cursor-pointer bg-secondary" key={t.id}>
           <CardHeader><CardTitle className="font-sans text-sm">{t.title}</CardTitle></CardHeader>
         </Card>
       )}
