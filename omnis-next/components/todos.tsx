@@ -24,7 +24,7 @@ export default function(props: {user: User}) {
   const supabase = createClientComponentClient<Database>()
 
   const createTodo = async (title: string) => {
-    const todo: Todo = {title, is_complete: false, user_id: props.user.id, created_at: (new Date()).toUTCString(), id: crypto.randomUUID()}
+    const todo: Todo = {title, is_complete: false, user_id: props.user.id, created_at: (new Date()).toUTCString(), id: crypto.randomUUID(), urgency: null, importance: null}
     mutate(async () => await supabase.from("todos").insert(todo), {optimisticData: [...todos ?? [], todo], populateCache: false, revalidate: true})
   }
 

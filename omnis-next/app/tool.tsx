@@ -4,16 +4,16 @@ import { Card } from "@/components/ui/card"
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import useTodos from "@/hooks/useTodos"
-import { Reorder } from "framer-motion"
 import { PlusCircle } from "lucide-react"
 import { useMemo, useState } from "react"
-import {DragDropContext} from 'react-beautiful-dnd'
 
 export default function Tool() {
   const [executing, setExecuting] = useState(false)
 
   const {data: todos} = useTodos()
+
   console.log("tool", todos)
+
   const doNow = useMemo(() => todos?.filter(t => t.importance == 0 && t.urgency == 0), [todos])
 
 
