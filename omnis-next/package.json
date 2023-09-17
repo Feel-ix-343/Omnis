@@ -43,6 +43,7 @@
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
     "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.4",
     "lucide-react": "^0.276.0",
     "next": "latest",
     "postcss": "8.4.24",

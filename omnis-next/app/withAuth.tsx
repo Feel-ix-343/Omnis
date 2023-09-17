@@ -18,7 +18,7 @@ export default async function(props: {children: ReactNode}) {
 
   return <>
     <WithSWR fallback={{"todos": todos}}>
-      <div className="w-screen bg-primary-foreground h-[8vh] flex flex-row gap-1 px-7 items-center">
+      <div className="w-screen bg-primary-foreground h-[8vh] flex flex-row gap-1 px-7 items-center z-50">
         <h1 className="text-4xl">Omnis Planning</h1>
 
         <p className="ml-auto mr-2">Hello, {(user.user_metadata.full_name as string).split(" ")[0]}</p>
