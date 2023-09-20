@@ -39,7 +39,9 @@ export interface Database {
           created_at: string
           id: string
           importance: number | null
+          index: number
           is_complete: boolean | null
+          scheduled_date: string | null
           title: string | null
           urgency: number | null
           user_id: string | null
@@ -48,7 +50,9 @@ export interface Database {
           created_at?: string
           id?: string
           importance?: number | null
+          index?: number
           is_complete?: boolean | null
+          scheduled_date?: string | null
           title?: string | null
           urgency?: number | null
           user_id?: string | null
@@ -57,7 +61,9 @@ export interface Database {
           created_at?: string
           id?: string
           importance?: number | null
+          index?: number
           is_complete?: boolean | null
+          scheduled_date?: string | null
           title?: string | null
           urgency?: number | null
           user_id?: string | null
@@ -76,7 +82,26 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      decrement: {
+        Args: {
+          starting_index: number
+          move_index: number
+        }
+        Returns: undefined
+      }
+      increment: {
+        Args: {
+          starting_index: number
+          move_index: number
+        }
+        Returns: undefined
+      }
+      max_index: {
+        Args: {
+          scheduled_date: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

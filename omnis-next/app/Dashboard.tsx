@@ -14,7 +14,7 @@ export default function (props: {user: User}) {
 
   resetServerContext()
   const supabase = createClientComponentClient<Database>()
-  const {mutate} = useTodos()
+  const {data, mutate} = useTodos()
   const onDragEnd = useCallback((r => {
     let importance : number | null = 0
     let urgency : number | null = 0
@@ -42,9 +42,16 @@ export default function (props: {user: User}) {
 
     const taskId = r.source.droppableId ===  "allTodos" ? JSON.parse(r.draggableId).id : r.draggableId
 
+    console.log(r)
+
     mutate(
       async () => {
-        await supabase.from('todos').upsert({id: taskId, importance, urgency})
+        if (r.destination!.index < r.source.index) {
+          await supabase.rpc('increment', {starting_index: r.destination!.index, move_index: r.source.index})
+        } else {
+          await supabase.rpc('decrement', {starting_index: r.destination!.index, move_index: r.source.index})
+        }
+        await supabase.from('todos').update({index: r.destination!.index}).eq('id', taskId)
       }, 
       {
         optimisticData: c => c?.map(to => to.id === taskId ? {...to, importance, urgency} satisfies Todo : to) ?? [], 

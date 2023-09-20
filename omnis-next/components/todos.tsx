@@ -17,9 +17,8 @@ export default function(props: {user: User}) {
 
   const {data: todos, isLoading, mutate} = useTodos()
 
-  const nonPrioritized = todos?.filter(t => t.importance === null && t.urgency === null)
+  const nonPrioritized = todos?.filter(t => t.importance === null && t.urgency === null).slice().sort((a, b) => a.index - b.index)
   const prioritized = todos?.filter(t => t.importance !== null || t.urgency !== null)
-  console.log(todos)
 
 
 
@@ -29,19 +28,6 @@ export default function(props: {user: User}) {
   if (isLoading && (todos === null || todos === undefined)) return <TodosSkeleton />
   return <div className="grid grid-flow-col gap-5 overflow-x-scroll">
     <TaskColumn title="Today" nonPrioritized={nonPrioritized ?? []} prioritized={prioritized ?? []} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
-    <TaskColumn title="Sep 17" nonPrioritized={[]} prioritized={[]} user={props.user} />
   </div>
 }
 
@@ -49,15 +35,24 @@ function TaskColumn(props: {title: string, nonPrioritized: Todo[], prioritized: 
   const {nonPrioritized, prioritized} = props
   const {data: todos, isLoading, mutate} = useTodos()
   const supabase = createClientComponentClient<Database>()
+
   const createTodo = async (title: string) => {
-    const todo: Todo = {title, is_complete: false, user_id: props.user.id, created_at: (new Date()).toUTCString(), id: crypto.randomUUID(), urgency: null, importance: null}
-    mutate(async () => await supabase.from("todos").insert(todo), {optimisticData: [...todos ?? [], todo], populateCache: false, revalidate: true})
+        const id = crypto.randomUUID()
+    mutate(
+
+      async () => {
+        const {data: maxIndex} = await supabase.rpc("max_index", {scheduled_date: (new Date()).toDateString()})
+        const {data} = await supabase.from("todos").insert({id, title, index: (maxIndex !== null) ? maxIndex + 1 : 0}).select().single()
+      }, {
+        optimisticData: [{id, title: title, is_complete: false, index: 2000, urgency: null, importance: null, scheduled_date: (new Date()).toDateString()}, ...nonPrioritized, ...prioritized],
+        revalidate: true,
+        populateCache: false,
+      })
   }
 
   const deleteTodo = async (todo: NonNullable<Todo>) => {
     const deleteDB = async () => {
       const {error} = await supabase.from('todos').delete().eq("id", todo.id)
-      if (error) console.log(error)
 
       if (error) {
         toast({
@@ -79,7 +74,7 @@ function TaskColumn(props: {title: string, nonPrioritized: Todo[], prioritized: 
         {(provided, snapshot) => (
           <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col gap-4">
             {nonPrioritized?.map((t, index) => t && 
-              <Draggable key={t.id} draggableId={JSON.stringify(t)} index={index}>
+              <Draggable key={JSON.stringify(t)} draggableId={JSON.stringify(t)} index={index}>
                 {(provided, snapshot) => 
                   <Card 
                     ref={provided.innerRef} 

@@ -14,7 +14,6 @@ export default function Tool() {
 
   const {data: todos} = useTodos()
 
-  console.log("tool", todos)
 
   const doNow = useMemo(() => todos?.filter(t => t.importance == 0 && t.urgency == 0), [todos])
   const schedule = useMemo(() => todos?.filter(t => t.importance == 0 && t.urgency == 1), [todos])
