@@ -85,20 +85,38 @@ export interface Database {
       decrement: {
         Args: {
           starting_index: number
+          list_date: string
           move_index: number
+        }
+        Returns: undefined
+      }
+      decrement_below: {
+        Args: {
+          inclusive: boolean
+          starting: number
+          list_date: string
         }
         Returns: undefined
       }
       increment: {
         Args: {
           starting_index: number
+          list_date: string
           move_index: number
+        }
+        Returns: undefined
+      }
+      increment_below: {
+        Args: {
+          inclusive: boolean
+          starting: number
+          list_date: string
         }
         Returns: undefined
       }
       max_index: {
         Args: {
-          scheduled_date: string
+          the_date: string
         }
         Returns: number
       }

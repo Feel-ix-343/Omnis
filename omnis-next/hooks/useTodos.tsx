@@ -14,7 +14,7 @@ const fetchTasks = async () => {
 }
 
 type Unpacked<T> = T extends (infer U)[] ? U : T;
-export type Todo = NonNullable<Unpacked<Awaited<ReturnType<typeof fetchTasks>>>>
+export type Todo = Database["public"]["Tables"]["todos"]["Row"]
 
 export default function useTodos () {
   return useSWR("todos", fetchTasks)

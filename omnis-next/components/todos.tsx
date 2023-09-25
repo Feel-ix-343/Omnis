@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { experimental_useOptimistic as useOptimistic, useState } from "react";
+import { useEffect, experimental_useOptimistic as useOptimistic, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User, createClientComponentClient } from "@supabase/auth-helpers-nextjs";
@@ -12,12 +12,14 @@ import revalidate from "@/app/revalidate";
 import useTodos, { Todo } from "@/hooks/useTodos";
 import TodosSkeleton from "./todos-skeleton";
 import { Draggable, Droppable } from "react-beautiful-dnd";
+import dayjs from "dayjs";
 
 export default function(props: {user: User}) {
 
   const {data: todos, isLoading, mutate} = useTodos()
+  useEffect(() => console.log("Cached todos", todos), [todos])
 
-  const nonPrioritized = todos?.filter(t => t.importance === null && t.urgency === null).slice().sort((a, b) => a.index - b.index)
+  const nonPrioritized = todos?.filter(t => t.importance === null && t.urgency === null)
   const prioritized = todos?.filter(t => t.importance !== null || t.urgency !== null)
 
 
@@ -27,12 +29,17 @@ export default function(props: {user: User}) {
 
   if (isLoading && (todos === null || todos === undefined)) return <TodosSkeleton />
   return <div className="grid grid-flow-col gap-5 overflow-x-scroll">
-    <TaskColumn title="Today" nonPrioritized={nonPrioritized ?? []} prioritized={prioritized ?? []} user={props.user} />
+    <TaskColumn date={dayjs().format("YYYY-MM-DD")} nonPrioritized={nonPrioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs(), 'day')) ?? []} prioritized={prioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs(), 'day')) ?? []} user={props.user} />
+    <TaskColumn date={dayjs().add(1, 'day').format("YYYY-MM-DD")} nonPrioritized={nonPrioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(1, 'day'), 'day')) ?? []} prioritized={prioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(1, 'day'), 'day')) ?? []} user={props.user} />
+    <TaskColumn date={dayjs().add(2, 'day').format("YYYY-MM-DD")} nonPrioritized={nonPrioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(2, 'day'), 'day')) ?? []} prioritized={prioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(1, 'day'), 'day')) ?? []} user={props.user} />
+    <TaskColumn date={dayjs().add(3, 'day').format("YYYY-MM-DD")} nonPrioritized={nonPrioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(3, 'day'), 'day')) ?? []} prioritized={prioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(1, 'day'), 'day')) ?? []} user={props.user} />
   </div>
 }
 
-function TaskColumn(props: {title: string, nonPrioritized: Todo[], prioritized: Todo[], user: User}) {
-  const {nonPrioritized, prioritized} = props
+function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: Todo[], user: User}) {
+  let {nonPrioritized, prioritized} = props
+  prioritized = prioritized.slice().sort((a, b) => a.index - b.index)
+  nonPrioritized = nonPrioritized.slice().sort((a, b) => a.index - b.index)
   const {data: todos, isLoading, mutate} = useTodos()
   const supabase = createClientComponentClient<Database>()
 
@@ -41,10 +48,10 @@ function TaskColumn(props: {title: string, nonPrioritized: Todo[], prioritized: 
     mutate(
 
       async () => {
-        const {data: maxIndex} = await supabase.rpc("max_index", {scheduled_date: (new Date()).toDateString()})
-        const {data} = await supabase.from("todos").insert({id, title, index: (maxIndex !== null) ? maxIndex + 1 : 0}).select().single()
+        const {data: maxIndex} = await supabase.rpc("max_index", {the_date: props.date})
+        const {data} = await supabase.from("todos").insert({id, title, index: (maxIndex !== null) ? maxIndex + 1 : 0, scheduled_date: props.date}).select().single()
       }, {
-        optimisticData: [{id, title: title, is_complete: false, index: 2000, urgency: null, importance: null, scheduled_date: (new Date()).toDateString()}, ...nonPrioritized, ...prioritized],
+        optimisticData: d => [...d ?? [], {id, title: title, is_complete: false, index: 2000, urgency: null, importance: null, scheduled_date: props.date}],
         revalidate: true,
         populateCache: false,
       })
@@ -68,13 +75,13 @@ function TaskColumn(props: {title: string, nonPrioritized: Todo[], prioritized: 
 
   return <>
     <div className="flex flex-col gap-4 w-[350px]">
-      <h3 className="h-10">Today</h3>
+      <h3 className="h-10">{props.date}</h3>
       <CreateTask createTask={createTodo} />
-      <Droppable droppableId="allTodos">
+      <Droppable droppableId={props.date}>
         {(provided, snapshot) => (
-          <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col gap-4">
+          <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col">
             {nonPrioritized?.map((t, index) => t && 
-              <Draggable key={JSON.stringify(t)} draggableId={JSON.stringify(t)} index={index}>
+              <Draggable key={t.id} draggableId={JSON.stringify(t)} index={index}>
                 {(provided, snapshot) => 
                   <Card 
                     ref={provided.innerRef} 
@@ -92,7 +99,7 @@ function TaskColumn(props: {title: string, nonPrioritized: Todo[], prioritized: 
                       }
                     )} 
 
-                    className="hover:shadow-lg hover:scale-[102%] transition-all hover:cursor-pointer" 
+                    className="hover:shadow-lg hover:scale-[102%] hover:cursor-pointer mb-3" 
                     key={t.id}
                   >
                     <CardHeader><CardTitle className="font-sans text-sm">{t.title}</CardTitle></CardHeader>

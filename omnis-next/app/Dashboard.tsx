@@ -9,6 +9,7 @@ import useTodos, { Todo } from "@/hooks/useTodos";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { Database } from "@/lib/database.types";
 import { toast } from "@/components/ui/use-toast";
+import dayjs from "dayjs";
 
 export default function (props: {user: User}) {
 
@@ -16,8 +17,16 @@ export default function (props: {user: User}) {
   const supabase = createClientComponentClient<Database>()
   const {data, mutate} = useTodos()
   const onDragEnd = useCallback((r => {
-    let importance : number | null = 0
-    let urgency : number | null = 0
+
+    if ((!r.destination?.index ?? null) && r.destination!.index !== 0) {
+      toast({
+        title: "Drop into a list"
+      })
+      return
+    }
+
+    let importance : number | null = null
+    let urgency : number | null = null
     if (r.destination?.droppableId === "doNow") {} // good
 
     if (r.destination?.droppableId === "schedule") {
@@ -40,21 +49,43 @@ export default function (props: {user: User}) {
       urgency = null
     }
 
-    const taskId = r.source.droppableId ===  "allTodos" ? JSON.parse(r.draggableId).id : r.draggableId
+    const taskId = dayjs(r.source.droppableId).isValid() ? JSON.parse(r.draggableId).id : r.draggableId
 
     console.log(r)
+    console.log(taskId)
 
     mutate(
       async () => {
-        if (r.destination!.index < r.source.index) {
-          await supabase.rpc('increment', {starting_index: r.destination!.index, move_index: r.source.index})
+
+        if (r.destination!.droppableId !== r.source.droppableId) {
+          await supabase.rpc('decrement_below', {starting: r.source.index, list_date: r.source!.droppableId, inclusive: false})
+          await supabase.rpc('increment_below', {starting: r.destination!.index, list_date: r.destination!.droppableId, inclusive: true})
+        } else if (r.destination!.index < r.source.index) {
+          await supabase.rpc('increment', {starting_index: r.destination!.index, move_index: r.source.index, list_date: r.destination!.droppableId})
         } else {
-          await supabase.rpc('decrement', {starting_index: r.destination!.index, move_index: r.source.index})
+          await supabase.rpc('decrement', {starting_index: r.destination!.index, move_index: r.source.index, list_date: r.destination!.droppableId})
         }
-        await supabase.from('todos').update({index: r.destination!.index}).eq('id', taskId)
+        await supabase.from('todos').update({index: r.destination!.index, scheduled_date: r.destination!.droppableId}).eq('id', taskId)
       }, 
       {
-        optimisticData: c => c?.map(to => to.id === taskId ? {...to, importance, urgency} satisfies Todo : to) ?? [], 
+        optimisticData: c => {
+          if (!c) return []
+          return c.map(t => {
+            if (r.destination!.droppableId !== r.source.droppableId) {
+              if (t.index > r.source.index && t.scheduled_date === r.source.droppableId) return {...t, index: t.index - 1} // decrement todo: make this better
+              else if (t.index >= r.destination!.index && t.scheduled_date === r.destination!.droppableId) return {...t, index: t.index + 1} // increment
+            } else if (t.scheduled_date !== r.destination!.droppableId) return t
+            else if (r.destination!.index < r.source.index && t.index >= r.destination!.index && t.index < r.source.index) {
+              return {...t, index: t.index + 1}
+            } else if (t.index <= r.destination!.index && t.index > r.source.index) {
+              return {...t, index: t.index - 1}
+            } 
+
+            if (t.id === taskId) {
+              return {...t, index: r.destination!.index, scheduled_date: r.destination!.droppableId}
+            } else return t
+          })
+        }, 
         populateCache: false
       }
     )
