@@ -7,6 +7,8 @@ import LogoutButton from "@/components/LogoutButton"
 import { Database } from "@/lib/database.types"
 import { SWRConfig } from "swr"
 import WithSWR from "./withSWR"
+import { fetchTasks } from "@/hooks/useTodos"
+import { fetchConfig } from "@/hooks/useConfig"
 
 export default async function(props: {children: ReactNode}) {
   const supabase = createServerComponentClient<Database>({cookies: cookies})
@@ -14,10 +16,11 @@ export default async function(props: {children: ReactNode}) {
 
   if (!user) return <Login />
 
-  const {data: todos} = await supabase.from('todos').select().eq('user_id', user.id)
+  const {data: todos} = await supabase.from('todos').select()
+  const {data: config} = await supabase.from('config').select().single() // Align these with the fetcher somehow
 
   return <>
-    <WithSWR fallback={{"todos": todos}}>
+    <WithSWR fallback={{"todos": todos, "config": config}}>
       <div className="w-screen bg-primary-foreground h-[8vh] flex flex-row gap-1 px-7 items-center z-50">
         <h1 className="text-4xl">Omnis Planning</h1>
 

@@ -3,13 +3,16 @@
 import { Card } from "@/components/ui/card"
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useConfig } from "@/hooks/useConfig"
 import useTodos, { Todo } from "@/hooks/useTodos"
+import { Database } from "@/lib/database.types"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { motion } from "framer-motion"
 import { FoldHorizontal, PlusCircle, UnfoldHorizontal } from "lucide-react"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { DragDropContext, Draggable, Droppable, OnDragEndResponder } from "react-beautiful-dnd"
 
-export default function Tool() {
+export default function Tool(props: {uid: string}) {
   const [executing, setExecuting] = useState(false)
 
   const {data: todos} = useTodos()
@@ -23,7 +26,18 @@ export default function Tool() {
 
   const [items, setItems] = useState([0, 1, 2, 3])
 
-  const [expanded, setExpanded] = useState(true)
+  const {data, mutate} = useConfig()
+  const expanded = data!.tool_is_expanded
+
+  const supabase = createClientComponentClient<Database>()
+
+  function toggleExpanded() {
+    mutate(async () => {
+      await supabase.from('config').update({tool_is_expanded: !expanded}).eq('user_id', props.uid)
+    }, {
+        optimisticData: {user_id: props.uid, tool_is_expanded: !expanded},
+      })
+  }
 
 
   return(
@@ -31,8 +45,8 @@ export default function Tool() {
 
       <motion.div layout className="flex flex-row gap-4 items-center">
         {expanded ? 
-          <FoldHorizontal onClick={() => setExpanded(false)} /> :
-          <UnfoldHorizontal onClick={() => setExpanded(true)} />
+          <FoldHorizontal className='hover:cursor-pointer' onClick={toggleExpanded} /> :
+          <UnfoldHorizontal  className='hover:cursor-pointer' onClick={toggleExpanded} />
         }
         <Tabs defaultValue={"planning"} className="flex flex-row items-center gap-3 mt-2">
           <TabsList>

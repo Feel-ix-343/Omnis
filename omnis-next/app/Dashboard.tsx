@@ -96,7 +96,7 @@ export default function (props: {user: User}) {
 
     <DragDropContext onDragEnd={onDragEnd}>
       <Todos user={props.user!} />
-      <Tool />
+      <Tool uid={props.user.id} />
     </DragDropContext>
 
 

@@ -34,6 +34,28 @@ export interface Database {
   }
   public: {
     Tables: {
+      config: {
+        Row: {
+          tool_is_expanded: boolean
+          user_id: string | null
+        }
+        Insert: {
+          tool_is_expanded?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          tool_is_expanded?: boolean
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "config_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       todos: {
         Row: {
           created_at: string
