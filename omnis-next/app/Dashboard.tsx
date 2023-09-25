@@ -18,7 +18,7 @@ export default function (props: {user: User}) {
   const {data, mutate} = useTodos()
   const onDragEnd = useCallback((r => {
 
-    if ((!r.destination?.index ?? null) && r.destination!.index !== 0) {
+    if (!r.destination?.index && r.destination?.index !== 0) {
       toast({
         title: "Drop into a list"
       })
