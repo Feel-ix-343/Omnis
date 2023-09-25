@@ -13,7 +13,7 @@ import useTodos, { Todo } from "@/hooks/useTodos";
 import TodosSkeleton from "./todos-skeleton";
 import { Draggable, Droppable } from "react-beautiful-dnd";
 import dayjs from "dayjs";
-import { BoxSelect, CheckCheck, CheckIcon, CheckSquare, LucideTrash, Trash, Trash2, Trash2Icon, TrashIcon } from "lucide-react";
+import { ArrowDownToLine, BoxSelect, CheckCheck, CheckIcon, CheckSquare, LucideTrash, Pencil, Save, Trash, Trash2, Trash2Icon, TrashIcon } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Checkbox } from "./ui/checkbox";
 
@@ -31,7 +31,7 @@ export default function(props: {user: User}) {
   
 
   if (isLoading && (todos === null || todos === undefined)) return <TodosSkeleton />
-  return <div className="grid grid-flow-col gap-5 overflow-x-scroll">
+  return <div className="grid grid-flow-col gap-5 overflow-x-scroll overflow-y-clip">
     <TaskColumn date={dayjs().format("YYYY-MM-DD")} nonPrioritized={nonPrioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs(), 'day')) ?? []} prioritized={prioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs(), 'day')) ?? []} user={props.user} />
     <TaskColumn date={dayjs().add(1, 'day').format("YYYY-MM-DD")} nonPrioritized={nonPrioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(1, 'day'), 'day')) ?? []} prioritized={prioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(1, 'day'), 'day')) ?? []} user={props.user} />
     <TaskColumn date={dayjs().add(2, 'day').format("YYYY-MM-DD")} nonPrioritized={nonPrioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(2, 'day'), 'day')) ?? []} prioritized={prioritized?.filter(t => dayjs(t.scheduled_date).isSame(dayjs().add(1, 'day'), 'day')) ?? []} user={props.user} />
@@ -99,8 +99,17 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
           <ScrollArea {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col h-[67vh]">
             {nonPrioritized?.map((t, index) => t && 
               <Draggable key={t.id} draggableId={JSON.stringify(t)} index={index}>
-                {(provided, snapshot) => 
-                  <Card 
+                {(provided, snapshot) => {
+                  const [editing, setEditing] = useState(false)
+                  const [title, setTitle] = useState(t.title)
+                  const updateTitle = () => {
+                    mutate(async () => {
+                      await supabase.from('todos').update({title: title}).eq('id', t.id)
+                    }, {
+                        optimisticData: c => c?.map(i => i.id === t.id ? {...t, title} : i) ?? [],
+                      })
+                  }
+                  return <Card 
                     ref={provided.innerRef} 
                     {...provided.dragHandleProps} 
                     {...provided.draggableProps} 
@@ -116,13 +125,23 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
                     //   }
                     // )} 
 
-                    className="hover:shadow-lg hover:cursor-pointer mb-3 flex flex-row items-center px-3" 
+                    className="hover:shadow-lg hover:cursor-pointer mb-3 flex flex-row items-center px-3 group" 
                     key={t.id}
                   >
                     {!t.is_complete ? <BoxSelect onClick={() => toggleComplete(t)} /> : <CheckSquare onClick={() => toggleComplete(t)} />}
-                    <CardHeader><CardTitle className="font-sans text-sm">{t.title}</CardTitle></CardHeader>
-                    <Trash2 onClick={() => deleteTodo(t)} className="ml-auto" />
+                    {!editing ? 
+                      <Pencil className="ml-2 hidden group-hover:block" size={14} onClick={() => setEditing(true)} /> :
+                      <ArrowDownToLine className="ml-2 hidden group-hover:block" size={14} onClick={() => {updateTitle(); setEditing(false)}} />
+                    }
+                    <CardHeader><CardTitle className="font-sans text-sm -ml-4">
+                      {!editing ?
+                        title : 
+                        <Input className='h-11 -my-3' value={title ?? undefined} onChange={e => setTitle(e.target.value)} autoFocus />
+                      }
+                    </CardTitle></CardHeader>
+                    <Trash2 onClick={() => deleteTodo(t)} className="ml-auto hidden group-hover:block" />
                   </Card>
+                }
                 }
               </Draggable>
             )}
@@ -153,6 +172,7 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
 function CreateTask(props: {createTask: (t: string) => void}) {
   const [creating, setCreating] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState<string | null>(null)
+  const [ref, setRef] = useState<HTMLInputElement | null>(null)
   return <>
     {!creating ? 
       <Card draggable className="bg-secondary transition-shadow hover:cursor-pointer" onClick={() => setCreating(true)} key="new">
@@ -160,10 +180,11 @@ function CreateTask(props: {createTask: (t: string) => void}) {
       </Card>
       :
       <Card draggable className="bg-secondary transition-shadow hover:cursor-pointer shadow-lg" key="new">
-        <CardHeader><CardTitle className="font-sans text-sm"><Input autoFocus placeholder="Todo Name" value={newTaskTitle ?? undefined} onChange={e => setNewTaskTitle(e.target.value)} className="bg-secondary focus:bg-white" /></CardTitle></CardHeader>
+        <CardHeader><CardTitle className="font-sans text-sm"><Input autoFocus ref={setRef} placeholder="Todo Name" value={newTaskTitle ?? undefined} onChange={e => setNewTaskTitle(e.target.value)} className="bg-secondary focus:bg-white" /></CardTitle></CardHeader>
 
         <CardFooter>
-          <Button variant="outline" className="ml-auto" onClick={() =>{setNewTaskTitle(""); setCreating(false); newTaskTitle && props.createTask(newTaskTitle)}}>Save</Button>
+          <Button variant="outline" className="ml-auto mr-2" onClick={() =>{setNewTaskTitle(""); setCreating(false)}}>Close</Button>
+          <Button variant="outline" className="" onClick={() =>{setNewTaskTitle(""); newTaskTitle && props.createTask(newTaskTitle); ref?.focus }}>Save</Button>
         </CardFooter>
       </Card>
     }
