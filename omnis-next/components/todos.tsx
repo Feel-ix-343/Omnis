@@ -13,6 +13,9 @@ import useTodos, { Todo } from "@/hooks/useTodos";
 import TodosSkeleton from "./todos-skeleton";
 import { Draggable, Droppable } from "react-beautiful-dnd";
 import dayjs from "dayjs";
+import { BoxSelect, CheckCheck, CheckIcon, CheckSquare, LucideTrash, Trash, Trash2, Trash2Icon, TrashIcon } from "lucide-react";
+import { ScrollArea } from "./ui/scroll-area";
+import { Checkbox } from "./ui/checkbox";
 
 export default function(props: {user: User}) {
 
@@ -60,6 +63,7 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
   const deleteTodo = async (todo: NonNullable<Todo>) => {
     const deleteDB = async () => {
       const {error} = await supabase.from('todos').delete().eq("id", todo.id)
+      await supabase.rpc('decrement_below', {starting: todo.index, inclusive: false, list_date: todo.scheduled_date!})
 
       if (error) {
         toast({
@@ -73,13 +77,26 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
     mutate(deleteDB, {optimisticData: c => c ? c.filter(t => t.id !== todo.id) : null, populateCache: false})
   }
 
+  const toggleComplete = async (todo: NonNullable<Todo>) => {
+    mutate(async () => {
+      const {error} = await supabase.from('todos').update({is_complete: !todo.is_complete}).eq('id', todo.id)
+      error && toast({
+        title: "Database Error",
+        description: `Error toggling complete for ${todo.title}: ${error?.message}`,
+        variant: 'destructive'
+      })
+    }, {
+        optimisticData: c => c?.map(to => to.id === todo.id ? {...to, is_complete: !to.is_complete} : to) ?? [], 
+      populateCache: false})
+  }
+
   return <>
     <div className="flex flex-col gap-4 w-[350px]">
       <h3 className="h-10">{props.date}</h3>
       <CreateTask createTask={createTodo} />
       <Droppable droppableId={props.date}>
         {(provided, snapshot) => (
-          <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col">
+          <ScrollArea {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col h-[67vh]">
             {nonPrioritized?.map((t, index) => t && 
               <Draggable key={t.id} draggableId={JSON.stringify(t)} index={index}>
                 {(provided, snapshot) => 
@@ -89,26 +106,28 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
                     {...provided.draggableProps} 
                     draggable 
 
-                    onClick={() => mutate(
-                      async () => {
-                        await supabase.from('todos').upsert({id: t.id, importance: 0, urgency: 0})
-                      }, 
-                      {
-                        optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: 0, urgency: 0} satisfies Todo : to) ?? [], 
-                        populateCache: false
-                      }
-                    )} 
+                    // onClick={() => mutate(
+                    //   async () => {
+                    //     await supabase.from('todos').upsert({id: t.id, importance: 0, urgency: 0})
+                    //   }, 
+                    //   {
+                    //     optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: 0, urgency: 0} satisfies Todo : to) ?? [], 
+                    //     populateCache: false
+                    //   }
+                    // )} 
 
-                    className="hover:shadow-lg hover:scale-[102%] hover:cursor-pointer mb-3" 
+                    className="hover:shadow-lg hover:cursor-pointer mb-3 flex flex-row items-center px-3" 
                     key={t.id}
                   >
+                    {!t.is_complete ? <BoxSelect onClick={() => toggleComplete(t)} /> : <CheckSquare onClick={() => toggleComplete(t)} />}
                     <CardHeader><CardTitle className="font-sans text-sm">{t.title}</CardTitle></CardHeader>
+                    <Trash2 onClick={() => deleteTodo(t)} className="ml-auto" />
                   </Card>
                 }
               </Draggable>
             )}
             {provided.placeholder}
-          </div>
+          </ScrollArea>
         )
 
         }
