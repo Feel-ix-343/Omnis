@@ -11,11 +11,12 @@ import { toast, useToast } from "./ui/use-toast";
 import revalidate from "@/app/revalidate";
 import useTodos, { Todo } from "@/hooks/useTodos";
 import TodosSkeleton from "./todos-skeleton";
-import { Draggable, Droppable } from "react-beautiful-dnd";
+import { Draggable, DraggableProvided, DraggableStateSnapshot, Droppable } from "react-beautiful-dnd";
 import dayjs from "dayjs";
 import { ArrowDownToLine, BoxSelect, CheckCheck, CheckIcon, CheckSquare, LucideTrash, Pencil, Save, Trash, Trash2, Trash2Icon, TrashIcon } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { Checkbox } from "./ui/checkbox";
+import { mutate } from "swr";
 
 export default function(props: {user: User}) {
 
@@ -52,7 +53,14 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
 
       async () => {
         const {data: maxIndex} = await supabase.rpc("max_index", {the_date: props.date})
-        const {data} = await supabase.from("todos").insert({id, title, index: (maxIndex !== null) ? maxIndex + 1 : 0, scheduled_date: props.date}).select().single()
+        const {data, error} = await supabase.from("todos").insert({id, title, index: (maxIndex !== null) ? maxIndex + 1 : 0, scheduled_date: props.date}).select().single()
+        if (error) {
+          toast({
+            title: "Database Error",
+            description: `Error creating ${title}: ${error.message}; possibly due to slow internet`,
+            variant: "destructive"
+          })
+        }
       }, {
         optimisticData: d => [...d ?? [], {id, title: title, is_complete: false, index: 2000, urgency: null, importance: null, scheduled_date: props.date}],
         revalidate: true,
@@ -100,6 +108,7 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
             {nonPrioritized?.map((t, index) => t && 
               <Draggable key={t.id} draggableId={JSON.stringify(t)} index={index}>
                 {(provided, snapshot) => {
+                  //return <Task provided={provided} snapshot={snapshot} t={t} toggleComplete={toggleComplete} deleteTodo={deleteTodo} />
                   const [editing, setEditing] = useState(false)
                   const [title, setTitle] = useState(t.title)
                   const updateTitle = () => {
@@ -131,12 +140,12 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
                     {!t.is_complete ? <BoxSelect onClick={() => toggleComplete(t)} /> : <CheckSquare onClick={() => toggleComplete(t)} />}
                     {!editing ? 
                       <Pencil className="ml-2 hidden group-hover:block" size={14} onClick={() => setEditing(true)} /> :
-                      <ArrowDownToLine className="ml-2 hidden group-hover:block" size={14} onClick={() => {updateTitle(); setEditing(false)}} />
+                      <ArrowDownToLine className="ml-2" size={14} onClick={() => {updateTitle(); setEditing(false)}} />
                     }
                     <CardHeader><CardTitle className="font-sans text-sm -ml-4">
                       {!editing ?
                         title : 
-                        <Input className='h-11 -my-3' value={title ?? undefined} onChange={e => setTitle(e.target.value)} autoFocus />
+                        <Input className='h-11 -my-3 px-1 -mx-1' value={title ?? undefined} onChange={e => setTitle(e.target.value)} autoFocus />
                       }
                     </CardTitle></CardHeader>
                     <Trash2 onClick={() => deleteTodo(t)} className="ml-auto hidden group-hover:block" />
@@ -167,6 +176,53 @@ function TaskColumn(props: {date: string, nonPrioritized: Todo[], prioritized: T
       )}
     </div>
   </>
+}
+
+function Task(props: {t: Todo, provided: DraggableProvided, snapshot: DraggableStateSnapshot, toggleComplete: (t: Todo) => void, deleteTodo: (t: Todo) => void}) {
+  const {t, provided, snapshot, toggleComplete, deleteTodo} = props
+  const supabase = createClientComponentClient<Database>()
+  const {mutate} = useTodos()
+  const [editing, setEditing] = useState(false)
+  const [title, setTitle] = useState(t.title)
+  const updateTitle = () => {
+    mutate(async () => {
+      await supabase.from('todos').update({title: title}).eq('id', t.id)
+    }, {
+        optimisticData: c => c?.map(i => i.id === t.id ? {...t, title} : i) ?? [],
+      })
+  }
+  return <Card 
+    ref={provided.innerRef} 
+    {...provided.dragHandleProps} 
+    {...provided.draggableProps} 
+    draggable 
+
+    // onClick={() => mutate(
+    //   async () => {
+    //     await supabase.from('todos').upsert({id: t.id, importance: 0, urgency: 0})
+    //   }, 
+    //   {
+    //     optimisticData: c => c?.map(to => to.id === t.id ? {...to, importance: 0, urgency: 0} satisfies Todo : to) ?? [], 
+    //     populateCache: false
+    //   }
+    // )} 
+
+    className="hover:shadow-lg hover:cursor-pointer mb-3 flex flex-row items-center px-3 group" 
+    key={t.id}
+  >
+    {!t.is_complete ? <BoxSelect onClick={() => toggleComplete(t)} /> : <CheckSquare onClick={() => toggleComplete(t)} />}
+    {!editing ? 
+      <Pencil className="ml-2 hidden group-hover:block" size={14} onClick={() => setEditing(true)} /> :
+      <ArrowDownToLine className="ml-2" size={14} onClick={() => {updateTitle(); setEditing(false)}} />
+    }
+    <CardHeader><CardTitle className="font-sans text-sm -ml-4">
+      {!editing ?
+        title : 
+        <Input className='h-11 -my-3 px-1 -mx-1' value={title ?? undefined} onChange={e => setTitle(e.target.value)} autoFocus />
+      }
+    </CardTitle></CardHeader>
+    <Trash2 onClick={() => deleteTodo(t)} className="ml-auto hidden group-hover:block" />
+  </Card>
 }
 
 function CreateTask(props: {createTask: (t: string) => void}) {

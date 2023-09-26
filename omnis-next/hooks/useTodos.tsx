@@ -9,7 +9,14 @@ const fetchTasks = async () => {
   const {data: {user}} = await supabase.auth.getUser()
 
   // get todos
-  const {data} = await supabase.from("todos").select("id, title, is_complete, importance, urgency, scheduled_date, index").eq('user_id', user!.id).order('index')
+  const {data, error} = await supabase.from("todos").select("id, title, is_complete, importance, urgency, scheduled_date, index").eq('user_id', user!.id).order('index')
+  if (error) {
+    toast({
+      title: "Database Error",
+      description: "Possibly due to slow internet; " + error.message,
+      variant: "destructive"
+    })
+  }
   return data
 }
 
