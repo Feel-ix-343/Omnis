@@ -32,3 +32,12 @@ export async function newEisenhowerTodo(todo: EisenhowerEntry, eisenhower: {prio
 }
 
 // export async function deleteEisenhowerTodo
+
+export async function deleteTodo(id: number) {
+  'use server'
+
+  const supabase = createServerActionClient<Database>({cookies})
+  await supabase.from('todos').delete().eq('id', id)
+
+  revalidatePath("planning/eisenhower")
+}
