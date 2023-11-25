@@ -22,15 +22,15 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
-import { ReactNode, experimental_useOptimistic as useOptimistic, useEffect, useState, startTransition } from 'react';
+import { ReactNode, experimental_useOptimistic as useOptimistic, useEffect, useState, startTransition, useTransition } from 'react';
 import { EisenhowerTasks} from './page';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowDownToLine, CheckSquare, PlusCircle } from 'lucide-react';
+import { ArrowDownToLine, CheckSquare, PlusCircle, Square, TrashIcon } from 'lucide-react';
 import { CheckboxItem } from '@radix-ui/react-context-menu';
-import { newEisenhowerTodo, updateEisenhowerOrdering } from './actions';
+import { deleteTodo, newEisenhowerTodo, updateEisenhowerOrdering } from './actions';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
@@ -84,13 +84,15 @@ export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
             <motion.div 
               className={cn("bg-white shadow-sm border-2 border-slate-200 rounded-lg px-3 py-1")} 
             >
-              <h1 className="text-lg font-sans">{activeTask?.task_id}</h1>
+              <h1 className="text-lg font-sans">{activeTask?.task}</h1>
             </motion.div> :
             null
           }
         </DragOverlay>
 
       </div>
+
+      {activeId && <Trash />}
 
     </DndContext>
   )
@@ -114,6 +116,10 @@ export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
     if (!over) return
     const { id } = active;
     const { id: overId } = over;
+
+    if (overId === "trash") {
+      return
+    }
 
     // Find the containers
     const activeContainer = findContainer(id);
@@ -177,7 +183,24 @@ export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
       toast({
         title: "You can't drop it there",
       })
+      setActiveId(undefined)
       return
+    }
+
+
+    if (event.over.id === "trash") {
+      const activeContainer = findContainer(event.active.id)
+      startTransition(() => {
+
+        setTodos({
+          ...todos,
+          [activeContainer as keyof EisenhowerTasks]: todos[activeContainer as keyof EisenhowerTasks].filter(t => t.task_id !== event.active.id)
+        })
+
+        deleteTodo(Number(event.active.id))
+      })
+
+      setActiveId(undefined)
     }
 
     const activePriority = findContainer(event.active.id) as keyof EisenhowerTasks
@@ -239,13 +262,13 @@ function MatrixBox(props: {children?: ReactNode, priority: keyof EisenhowerTasks
     }
 
 
-      newEisenhowerTodo({
-        task: todo,
-      }, {
-          order_id: props.todos.length,
-          priority: props.priority,
-        }
-      ) // get errors
+    newEisenhowerTodo({
+      task: todo,
+    }, {
+        order_id: props.todos.length,
+        priority: props.priority,
+      }
+    ) // get errors
 
     setTodo("")
   }
@@ -297,13 +320,29 @@ function Todo(props: {todo: EisenhowerTasks[keyof EisenhowerTasks][number]}) {
 
   return (
     <motion.div 
-      className={cn("bg-white shadow-sm border-2 border-slate-200 rounded-lg px-3 py-1", {"opacity-0": isDragging})} 
+      className={cn("bg-white shadow-sm border-2 border-slate-200 rounded-lg px-3 py-1 flex flex-row items-center gap-2", {"opacity-0": isDragging})} 
       ref={setNodeRef} 
       style={style} 
       {...attributes} 
       {...listeners}
     >
       <h1 className="text-lg font-sans">{props.todo.task}</h1>
+    </motion.div>
+  )
+}
+
+function Trash() {
+  const {isOver, setNodeRef} = useDroppable({
+    id: "trash"
+  })
+  return (
+    <motion.div 
+      animate={{
+        scale: isOver ? 1.03 : 1
+      }}
+      ref={setNodeRef} 
+      className={cn("px-5 py-2 rounded-lg mx-auto border w-[500px] mt-10 h-[100px] flex justify-center items-center", {"bg-red-50": isOver, "border-red-200": isOver})}>
+      <TrashIcon className={cn("stroke-slate-300 mb-2 absolute", {"stroke-red-200": isOver})} />
     </motion.div>
   )
 }
