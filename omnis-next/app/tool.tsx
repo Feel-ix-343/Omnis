@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card"
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useConfig } from "@/hooks/useConfig"
+import useEisenhower, { EisenhowerTodo } from "@/hooks/useEisenhower"
 import useTodos, { Todo } from "@/hooks/useTodos"
 import { Database } from "@/lib/database.types"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
@@ -15,13 +16,13 @@ import { DragDropContext, Draggable, Droppable, OnDragEndResponder } from "react
 export default function Tool(props: {uid: string}) {
   const [executing, setExecuting] = useState(false)
 
-  const {data: todos} = useTodos()
+  const {data: todos} = useEisenhower()
 
 
-  const doNow = useMemo(() => todos?.filter(t => t.importance == 0 && t.urgency == 0), [todos])
-  const schedule = useMemo(() => todos?.filter(t => t.importance == 0 && t.urgency == 1), [todos])
-  const avoid = useMemo(() => todos?.filter(t => t.importance == 1 && t.urgency == 0), [todos])
-  const doLater = useMemo(() => todos?.filter(t => t.importance == 1 && t.urgency == 1), [todos])
+  const doNow = useMemo(() => todos?.filter(t => t.priority === 1).sort((a, b) => a.index - b.index), [todos])
+  const schedule = useMemo(() => todos?.filter(t => t.priority === 2).sort((a, b) => a.index - b.index), [todos])
+  const avoid = useMemo(() => todos?.filter(t => t.priority === 3).sort((a, b) => a.index - b.index), [todos])
+  const doLater = useMemo(() => todos?.filter(t => t.priority === 4).sort((a, b) => a.index - b.index), [todos])
 
 
   const [items, setItems] = useState([0, 1, 2, 3])
@@ -76,7 +77,7 @@ export default function Tool(props: {uid: string}) {
         </Tabs>
       </motion.div>
 
-      <motion.div layout className={`grid ${expanded ? "grid-cols-2" : "grid-cols-1"} gap-10 ${expanded ? "grid-rows-2" : "grid-rows-4"} h-full`}>
+      <motion.div layout className={`overflow-scroll grid ${expanded ? "grid-cols-2" : "grid-cols-1"} gap-10 ${expanded ? "grid-rows-2" : "grid-rows-4"} h-full`}>
         <EisenhowerBox expanded={expanded} title="Do Now" droppableId="doNow" todos={doNow} />
         <EisenhowerBox expanded={expanded} title="Schedule" droppableId="schedule" todos={schedule} />
         <EisenhowerBox expanded={expanded} title="Avoid" droppableId="avoid" todos={avoid} />
@@ -86,7 +87,7 @@ export default function Tool(props: {uid: string}) {
   )
 }
 
-function EisenhowerBox(props: {title: string, droppableId: string, todos?: Todo[], expanded: boolean}) {
+function EisenhowerBox(props: {title: string, droppableId: string, todos?: EisenhowerTodo[], expanded: boolean}) {
   return (
     <motion.div layout className="flex flex-col gap-2 items-center">
       <motion.h4 layout>{props.title}</motion.h4>
@@ -100,7 +101,7 @@ function EisenhowerBox(props: {title: string, droppableId: string, todos?: Todo[
 
                   <motion.div layout>
                     <Card ref={provided.innerRef} style={provided.draggableProps.style} {...provided.draggableProps} {...provided.dragHandleProps} className="py-1 px-3">
-                      <p>{t.title}</p>
+                      <p>{t.todos?.title}</p>
                     </Card>
                   </motion.div>
                 )

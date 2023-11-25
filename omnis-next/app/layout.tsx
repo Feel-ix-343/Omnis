@@ -4,13 +4,7 @@ import './globals.css'
 import 'cal-sans'
 import { Montserrat } from 'next/font/google'
 import localFont from 'next/font/local'
-import WithAuth from './withAuth'
-import { Toast } from '@/components/ui/toast'
 import { Toaster } from '@/components/ui/toaster'
-import WithSWR from './withSWR'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Database } from '@/lib/database.types'
-import { cookies } from 'next/headers'
 
 const fontSans = Montserrat({
   subsets: ['latin'],
@@ -35,15 +29,12 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
 
-
   return (
     <html lang="en">
       <body>
         <main className={"min-h-screen bg-background flex flex-col items-center " + fontHeading.variable + " " + fontSans.variable}>
           <Toaster />
-          <WithAuth>
-              {children}
-          </WithAuth>
+          {children}
         </main>
       </body>
     </html>

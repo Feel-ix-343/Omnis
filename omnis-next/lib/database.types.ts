@@ -34,117 +34,58 @@ export interface Database {
   }
   public: {
     Tables: {
-      config: {
+      eisenhower: {
         Row: {
-          tool_is_expanded: boolean
-          user_id: string | null
+          order_id: number
+          priority: Database["public"]["Enums"]["priority"]
+          task_id: number
         }
         Insert: {
-          tool_is_expanded?: boolean
-          user_id?: string | null
+          order_id: number
+          priority?: Database["public"]["Enums"]["priority"]
+          task_id: number
         }
         Update: {
-          tool_is_expanded?: boolean
-          user_id?: string | null
+          order_id?: number
+          priority?: Database["public"]["Enums"]["priority"]
+          task_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "config_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
+            foreignKeyName: "eisenhower_task_id_fkey"
+            columns: ["task_id"]
+            referencedRelation: "todos"
             referencedColumns: ["id"]
           }
         ]
       }
       todos: {
         Row: {
-          created_at: string
-          id: string
-          importance: number | null
-          index: number
+          id: number
           is_complete: boolean | null
-          scheduled_date: string | null
-          title: string | null
-          urgency: number | null
-          user_id: string | null
+          task: string
         }
         Insert: {
-          created_at?: string
-          id?: string
-          importance?: number | null
-          index?: number
+          id?: number
           is_complete?: boolean | null
-          scheduled_date?: string | null
-          title?: string | null
-          urgency?: number | null
-          user_id?: string | null
+          task: string
         }
         Update: {
-          created_at?: string
-          id?: string
-          importance?: number | null
-          index?: number
+          id?: number
           is_complete?: boolean | null
-          scheduled_date?: string | null
-          title?: string | null
-          urgency?: number | null
-          user_id?: string | null
+          task?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "todos_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      decrement: {
-        Args: {
-          starting_index: number
-          list_date: string
-          move_index: number
-        }
-        Returns: undefined
-      }
-      decrement_below: {
-        Args: {
-          inclusive: boolean
-          starting: number
-          list_date: string
-        }
-        Returns: undefined
-      }
-      increment: {
-        Args: {
-          starting_index: number
-          list_date: string
-          move_index: number
-        }
-        Returns: undefined
-      }
-      increment_below: {
-        Args: {
-          inclusive: boolean
-          starting: number
-          list_date: string
-        }
-        Returns: undefined
-      }
-      max_index: {
-        Args: {
-          the_date: string
-        }
-        Returns: number
-      }
+      [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      priority: "do_now" | "do_later" | "delegate" | "dont_do"
     }
     CompositeTypes: {
       [_ in never]: never

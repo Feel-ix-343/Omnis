@@ -1,14 +1,13 @@
 'use client'
 
+
 import { Button } from "@/components/ui/button"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useRouter } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
 
-export default function () {
+export default async function () {
 
   const supabase = createClientComponentClient()
-  const router = useRouter()
-
   const handleLogin = async() => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -16,7 +15,6 @@ export default function () {
         redirectTo: `${location.origin}/auth/callback`
       }
     })
-    router.push("/")
   }
 
   return<>
@@ -29,3 +27,4 @@ export default function () {
     </div>
   </>
 }
+

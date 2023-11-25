@@ -1,20 +1,25 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
-import Link from "next/link"
-import React, { ReactNode } from "react"
-import Login from "./login"
-import LogoutButton from "@/components/LogoutButton"
-import { Database } from "@/lib/database.types"
-import { SWRConfig } from "swr"
-import WithSWR from "./withSWR"
+import LogoutButton from "@/components/LogoutButton";
+import { Database } from "@/lib/database.types";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
-export default async function(props: {children: ReactNode}) {
-  const supabase = createServerComponentClient<Database>({cookies: cookies})
-  const {data: {user}} = await supabase.auth.getUser()
+import Link from "next/link";
+import { ReactNode } from "react";
 
-  if (!user) return <Login />
+export default async function({children}: {children: ReactNode}){
 
-  return <>
+
+  const supabase = createServerComponentClient<Database>({cookies})
+  const { data: {user} } = await supabase.auth.getUser()
+  if (!user) {
+    return redirect('/')
+  }
+
+
+  return (
+
+    <>
       <div className="w-screen bg-primary-foreground h-[8vh] flex flex-row gap-1 px-7 items-center z-50">
         <h1 className="text-4xl">Omnis Planning</h1>
 
@@ -24,7 +29,7 @@ export default async function(props: {children: ReactNode}) {
           <LogoutButton />
         </div>
       </div>
-
-      {props.children}
-  </>
+      {children}
+    </>
+  )
 }

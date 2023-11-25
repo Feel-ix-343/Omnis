@@ -8,8 +8,7 @@ const fetchTasks = async () => {
   const supabase = createClientComponentClient<Database>()
   const {data: {user}} = await supabase.auth.getUser()
 
-  // get todos
-  const {data, error} = await supabase.from("todos").select("id, title, is_complete, scheduled_date, index").eq('user_id', user!.id).order('index')
+  const {data, error} = await supabase.from("eisenhower_ordering").select("*, todos(id, title)")
   if (error) {
     toast({
       title: "Database Error",
@@ -21,8 +20,8 @@ const fetchTasks = async () => {
 }
 
 type Unpacked<T> = T extends (infer U)[] ? U : T;
-export type Todo = Database["public"]["Tables"]["todos"]["Row"]
+export type EisenhowerTodo = Unpacked<Awaited<ReturnType<typeof fetchTasks>>>
 
-export default function useTodos () {
-  return useSWR("todos", fetchTasks)
+export default function useEisenhower () {
+  return useSWR("eisenhower", fetchTasks)
 }
