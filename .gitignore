@@ -2,3 +2,4 @@ node_modules
 dist
 .vercel
 Session.vim
+/omnis-next/.idea/workspace.xml
