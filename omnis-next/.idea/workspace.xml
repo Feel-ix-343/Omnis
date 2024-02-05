@@ -5,25 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9160b694-b855-4c26-b1cc-04e5a6095103" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Dashboard.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/login.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/tool.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/tool.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/withAuth.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/withAuth.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/todos.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/todos.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/ui/input.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui/input.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hooks/useTodos.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/hooks/useTodos.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/database.types.ts" beforeDir="false" afterPath="$PROJECT_DIR$/lib/database.types.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/next.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/next.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/migrations/20230618024722_init.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/migrations/20230916045448_eisenhower.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/migrations/20230920031944_increment.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/migrations/20230925184030_config.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/supabase/seed.sql" beforeDir="false" afterPath="$PROJECT_DIR$/supabase/seed.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/planning/eisenhower/actions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/app/planning/eisenhower/actions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/planning/eisenhower/matrix.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/planning/eisenhower/matrix.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

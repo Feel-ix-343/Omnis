@@ -28,7 +28,7 @@ export async function newEisenhowerTodo(todo: EisenhowerEntry, eisenhower: {prio
   const {error: er} = await supabase.from("eisenhower").insert({task_id: data.id, order_id: eisenhower.order_id, priority: eisenhower.priority})
   // todo return error
 
-  revalidatePath("planning/eisenhower")
+  revalidatePath("planning")
 }
 
 // export async function deleteEisenhowerTodo
@@ -39,5 +39,13 @@ export async function deleteTodo(id: number) {
   const supabase = createServerActionClient<Database>({cookies})
   await supabase.from('todos').delete().eq('id', id)
 
-  revalidatePath("planning/eisenhower")
+  revalidatePath("planning")
+}
+
+export async function completeTodo(id: number) {
+  'use server'
+
+  const supabase = createServerActionClient<Database>({cookies})
+  supabase.from('todos').update({is_complete: true}).eq('id', id)
+  revalidatePath("planning")
 }

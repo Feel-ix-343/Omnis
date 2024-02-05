@@ -2,11 +2,6 @@
 
 import {
   DndContext, 
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   DragEndEvent,
   useDroppable,
   DragOverlay,
@@ -17,33 +12,30 @@ import {
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
-import { ReactNode, experimental_useOptimistic as useOptimistic, useEffect, useState, startTransition, useTransition } from 'react';
+import { ReactNode, useOptimistic, useState, startTransition, useEffect } from 'react';
 import { EisenhowerTasks} from './page';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowDownToLine, CheckSquare, PlusCircle, Square, TrashIcon } from 'lucide-react';
-import { CheckboxItem } from '@radix-ui/react-context-menu';
+import { Check, PlusCircle, TrashIcon } from 'lucide-react';
 import { deleteTodo, newEisenhowerTodo, updateEisenhowerOrdering } from './actions';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { useRouter } from 'next/navigation';
 
 export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
-  console.log(props.eisenhowerTodos)
-
   const [todos, setTodos] = useOptimistic(
     props.eisenhowerTodos,
     (old, newList: EisenhowerTasks) => {
       return newList
     }
   )
+
+  useEffect(() => console.log({useeffecttodos: todos}), [todos])
+
+
   // const [todos, setTodos] = useState(props.eisenhowerTodos) // this won't work for optimistic because when ever you set state, props gets read again. 
 
   const [activeId, setActiveId] = useState<UniqueIdentifier>()
@@ -53,7 +45,7 @@ export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
   return (
     <DndContext onDragEnd={handleDragEnd} onDragStart={handleDragStart} onDragOver={handleDragOver}>
 
-      <div className="grid grid-cols-2 grid-rows-2 gap-7 w-6/12">
+      <div className="grid grid-cols-2 grid-rows-2 gap-7 w-[620px]">
 
         <MatrixBox priority="do_now" todos={todos.do_now}>
           <SortableContext strategy={verticalListSortingStrategy} items={todos.do_now.map( t => t.task_id )}>
@@ -92,12 +84,16 @@ export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
 
       </div>
 
-      {activeId && <Trash />}
+      <div className="flex flex-row gap-3" >
+        {activeId && <Complete />}
+        {activeId && <Trash />}
+      </div>
 
     </DndContext>
   )
 
   function findContainer(id: UniqueIdentifier) {
+    console.log({todos})
     if (id in todos) {
       return id
     }
@@ -129,13 +125,11 @@ export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
 
     if (
       !activeContainer ||
-      !overContainer ||
-      activeContainer === overContainer
+        !overContainer ||
+        activeContainer === overContainer
     ) {
       return;
     }
-
-    console.log("still goign")
 
     const prev = todos
     const activeItems = prev[activeContainer as keyof EisenhowerTasks];
@@ -211,6 +205,7 @@ export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
         !overPriority ||
         activePriority !== overPriority
     ) {
+      console.log("drop canceled")
       return;
     }
 
@@ -222,12 +217,12 @@ export default function(props: {eisenhowerTodos: EisenhowerTasks}) {
 
     if (activeIndex !== overIndex) {
       const newobj = {
-        ...props.eisenhowerTodos,
-        [overPriority]: arrayMove(props.eisenhowerTodos[overPriority], activeIndex, overIndex)
+        ...todos,
+        [overPriority]: arrayMove(todos[overPriority], activeIndex, overIndex)
       }
       startTransition(() => {
         setTodos(newobj)
-        updateEisenhowerOrdering(newobj) // this isin't ideal, but it works
+        updateEisenhowerOrdering(newobj)
       })
     }
 
@@ -343,6 +338,23 @@ function Trash() {
       ref={setNodeRef} 
       className={cn("px-5 py-2 rounded-lg mx-auto border w-[500px] mt-10 h-[100px] flex justify-center items-center", {"bg-red-50": isOver, "border-red-200": isOver})}>
       <TrashIcon className={cn("stroke-slate-300 mb-2 absolute", {"stroke-red-200": isOver})} />
+    </motion.div>
+  )
+}
+
+function Complete() {
+  const {isOver, setNodeRef} = useDroppable({
+    id: "complete"
+  })
+
+  return (
+    <motion.div 
+      animate={{
+        scale: isOver ? 1.03 : 1
+      }}
+      ref={setNodeRef} 
+      className={cn("px-5 py-2 rounded-lg mx-auto border w-[500px] mt-10 h-[100px] flex justify-center items-center", {"bg-green-50": isOver, "border-green-200": isOver})}>
+      <Check className={cn("stroke-slate-300 mb-2 absolute", {"stroke-green-200": isOver})} />
     </motion.div>
   )
 }
