@@ -1,5 +1,5 @@
 # Omnis
-A daily planning app for people with executive disfunctioning disorder.
+A daily planning app for people with executive disfunctioning disorder (EFD).
 
 **Creators:** Siddharth Gupta, Vignesh Peddi, Felix Zeller
 
